@@ -1,0 +1,99 @@
+---
+title: "The Beta Distribution"
+author: "Group: Goliath"
+date: "STA421"
+output:
+  ioslides_presentation:
+    transition: faster
+    widescreen: yes
+    css: style.css
+    logo: uzh_logo.png
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, echo=FALSE,include=FALSE}
+#load libraries
+library(readxl)
+library(ggplot2)
+library(dplyr,warn.conflicts = FALSE)
+library(tidyr)
+library(kableExtra)
+
+options(dplyr.summarise.inform = FALSE)
+options("kableExtra.html.bsTable" = T)
+```
+
+
+## Properties of the Beta distribution
+
+Continuous density function  defined on the interval $[0,1]$ $f(x)=\frac{1}{B(\alpha,\beta)}x^{\alpha-1}(1-x)^{\beta-1}$ with the two shape parameters $\alpha,\beta>1$
+
+Normalization assured by $B(\alpha,\beta)=\dfrac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}=\dfrac{(\alpha-1)!(\beta-1)!}{(\alpha+\beta-1)!}$
+
+Expectation value: $E(X)=\dfrac{\alpha}{\alpha+\beta}$
+
+Variance: $Var(X)=\dfrac{\alpha\beta}{(\alpha+\beta+1)(\alpha+\beta)^2}$
+
+## Properties of the Beta distribution
+
+```{r,echo=F}
+x_grid <- seq(from = -0.0, to = 1.0, length.out = 100)
+alpha <- c(0.1, 0.5,1, 2,5)
+beta <- c(0.1, 0.5,1, 2, 5)
+
+p <- 1.1
+p <- 2
+alpha <- c(seq(from = 0.0, to = 5, length.out = 20),p)
+beta <- c(seq(from = 0.0, to = 5, length.out = 20),p)
+
+par_grid <- expand.grid("alpha"=alpha,"beta"=beta)
+y <- data.frame(t(apply(X = par_grid, MARGIN = 1,FUN = function(x){dbeta(x_grid,x[1],x[2])})))
+df <- cbind(par_grid,y)
+colnames(df)[3:ncol(df)] <- x_grid
+df_long <- tidyr::gather(df,x,density,-c(alpha,beta) )
+df_long$x <- as.numeric(df_long$x)
+
+ggplot(data = df_long[df_long$alpha==df_long$beta,], aes(x=x, y = density,group = beta,col = beta))+
+  geom_line()+
+  geom_vline(aes(xintercept = 0.5))
+
+ggplot(data = df_long[df_long$alpha==p,], aes(x=x, y = density,group = beta,col = beta))+
+  geom_line()+
+  geom_vline(aes(xintercept = 0.5))+
+  geom_line(data = df_long[df_long$beta==p & df_long$alpha==p,], aes(x=x, y = density),col = "red")+
+  ggtitle(paste0("alpha=",p))
+
+ggplot(data = df_long[df_long$beta==p,], aes(x=x, y = density,group = alpha,col = alpha))+
+  geom_line()+
+  geom_vline(aes(xintercept = 0.5))+
+  ggtitle(paste0("beta=",p))+
+  geom_line(data = df_long[df_long$beta==p & df_long$alpha==p,], aes(x=x, y = density),col = "red")
+```
+
+
+```{r,echo=F, include=F}
+ggplot(data = df_long[df_long$alpha==sort(unique(df_long$alpha))[2]
+,], aes(x=x, y = density,group = beta,col = beta))+
+  geom_line()+
+  geom_vline(aes(xintercept = 0.5))
+
+ggplot(data = df_long[df_long$beta==sort(unique(df_long$beta))[2]
+,], aes(x=x, y = density,group = alpha,col = as.factor(alpha)))+
+  geom_line(show.legend = T)
+```
+
+
+## Why is it interesting for Bayesian statistics?
+We can change $x$ to $p$ and take it as a prior distribution!
+
+
+
+## Reference:
+
+<ul>
+  <li>https://en.wikipedia.org/wiki/Beta_distribution#Mean_and_sample_size </li>
+</ul>
