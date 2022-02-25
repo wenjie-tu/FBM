@@ -1,0 +1,131 @@
+---
+title: "Worksheet01_Exercise06"
+author: "Goliath"
+date: "25 2 2022"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Exercise 6 - Monte Carlo: Random Sample vs. the True Distribution
+
+```{r, include=T}
+set.seed(44566)
+X <- rnorm(n=1000, mean = 160, sd = 20)
+```
+
+
+
+## Part 1 - True Values:
+
+The expected value of the standard normal distribution equals 0: 
+$$X \overset{}{\sim} Norm(\mu = 0, \sigma^2= 1)$$ It follows that $E(X) = 0$.
+
+When $Y \overset{}{\sim} Norm(\mu, \sigma^2)$ then $$X = \frac{(Y-\mu)}{\sigma}$$ is standard normally distributed. Therefore $$E(Y) = E(\sigma X+\mu) = \sigma E(X)+ \mu = \mu$$
+
+The true values (= theoretical) of the distribution are the following:
+
+
+```{r, include=T}
+### Calculations:
+mean_t <- 160
+sd_t <- 20
+var_t <- sd_t^2
+med_t <- 160
+q0025_t <- qnorm(0.025, 160,20) #120.8007
+q50_t <- qnorm(0.5, 160, 20)  #160
+q975_t <- qnorm(0.975,160,20)  #199.1993
+True <- c(mean_t, sd_t, var_t, med_t, round(q0025_t,2), 
+                round(q50_t,2), round(q975_t,2))
+
+values<- as.data.frame(row.names = c("mean", "sd", "variance", "median", "2.5% Quantile", 
+                "50% Quantile", "97.5% Quantile"),
+                x = True)
+
+## True Values:
+values
+```
+
+
+## Part 2 - Traceplot:
+
+```{r, echo=T}
+df <- as.data.frame(X)
+df$m <- seq(1,1000,1)
+
+plot(df$m, df$X, type = "l", main="Traceplot", xlab = "Iteration", ylab = "X")
+```
+
+
+## Part 3 - Histogram and True Density Curve:
+
+```{r}
+hist(X, xlim = c(75,250), freq = F, ylim = c(0,0.02), main = "Histogram of Sample and True Density Curve")
+lines(dnorm(0:250,mean=160,sd=20), col="red", lwd=2)
+
+```
+
+
+## Part 4 - Sample Values:
+
+
+```{r, include=T}
+### Calculations:
+mean_hat <- mean(X)
+sd_hat <- sd(X)
+var_hat <- var(X)
+med_hat <- median(X)
+q0025_hat <- quantile(X, probs = 0.025)[[1]]
+q50_hat <- quantile(X, probs = 0.5)[[1]]
+q975_hat <- quantile(X, probs = 0.975)[[1]]
+
+sample_values <- c(round(mean_hat,2), round(sd_hat,2), round(var_hat,2), 
+                   round(med_hat,2), round(q0025_hat,2), 
+                   round(q50_hat,2), round(q975_hat,2))
+
+values$Sample <- sample_values
+
+## 
+values
+```
+
+```{r, include=T}
+## Comparision:
+values$Difference <- values$True- values$Sample
+values
+```
+
+
+## Part 5 - Probabilities:
+
+
+```{r, include=T}
+## P[X>175] = 1-P[X <= 175]:
+## Probability of the Sample: 
+p1 <- length(which(X>175))/1000
+p1
+
+## Theoretical Probability:
+1- pnorm(175, mean = 160, sd = 20)
+
+## P[150 < X < 180] = P[151 <= X <= 179]
+## Probability of the Sample: 
+p2 <- length(which(X>150&X<180))/1000
+p2
+
+## Theoretical Probability:
+pnorm(179, 160, 20) - pnorm(151, 160, 20)
+
+```
+Comment:
+
+$P[X > 175]$ is equal to $1-P[X \le 175]$. 
+
+$P[150 < X < 180]$ is equal to $P[X \le 179] - P[X \le 151]$. 
+
+
