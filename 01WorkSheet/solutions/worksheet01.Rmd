@@ -284,7 +284,8 @@ tab <- matrix(c(14, 9, 1, 5), nrow = 2, byrow = TRUE)
 formatBF(BF=minBF)
 ```
 
-We see that $BF=\frac{1}{3.4}<1$ so the BF is decreasing the prior odds of no effect $P[H_0]$.
+We see that $BF=\frac{1}{3.4}<1$ so the BF is decreasing the prior odds of $H_0$ that says the drug has no effect.
+
 
 ```{r}
 BF2pp(1/3.4, prior.prob=0.5)
