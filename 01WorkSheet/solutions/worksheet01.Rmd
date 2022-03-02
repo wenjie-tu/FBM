@@ -261,7 +261,7 @@ $$
 \end{aligned}
 $$
 
-The prior probability of $H_0$ ($\mu=\mu_0$) is 0.5, and after observing the data $y$ such a probability is updated to 0.554 (posterior probability).
+The prior probability of $H_0$ ($\mu=\mu_0$) is 0.5, and after observing the data $y$ such a probability is updated to 0.554 (posterior probability). The higher the $BF_{01}$ the higher is the favor for $H_0$. It is only $\approx 1.241$, which means that there is barely no evidence and gets also reflected in hardly updated posterior probability.
 
 $~$
 
