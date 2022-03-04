@@ -49,7 +49,9 @@ $$
 \end{aligned}
 $$
 
-This diagnostic test seems reliable at the first glance since the sensitivity is 0.96 and the specificity is 0.97. From a Bayesian perspective, however, we see that the probability that someone is healthy given he or she is tested positive is 0.94. In other words, if someone is tested positive, he or she is actually healthy with a probability of 0.94. This diagnostic test in this sense is not reliable at all.
+This diagnostic test seems reliable at the first glance since the sensitivity is 0.96 and the specificity is 0.97. From a Bayesian perspective, however, we see that the probability that someone is healthy given he or she is tested positive is 0.94. In other words, if someone is tested positive, he or she is actually healthy with a probability of 0.94. This diagnostic test in this sense is not reliable at all. The prevalence of this disease in the population is 0.002, which indicates a rare disease. The PPV (positive predictive value) is defined as being diseased when having a positive test result. In this case 
+$$PPV =  {P[D^{+}| T^{+}]} =  1-{P[D^{-}| T^{+}]} = 1-0.94 = 0.06$$
+A low PPV indicate that many false positive test results.
 
 $~$
 
@@ -96,13 +98,13 @@ qnorm(c(0.025, 0.5, 0.975), mean = mu, sd = sigma)
 
 ```{r, fig.cap="Traceplot of the MC sample for X"}
 # Plot the traceplot of the MC sample for X
-traceplot(mcmc(mc.samples))
+traceplot(mcmc(mc.samples), ylab="X")
 ```
 
 #### 6.3
 
 ```{r, fig.cap="Histogram of the MC sample for X"}
-hist(mc.samples, freq = FALSE, breaks = 20) # generate a histogram
+hist(mc.samples, freq = FALSE, breaks = 20, xlab="X") # generate a histogram
 lines(density(mc.samples), col = "red", lwd = 2) # add empirical density
 lines(seq(100, 220), dnorm(seq(100, 220), mean = mu, sd = sigma), 
       col = "blue", lwd = 2) # add true density
