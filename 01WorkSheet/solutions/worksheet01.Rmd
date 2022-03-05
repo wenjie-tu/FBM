@@ -3,6 +3,7 @@ title: "Worksheet1"
 subtitle: "Foundations of Bayesian Methodology"
 author: "Group: Goliath"
 date: 'Spring Semester 2022'
+bibliography: biblio.bib  
 output: 
   html_document:
     toc: true
@@ -49,11 +50,14 @@ $$
 \end{aligned}
 $$
 
-This diagnostic test seems reliable at the first glance since the sensitivity is 0.96 and the specificity is 0.97. From a Bayesian perspective, however, we see that the probability that someone is healthy given he or she is tested positive is 0.94. In other words, if someone is tested positive, he or she is actually healthy with a probability of 0.94. This diagnostic test in this sense is not reliable at all. The prevalence of this disease in the population is 0.002, which indicates a rare disease. The PPV (positive predictive value) is defined as being diseased when having a positive test result. In this case 
-$$PPV =  {P[D^{+}| T^{+}]} =  1-{P[D^{-}| T^{+}]} = 1-0.94 = 0.06$$
-A low PPV indicate that many false positive test results.
+This diagnostic test seems reliable at the first glance since the sensitivity is 0.96 and the specificity is 0.97. From a Bayesian perspective, however, we see that the probability that someone is healthy given he or she is tested positive is 0.94. In other words, if someone is tested positive, he or she is actually healthy with a probability of 0.94. This diagnostic test in this sense is not reliable at all. The prevalence of this disease in the population is 0.002, which indicates a rare disease. The PPV (positive predictive value) is an important parameter for the evaluation of diagnostic tests. It is defined as being diseased when having a positive test result. In this case it is calculated by:
+$$PPV =  {P[D^{+}| T^{+}]} = 1-{P[D^{-}| T^{+}]} = 1-0.94 = 0.06$$
+The low PPV indicates that the ratio of patients truly diagnosed as positive to all those who had positive test result is low, seen in the alternative expression @Altman1994:
+$$PPV =  \frac{TP}{TP + FP}= 0.06$$
+With TP = True positives and FP = False Positives. On the other hand, the NPV designates the ratio of truly diagnosed negatives to all who had a negative test result. It is worth mentioning that depending on the category of the test outcome, one or the other value might be of higher importance. For instance, for SARS-CoV-2 antigen rapid tests, it is more important that negative predictions are true, hence the NPV should be considered, which is related to the specificity. On the other hand, for e.g. SARS-CoV-2 rapid antibody tests, the PPV is more important and thus the sensitivity should be considered first.
 
-$~$
+Furthermore, all these values are impacted by the prevalence of the disease. As the prevalence increases, the PPV also increases but the NPV decreases @tenny2017prevalence, even though the test's specificity and sensitivity remain identical. This seemingly unintuitive result highlights the importance of the Bayesian methodology. 
+
 
 ### Exercise 6 (Monte Carlo: random sample vs the true distribution)
 
