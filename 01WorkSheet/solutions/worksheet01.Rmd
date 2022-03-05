@@ -64,7 +64,7 @@ Furthermore, all these values are impacted by the prevalence of the disease. As 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-setwd("F:/UZH/22Spring/FBM/R")
+#setwd("F:/UZH/22Spring/FBM/R")
 Sys.setenv(lang="us_en")
 ```
 
