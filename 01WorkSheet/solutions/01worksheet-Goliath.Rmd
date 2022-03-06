@@ -1,14 +1,13 @@
 ---
-title: "Worksheet1"
-subtitle: "Foundations of Bayesian Methodology"
-author: "Group: Goliath"
-date: 'Spring Semester 2022'
-bibliography: biblio.bib  
-output: 
-  html_document:
-    toc: true
-    toc_depth: 4
-    toc_float: true
+title: "Worksheet 1"
+author: 'Group: Goliath'
+date: "Spring Semester 2022"
+output: pdf_document
+bibliography: biblio.bib
+nocite: '@*'
+subtitle: Foundations of Bayesian Methodology
+papersize: a4
+fontsize: 10pt
 ---
 
 ### Exercise 4 (Bayes theorem)
@@ -16,11 +15,11 @@ output:
 $$
 \begin{aligned}
     P[A\mid B,I] 
-    &= \frac{P[A,B,I]}{P[B,I]} \\
-    &= \frac{P[B\mid A,I]\cdot P[A,I]}{P[B,I]} \\
-    &= \frac{P[B\mid A,I]\cdot P[A\mid I]\cdot P[I]}{P[B,I]} \\
-    &= \frac{P[B\mid A,I]\cdot P[A\mid I]\cdot P[I]}{P[B\mid I]\cdot P[I]} \\
-    &= \frac{P[B\mid A,I]\cdot P[A\mid I]}{P[B\mid I]}
+    &= \frac{P[A,B,I]}{P[B,I]} & \text{conditional probability} \\
+    &= \frac{P[B\mid A,I]\cdot P[A,I]}{P[B,I]} & \text{apply chain rule to }P[A,B,I] \\
+    &= \frac{P[B\mid A,I]\cdot P[A\mid I]\cdot P[I]}{P[B,I]} & \text{apply chain rule to }P[A,I] \\
+    &= \frac{P[B\mid A,I]\cdot P[A\mid I]\cdot P[I]}{P[B\mid I]\cdot P[I]} & \text{apply chain rule to }P[B,I] \\
+    &= \frac{P[B\mid A,I]\cdot P[A\mid I]}{P[B\mid I]} & P[I] \text{ cancels out}
 \end{aligned}
 $$
 
@@ -51,13 +50,20 @@ $$
 $$
 
 This diagnostic test seems reliable at the first glance since the sensitivity is 0.96 and the specificity is 0.97. From a Bayesian perspective, however, we see that the probability that someone is healthy given he or she is tested positive is 0.94. In other words, if someone is tested positive, he or she is actually healthy with a probability of 0.94. This diagnostic test in this sense is not reliable at all. The prevalence of this disease in the population is 0.002, which indicates a rare disease. The PPV (positive predictive value) is an important parameter for the evaluation of diagnostic tests. It is defined as being diseased when having a positive test result. In this case it is calculated by:
-$$PPV =  {P[D^{+}| T^{+}]} = 1-{P[D^{-}| T^{+}]} = 1-0.94 = 0.06$$
+
+$$
+PPV =  {P[D^{+}\mid T^{+}]} = 1-{P[D^{-}\mid T^{+}]} = 1-0.94 = 0.06
+$$
 The low PPV indicates that the ratio of patients truly diagnosed as positive to all those who had positive test result is low, seen in the alternative expression @Altman1994:
-$$PPV =  \frac{TP}{TP + FP}= 0.06$$
+
+$$
+PPV =  \frac{TP}{TP + FP}= 0.06
+$$
 With TP = True positives and FP = False Positives. On the other hand, the NPV designates the ratio of truly diagnosed negatives to all who had a negative test result. It is worth mentioning that depending on the category of the test outcome, one or the other value might be of higher importance. For instance, for SARS-CoV-2 antigen rapid tests, it is more important that negative predictions are true, hence the NPV should be considered, which is related to the specificity. On the other hand, for e.g. SARS-CoV-2 rapid antibody tests, the PPV is more important and thus the sensitivity should be considered first.
 
 Furthermore, all these values are impacted by the prevalence of the disease. As the prevalence increases, the PPV also increases but the NPV decreases @tenny2017prevalence, even though the test's specificity and sensitivity remain identical. This seemingly unintuitive result highlights the importance of the Bayesian methodology. 
 
+$~$
 
 ### Exercise 6 (Monte Carlo: random sample vs the true distribution)
 
@@ -73,7 +79,7 @@ library(coda) # trace plot
 library(pCalibrate) # calibration of p-values
 ```
 
-#### 6.1
+#### 6.1 True Values
 
 ```{r}
 set.seed(44566) # set seed for reproducibility
@@ -98,14 +104,14 @@ Given that the random variable $X$ follows a normal distribution with $\mu=160$ 
 qnorm(c(0.025, 0.5, 0.975), mean = mu, sd = sigma)
 ```
 
-#### 6.2
+#### 6.2 Traceplot
 
 ```{r, fig.cap="Traceplot of the MC sample for X"}
 # Plot the traceplot of the MC sample for X
 traceplot(mcmc(mc.samples), ylab="X")
 ```
 
-#### 6.3
+#### 6.3 Histogram and True Density Curve
 
 ```{r, fig.cap="Histogram of the MC sample for X"}
 hist(mc.samples, freq = FALSE, breaks = 20, xlab="X") # generate a histogram
@@ -116,24 +122,40 @@ legend(x = "topright", legend = c("empirical density", "true density"),
        col = c("red", "blue"), lwd = 2) # add legend
 ```
 
-#### 6.4
+#### 6.4 Sample Values
 
 ```{r}
 # Summary statistics of MC sample
 sample.mean <- mean(mc.samples)
 sample.sd <- sd(mc.samples)
 sample.var <- var(mc.samples)
+sample.med <- median(mc.samples)
 
 cat(sprintf("The sample mean is %.4f
             \nThe sample standard deviation is %.4f
-            \nThe sample variance is %.4f\n\n", 
-            sample.mean, sample.sd, sample.var))
+            \nThe sample variance is %.4f\n
+            \nThe sample median is %.4f\n\n", 
+            sample.mean, sample.sd, sample.var, sample.med))
 
 # Sample quantiles
 quantile(mc.samples, probs = c(0.025, 0.5, 0.975))
 ```
 
-#### 6.5
+\begin{table}[!htbp]
+    \centering
+    \small
+    \caption{Descriptive statistics}
+    \begin{tabular}{lccccccc}
+    \toprule
+           & Mean & Standard deviation & Variance & Median & $2.5\%$ quantile & $2.5\%$ quantile & $2.5\%$ quantile \\
+    \midrule
+    True   & $160.0000$ & $20.0000$ & $400.0000$ & $160.0000$ & $120.8007$ & $160.0000$ & $199.1993$ \\
+    Sample & $159.6127$ & $19.8155$ & $392.6537$ & $159.8035$ & $119.6477$ & $159.8035$ & $197.4104$ \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+#### 6.5 Probabilities
 
 $$
 P[X>175] = 1 - P[X\leq175]
@@ -168,7 +190,7 @@ $~$
 
 #### 7(a)
 
-We know that 
+We know that:
 $$
 \begin{aligned}
     y\mid\mu &\sim N(\mu, \kappa^{-1}) \\
@@ -201,11 +223,32 @@ $$
 \mu\mid x\sim N\left(\frac{y\kappa+v\lambda}{\kappa+\lambda}, \frac{1}{\kappa+\lambda} \right)
 $$
 
-Since the normal prior is conjugate to the normal likelihood with known variance, we can avoid integration and use the following formula to compute the marginal distribution:
+Since the normal prior is conjugate to the normal likelihood with **known variance**, we can avoid integration and use the following formula to compute the marginal distribution:
+
+From **Exercise 4** we derived:
+
+$$
+P[A\mid B,I]=\frac{P[B\mid A,I]\cdot P[A\mid I]}{P[B\mid I]}
+$$
+
+Apply the Bayes theorem to our context:
+
+$$
+f(y\mid \mu,H_1)=\frac{f(\mu\mid y,H_1)f(y\mid H_1)}{f(\mu\mid H_1)}
+$$
+
+Rearrange the above equation:
+
+$$
+f(y\mid H_1)=\frac{f(y\mid \mu,H_1)f(\mu\mid H_1)}{f(\mu\mid y,H_1)}
+$$
+
+We leave out the additional conditioning on $H_1$ for readability:
+
 $$
 \begin{aligned}
     f(y\mid H_1)
-    &=\frac{f(y\mid\mu) f(\mu)}{f(\mu\mid x)} \\
+    &=\frac{f(y\mid\mu) f(\mu)}{f(\mu\mid y)} \\
     &=\frac{\frac{1}{\sqrt{2\pi} }\sqrt{\kappa}\exp(-\frac{\kappa}{2}(y-\mu)^2)\cdot\frac{1}{\sqrt{2\pi} }\sqrt{\lambda}\exp(-\frac{\lambda}{2}(\mu-v)^2)  }{\frac{1}{\sqrt{2\pi} }\sqrt{\kappa+\lambda}\exp\left(-\frac{\kappa+\lambda}{2}(\mu-\frac{y\kappa+v\lambda}{\kappa+\lambda})^2\right)} \\
     &=\frac{1}{\sqrt{2\pi}}\sqrt{\frac{\kappa\lambda}{\kappa+\lambda}}
     \exp\left(-\frac{\kappa}{2}(y-\mu)^2-\frac{\lambda}{2}(\mu-v)^2+
@@ -247,13 +290,13 @@ $$
 Plug the parameters into $BF_{01}$:
 
 $$
-\begin{align*}
+\begin{aligned}
     BF_{01}
     &=\sqrt{\frac{\kappa+\lambda}{\lambda}}\exp\left(-\frac{\kappa}{2}\left((y-\mu_0)^2-\frac{\lambda}{\kappa+\lambda}(y-v)^2 \right) \right) \\
     &=\sqrt{\frac{1+\frac{1}{2}}{\frac{1}{2}}}\exp\left(-\frac{1}{2}\left((1-0)^2-\frac{\frac{1}{2}}{1+\frac{1}{2}}(1-2)^2 \right) \right) \\
     &=\sqrt{3}\exp\left(-\frac{1}{3}\right) \\
     &\approx1.241
-\end{align*}
+\end{aligned}
 $$
 
 $$
@@ -290,7 +333,7 @@ tab <- matrix(c(14, 9, 1, 5), nrow = 2, byrow = TRUE)
 formatBF(BF=minBF)
 ```
 
-We see that $BF=\frac{1}{3.4}<1$ so the BF is decreasing the prior odds of $H_0$ that says the drug has no effect.
+We see that $BF=\frac{1}{3.4}<1$ so the BF is decreasing the prior odds of $H_0$ (i.e. the drug has no effect).
 
 
 ```{r}
@@ -314,3 +357,9 @@ P[H_0\mid y]=\frac{BF_{01}(y)\frac{P[H_0]}{1-P[H_0]}}{1+BF_{01}(y)\frac{P[H_0]}{
 $$
 
 The prior probability of no effect $P[H_0]$ is equal to 50%. After observing the data, the probability is updated to 22.7% (posterior probability $P[H_0\mid y]$).
+
+$~$
+
+\newpage
+
+### Bibliography
