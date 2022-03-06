@@ -132,7 +132,7 @@ sample.med <- median(mc.samples)
 
 cat(sprintf("The sample mean is %.4f
             \nThe sample standard deviation is %.4f
-            \nThe sample variance is %.4f\n
+            \nThe sample variance is %.4f
             \nThe sample median is %.4f\n\n", 
             sample.mean, sample.sd, sample.var, sample.med))
 
@@ -182,6 +182,20 @@ pnorm(175, mean = mu, sd = sigma, lower.tail = FALSE)
 # Calculate P[150<X<180] from true CDF
 pnorm(180, mean = mu, sd = sigma) - pnorm(150, mean = mu, sd = sigma)
 ```
+
+\begin{table}[!htbp]
+    \centering
+    \small
+    \caption{Comparision between true values and sample values}
+    \begin{tabular}{lcc}
+    \toprule
+           & $P[X>175]$ & $P[150<X<180]$ \\
+    \midrule
+    True   & $0.227$ & $0.533$ \\
+    Sample & $0.225$ & $0.536$ \\
+    \bottomrule
+    \end{tabular}
+\end{table}
 
 $~$
 
