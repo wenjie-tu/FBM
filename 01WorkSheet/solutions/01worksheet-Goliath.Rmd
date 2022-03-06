@@ -50,12 +50,10 @@ $$
 $$
 
 This diagnostic test seems reliable at the first glance since the sensitivity is 0.96 and the specificity is 0.97. From a Bayesian perspective, however, we see that the probability that someone is healthy given he or she is tested positive is 0.94. In other words, if someone is tested positive, he or she is actually healthy with a probability of 0.94. This diagnostic test in this sense is not reliable at all. The prevalence of this disease in the population is 0.002, which indicates a rare disease. The PPV (positive predictive value) is an important parameter for the evaluation of diagnostic tests. It is defined as being diseased when having a positive test result. In this case it is calculated by:
-
 $$
 PPV =  {P[D^{+}\mid T^{+}]} = 1-{P[D^{-}\mid T^{+}]} = 1-0.94 = 0.06
 $$
 The low PPV indicates that the ratio of patients truly diagnosed as positive to all those who had positive test result is low, seen in the alternative expression @Altman1994:
-
 $$
 PPV =  \frac{TP}{TP + FP}= 0.06
 $$
@@ -91,6 +89,7 @@ sigma <- 20
 # Generate a Monte Carlo sample of size 1000
 mc.samples <- rnorm(1000, mean = mu, sd = sigma)
 ```
+
 
 Given that the random variable $X$ follows a normal distribution with $\mu=160$ and $\sigma=20$, we can know that:
 
@@ -190,6 +189,29 @@ $~$
 
 #### 7(a)
 
+
+Since the normal prior is conjugate to the normal likelihood with **known variance**, we can avoid integration and use the following formula to compute the marginal distribution:
+
+From **Exercise 4** we derived:
+$$
+P[A\mid B,I]=\frac{P[B\mid A,I]\cdot P[A\mid I]}{P[B\mid I]}
+$$
+
+Apply the Bayes theorem to our context:
+$$
+f(y\mid \mu,H_1)=\frac{f(\mu\mid y,H_1)f(y\mid H_1)}{f(\mu\mid H_1)}
+$$
+
+Rearrange the above equation:
+$$
+f(y\mid H_1)=\frac{f(y\mid \mu,H_1)f(\mu\mid H_1)}{f(\mu\mid y,H_1)}
+$$
+
+We leave out the additional conditioning on $H_1$ for readability:
+$$
+f(y\mid H_1)= \frac{f(y\mid\mu) f(\mu)}{f(\mu\mid y)}
+$$
+
 We know that:
 $$
 \begin{aligned}
@@ -211,7 +233,7 @@ $$
 The posterior density of $\mu$:
 $$
 \begin{aligned}
-    f(\mu\mid x) 
+    f(\mu\mid y) 
     & \propto f(y\mid\mu) \cdot f(\mu) \\
     & \propto \exp\left(-\frac{\kappa}{2}(y-\mu)^2-\frac{\lambda}{2}(\mu-v)^2 \right) \\
     & \propto \exp\left(-\frac{\kappa+\lambda}{2}\left(\mu-\frac{y\kappa+v\lambda}{\kappa+\lambda}\right)^2 \right)
@@ -220,30 +242,8 @@ $$
 
 Therefore:
 $$
-\mu\mid x\sim N\left(\frac{y\kappa+v\lambda}{\kappa+\lambda}, \frac{1}{\kappa+\lambda} \right)
+\mu\mid y\sim N\left(\frac{y\kappa+v\lambda}{\kappa+\lambda}, \frac{1}{\kappa+\lambda} \right)
 $$
-
-Since the normal prior is conjugate to the normal likelihood with **known variance**, we can avoid integration and use the following formula to compute the marginal distribution:
-
-From **Exercise 4** we derived:
-
-$$
-P[A\mid B,I]=\frac{P[B\mid A,I]\cdot P[A\mid I]}{P[B\mid I]}
-$$
-
-Apply the Bayes theorem to our context:
-
-$$
-f(y\mid \mu,H_1)=\frac{f(\mu\mid y,H_1)f(y\mid H_1)}{f(\mu\mid H_1)}
-$$
-
-Rearrange the above equation:
-
-$$
-f(y\mid H_1)=\frac{f(y\mid \mu,H_1)f(\mu\mid H_1)}{f(\mu\mid y,H_1)}
-$$
-
-We leave out the additional conditioning on $H_1$ for readability:
 
 $$
 \begin{aligned}
@@ -286,6 +286,7 @@ $$
 $$
 
 #### 7(d)
+
 
 Plug the parameters into $BF_{01}$:
 
