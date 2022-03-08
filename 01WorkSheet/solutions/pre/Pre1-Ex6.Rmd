@@ -1,0 +1,139 @@
+---
+title: "Worksheet 1 - Exercise 6"
+subtitle: "Foundations of Bayesian Methodology"
+author: "Wenjie Tu"
+date: '2022-03-10'
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+---
+
+### Exercise 6 (Monte Carlo: random sample vs the true distribution)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#setwd("F:/UZH/22Spring/FBM/R")
+Sys.setenv(lang="us_en")
+```
+
+```{r libraries, message=FALSE}
+library(coda) # trace plot
+library(pCalibrate) # calibration of p-values
+```
+
+#### 6.1 True Values
+
+```{r}
+set.seed(44566) # set seed for reproducibility
+
+# X ~ N(160, 20^2)
+mu <- 160
+sigma <- 20
+
+# Generate a Monte Carlo sample of size 1000
+mc.samples <- rnorm(1000, mean = mu, sd = sigma)
+```
+
+
+Given that the random variable $X$ follows a normal distribution with $\mu=160$ and $\sigma=20$, we can know that:
+
+* Expectation of $X$: $160$
+* Standard deviation of $X$: $20$
+* Variance of $X$: $400$
+* Median of $X$: $160$
+
+```{r}
+# Report the (0.025, 0.5, 0.975) quantiles of X
+qnorm(c(0.025, 0.5, 0.975), mean = mu, sd = sigma)
+```
+
+#### 6.2 Traceplot
+
+```{r}
+# Plot the traceplot of the MC sample for X
+plot(seq(1,1000), mc.samples, type="l", xlab="Iterations", ylab="X", main="Traceplot")
+```
+
+```{r, fig.cap="Traceplot of the MC sample for X"}
+# Alternative way of traceplot using coda package
+traceplot(mcmc(mc.samples), ylab="X")
+```
+
+#### 6.3 Histogram and True Density Curve
+
+```{r, fig.cap="Histogram of the MC sample for X"}
+hist(mc.samples, freq = FALSE, breaks = 20, xlab="X") # generate a histogram
+lines(density(mc.samples), col = "red", lwd = 2) # add empirical density
+lines(seq(100, 220), dnorm(seq(100, 220), mean = mu, sd = sigma), 
+      col = "blue", lwd = 2) # add true density
+legend(x = "topright", legend = c("empirical density", "true density"), 
+       col = c("red", "blue"), lwd = 2) # add legend
+```
+
+#### 6.4 Sample Values
+
+```{r}
+# Summary statistics of MC sample
+sample.mean <- mean(mc.samples)
+sample.sd <- sd(mc.samples)
+sample.var <- var(mc.samples)
+sample.med <- median(mc.samples)
+
+cat(sprintf("The sample mean is %.4f
+            \nThe sample standard deviation is %.4f
+            \nThe sample variance is %.4f
+            \nThe sample median is %.4f\n\n", 
+            sample.mean, sample.sd, sample.var, sample.med))
+
+# Sample quantiles
+quantile(mc.samples, probs = c(0.025, 0.5, 0.975))
+```
+
+```{r table, echo=FALSE}
+df <- data.frame(matrix(c(160.00, 20.00, 400.00, 160.00, 120.80, 160.00, 199.20, 
+                          159.61, 19.82, 392.65, 159.80, 119.65, 159.80, 197.41), 
+                        nrow=2, byrow=TRUE))
+colnames(df) <- c("Mean", "SD", "Variance", "Median", "2.5% quantile", "50% quantile", "97.5% quantile")
+rownames(df) <- c("True", "Sample")
+knitr::kable(df, "pandoc", align = "c", caption = "Descriptive statistics")
+```
+
+#### 6.5 Probabilities
+
+$$
+P[X>175] = 1 - P[X\leq175]
+$$
+
+$$
+P[150<X<180]=P[X\leq180]-P[X\leq150]
+$$
+
+```{r}
+# Compute the empirical cumulative distribution function for MC sample
+Fn <- ecdf(mc.samples)
+
+# Calculate P[X>175] from empirical CDF
+1 - Fn(175)
+
+# Calculate P[150<X<180] from empirical CDF
+Fn(180) - Fn(150)
+```
+
+```{r}
+# Calculate P[X>175] from true CDF
+pnorm(175, mean = mu, sd = sigma, lower.tail = FALSE)
+
+# Calculate P[150<X<180] from true CDF
+pnorm(180, mean = mu, sd = sigma) - pnorm(150, mean = mu, sd = sigma)
+```
+
+```{r, echo=FALSE, results='asis'}
+df1 <- data.frame(matrix(c(0.227, 0.533, 0.225, 0.536), nrow=2, byrow=TRUE))
+colnames(df1) <- c("$P[X>175]$", "$P[150<X<180]$")
+rownames(df1) <- c("True", "Sample")
+knitr::kable(df1, "pandoc", align="c", caption="Comparison between true values and sample values")
+```
+

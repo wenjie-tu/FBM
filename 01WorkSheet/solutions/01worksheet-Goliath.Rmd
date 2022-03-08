@@ -146,7 +146,7 @@ quantile(mc.samples, probs = c(0.025, 0.5, 0.975))
     \caption{Descriptive statistics}
     \begin{tabular}{lccccccc}
     \toprule
-           & Mean & Standard deviation & Variance & Median & $2.5\%$ quantile & $2.5\%$ quantile & $2.5\%$ quantile \\
+           & Mean & Standard deviation & Variance & Median & $2.5\%$ quantile & $50\%$ quantile & $97.5\%$ quantile \\
     \midrule
     True   & $160.0000$ & $20.0000$ & $400.0000$ & $160.0000$ & $120.8007$ & $160.0000$ & $199.1993$ \\
     Sample & $159.6127$ & $19.8155$ & $392.6537$ & $159.8035$ & $119.6477$ & $159.8035$ & $197.4104$ \\
@@ -328,7 +328,7 @@ $$
 \end{aligned}
 $$
 
-The prior probability of $H_0$ ($\mu=\mu_0$) is 0.5, and after observing the data $y$ such a probability is updated to 0.554 (posterior probability). The higher the $BF_{01}$ the higher is the favor for $H_0$. It is only $\approx 1.241$, which means that there is barely no evidence and gets also reflected in hardly updated posterior probability.
+The prior probability of $H_0$ ($\mu=\mu_0$) is 0.5, and after observing the data $y$ such a probability is updated to 0.554 (posterior probability). The higher the $BF_{01}$ the higher is the favor for $H_0$. It is only $\approx 1.241$, which means that there is weak evidence and gets also reflected in hardly updated posterior probability.
 
 $~$
 
