@@ -126,6 +126,8 @@ Fn(180) - Fn(150)
 # Calculate P[X>175] from true CDF
 pnorm(175, mean = mu, sd = sigma, lower.tail = FALSE)
 
+1 - pnorm(175, mean = mu, sd = sigma)
+
 # Calculate P[150<X<180] from true CDF
 pnorm(180, mean = mu, sd = sigma) - pnorm(150, mean = mu, sd = sigma)
 ```
