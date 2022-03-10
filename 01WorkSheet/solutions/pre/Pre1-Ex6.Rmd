@@ -1,7 +1,7 @@
 ---
 title: "Worksheet 1 - Exercise 6"
 subtitle: "Foundations of Bayesian Methodology"
-author: "Wenjie Tu"
+author: "Goliath"
 date: '2022-03-10'
 output: 
   html_document:
