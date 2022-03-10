@@ -1,0 +1,212 @@
+---
+title: "The Beta Distribution"
+author: "Group: Goliath"
+date: "STA421"
+output:
+  ioslides_presentation:
+    transition: faster
+    widescreen: yes
+    css: style.css
+    logo: uzh_logo.png
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, echo=FALSE,include=FALSE}
+#load libraries
+library(readxl)
+library(ggplot2)
+library(dplyr,warn.conflicts = FALSE)
+library(tidyr)
+library(kableExtra)
+library("gridExtra")
+
+
+options(dplyr.summarise.inform = FALSE)
+options("kableExtra.html.bsTable" = T)
+```
+
+
+## History of the Beta distribution:
+
+**1763:** Beta distribution as density of the probabilities of Bernoulli trials (did not go into details of the properties)  
+(Work of Bayes published after his death by Richard Price)
+
+
+**1895:** Systematic Discussion by Karl Pearson $\rightarrow$ Prior WWII Beta distribution known as Pearson Type 1 distribution (a generalization of the Beta distribution)
+
+</div>
+<font size="4">
+<div class="centered">
+![Thomas Bayes: 1701-1761](220px-Thomas_Bayes.gif){width=20%}
+</div>
+</font>
+
+## Properties of the Beta distribution:
+
+Continuous density function  defined on the interval $[0,1]$ $f(x)=\frac{1}{B(\alpha,\beta)}x^{\alpha-1}(1-x)^{\beta-1}$  
+with the two shape parameters $\alpha,\beta>0$
+
+Normalization assured by Beta-function: $B(\alpha,\beta)=\dfrac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}=\dfrac{(\alpha-1)!(\beta-1)!}{(\alpha+\beta-1)!}$
+
+Expectation value: $E(X)=\dfrac{\alpha}{\alpha+\beta}$
+
+Variance: $Var(X)=\dfrac{\alpha\beta}{(\alpha+\beta+1)(\alpha+\beta)^2}$
+
+
+## Idea of the parameters:
+
+In probability context and without the normalization constant:  
+$$
+f(p)\propto p^{\alpha-1}(1-p)^{\beta-1}
+$$  
+Remember Binomial: $f(k;p,n)=\binom{n}{k}p^{k}(1-p)^{n-k}$ with
+
+* $k=\#Successes$ 
+
+* $n=\#trials$
+
+Thus can be seen as:
+
+* $\alpha-1=\#Successes$ 
+
+* $\beta-1=\#Failures$
+
+
+
+## Properties of the Beta distribution 1:
+
+* The higher $\beta$ ($\#Failures$) the more shifted towards lower probabilities
+
+* The higher $\alpha$ ($\#Successes$) the more shifted towards higher probabilities
+
+
+
+```{r, echo = FALSE, fig.align='center', out.height="40%"}
+x_grid <- seq(from = -0.0, to = 1.0, length.out = 100)
+p <- 2
+alpha <- c(seq(from = 0.0, to = 5, length.out = 20),p)
+beta <- c(seq(from = 0.0, to = 5, length.out = 20),p)
+par_grid <- expand.grid("alpha"=alpha,"beta"=beta)
+y <- data.frame(t(apply(X = par_grid, MARGIN = 1,FUN = function(x){dbeta(x_grid,x[1],x[2])})))
+df <- cbind(par_grid,y)
+colnames(df)[3:ncol(df)] <- x_grid
+df_long <- tidyr::gather(df,x,density,-c(alpha,beta) )
+df_long$x <- as.numeric(df_long$x)
+df_long$a_below1 <- ifelse(df_long$alpha<1,"alpha<1","alpha>=1")
+df_long$b_below1 <- ifelse(df_long$beta<1,"beta<1","beta>=1")
+
+# Plots:
+t1 <- bquote(alpha==.(p))
+p1 <- ggplot(data = df_long[df_long$alpha==p,], aes(x=x, y = density,group = beta,col = beta))+
+  geom_line()+
+  geom_vline(aes(xintercept = 0.5))+
+  geom_line(data = df_long[df_long$beta==p & df_long$alpha==p,], aes(x=x, y = density),col = "red")+
+  ggtitle(t1)+xlab("p")
+
+t2 <- bquote(beta==.(p))
+p2<-ggplot(data = df_long[df_long$beta==p,], aes(x=x, y = density,group = alpha,col = alpha))+
+  geom_line()+
+  geom_vline(aes(xintercept = 0.5))+
+  ggtitle(t2)+xlab("p")+
+  geom_line(data = df_long[df_long$beta==p & df_long$alpha==p,], aes(x=x, y = density),col = "red")
+
+equal <- ggplot(data = df_long[df_long$alpha==df_long$beta,], aes(x=x, y = density,group = beta,col = beta))+
+  geom_line()+
+  geom_vline(aes(xintercept = 0.5))+
+  ggtitle(expression(beta == alpha))+xlab("p")+
+  labs(color='')
+
+t3 <- bquote(alpha==.(p))
+p3<-ggplot(data = df_long[df_long$alpha==p,], aes(x=x, y = density,group = beta,col = beta))+
+  geom_line()+
+  geom_vline(aes(xintercept = 0.5))+
+  geom_line(data = df_long[df_long$beta==p & df_long$alpha==p,], aes(x=x, y = density),col = "red")+
+  ggtitle(t1)+xlab("p")+
+  facet_grid(~b_below1)
+
+t4 <- bquote(beta==.(p))
+p4<-ggplot(data = df_long[df_long$beta==p,], aes(x=x, y = density,group = alpha,col = alpha))+
+  geom_line()+
+  geom_vline(aes(xintercept = 0.5))+
+  ggtitle(t2)+xlab("p")+
+  geom_line(data = df_long[df_long$beta==p & df_long$alpha==p,], aes(x=x, y = density),col = "red")+
+    facet_grid(~a_below1)
+```
+
+
+```{r, echo = FALSE, fig.align='center', out.height="40%"}
+grid.arrange(p1,p2,nrow = 1)
+```
+
+## Properties of the Beta distribution 2:
+
+* If $\alpha=\beta\rightarrow$ peak at $p=0.5$ (equal success or failure)
+
+
+```{r, echo = FALSE,out.width = "70%", fig.align='center'}
+equal
+```
+
+## Properties of the Beta distribution 3:
+<font size="4">
+Expectation value: $E(X)=\dfrac{\alpha}{\alpha+\beta}=\dfrac{\lambda\alpha}{\lambda(\alpha+\beta)}=\dfrac{\lambda\alpha}{\lambda\alpha+\lambda\beta}$
+
+Variance: $Var(X)=\dfrac{\lambda\alpha\lambda\beta}{(\lambda\alpha+\lambda\beta+1)(\lambda\alpha+\lambda\beta)^2}=\dfrac{\alpha\beta}{(\lambda\alpha+\lambda\beta+1)(\alpha+\beta)^2}$
+</font>
+
+
+```{r,echo = FALSE,out.width = "60%", fig.align='center'}
+variance <- function(alpha,beta){(alpha*beta)/((alpha+beta+1)*(alpha+beta)^2)}
+lambda <- c(seq(from = 0.1, to = 50, length.out = 40))
+
+alpha <- lambda * 1
+beta <- lambda * 2
+par_grid <- cbind("alpha"=alpha,"beta"=beta,"lambda" = lambda)
+y <- data.frame(t(apply(X = par_grid, MARGIN = 1,FUN = function(x){dbeta(x_grid,x[1],x[2])})))
+var_beta <- data.frame("Variance" = apply(X = par_grid, MARGIN = 1,FUN = function(x){variance(x[1],x[2])}))
+var_beta$lambda <-lambda
+df <- cbind(par_grid,y)
+colnames(df)[4:ncol(df)] <- x_grid
+df_long <- tidyr::gather(df,x,density,-c(alpha,beta,lambda) )
+df_long$x <- as.numeric(df_long$x)
+
+pvari1<-ggplot(data = df_long, aes(x=x, y = density,group = lambda,col = lambda))+
+  geom_line()+
+  geom_vline(aes(xintercept = 1/3))+
+  ggtitle(expression(alpha ==1~beta==2))+
+  xlab("p")
+
+pvari2<-ggplot(data = var_beta, aes(x=lambda, y = Variance))+
+  geom_line()+
+  xlab(expression(lambda))
+
+
+grid.arrange(pvari1,pvari2,nrow = 1)
+```
+
+## Properties of the Beta distribution 4:
+
+```{r,echo = FALSE,out.width = "80%", fig.align='center'}
+grid.arrange(p3,p4,nrow = 2)
+```
+
+## &nbsp;
+<br> <br>
+<br> <br>
+<div class="centered">
+<font size="10">
+<b>Overall: Is a flexible continuous density function to model probabilities!</b>
+</font>
+
+</div>
+
+## Reference:
+
+<ul>
+  <li>https://en.wikipedia.org/wiki/Beta_distribution#Mean_and_sample_size </li>
+  <li>http://varianceexplained.org/statistics/beta_distribution_and_baseball/</li>
+</ul>

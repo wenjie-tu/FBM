@@ -1,0 +1,89 @@
+/* this is a Cascading Style Sheet logo: https://en.wikipedia.org/wiki/CSS  */
+
+
+slides > slide {
+  font-size: 18pt;  
+  color: black
+}
+
+
+/* slide title properties */ 
+slides > slide hgroup h2 {
+  font-size: 36pt;
+  color: blue
+}
+
+
+/* display style code block  properties  */
+slides > slide pre {
+  font-size: 24pt;
+  color: black
+  line-height: 110%;
+}
+
+/* inline code block properties  */
+slides > slide code {
+  font-size: 100%;
+  color: cyan;
+}
+
+/* title slide properties */
+slides > slide.title-slide hgroup h1 {
+  font-size: 48pt;
+  color: blue;
+}
+
+slides > slide.title-slide hgroup p {
+  font-size: 32pt;
+  color: gray;
+}
+
+
+
+/* This CSS file configure the uzh logo to appropriate sizes */
+
+/* the file uzh_logo.png has size 1039x423 */ 
+
+.gdbar img {
+  width: 368px !important;
+  height: 150px !important;
+  margin: 10px 10px; !important;
+}
+/* `!important` will override all previous styling rules for that specific property on that element */
+
+.gdbar {
+  width: 388px !important;
+  height: 170px !important;
+}
+
+aside.gdbar {
+  left: initial;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+slides > slide:not(.nobackground):before {
+  width: 123px;
+  height: 50px;
+  background-size: 123px 50px;
+}
+
+
+
+slides > slide {
+  background: white;
+}
+
+
+
+
+slides > slide {
+#  background:  rgba(117, 190, 218, 1);  /* last number gives opacity  */
+#  background: linear-gradient(red, yellow);
+   /* Syntax:  background-image: linear-gradient(direction, color-stop1, color-stop2, ...); */
+}
+
+
+
