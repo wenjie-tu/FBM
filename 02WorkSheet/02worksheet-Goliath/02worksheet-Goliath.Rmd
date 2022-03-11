@@ -1,0 +1,424 @@
+---
+title: "Worksheet 2"
+author: 'Group: Goliath'
+date: "Spring Semester 2022"
+output: pdf_document
+# bibliography: biblio.bib
+nocite: '@*'
+subtitle: Foundations of Bayesian Methodology
+papersize: a4
+fontsize: 10pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Exercise 3 (Conjugate Bayes: analytical derivation)
+
+$$
+\begin{aligned}
+y_1,\cdots,y_n\mid m  & \overset{i.i.d}{\sim} \mathcal{N}(m,\kappa^{-1}) \\
+m & \: \sim \:\mathcal{N}(\mu,\lambda^{-1})
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+f(y_1,\cdots,y_n\mid m)
+&= \prod_{i=1}^{n} f(y_i\mid m) \\
+&= \prod_{i=1}^{n} \left(\sqrt{\frac{\kappa}{2\pi}}\exp\left(-\frac{\kappa}{2}(y_i-m)^2 \right) \right) \\
+&= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\exp\left(-\frac{\kappa}{2}\sum_{i=1}^{n}(y_i-m)^2 \right)
+\end{aligned}
+$$
+
+$$
+f(m)=\sqrt{\frac{\lambda}{2\pi}}\exp\left(-\frac{\lambda}{2}(m-\mu)^2 \right)
+$$
+
+$$
+\begin{aligned}
+&\quad\quad f(y_1,\cdots,y_n\mid m)f(m) \\
+&= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\exp\left(-\frac{\kappa}{2}\sum_{i=1}^{n}(y_i-m)^2 \right)
+\cdot \sqrt{\frac{\lambda}{2\pi}}\exp\left(-\frac{\lambda}{2}(m-\mu)^2 \right) \\
+&= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\left(\frac{\lambda}{2\pi}\right)^{\frac{1}{2}}
+\exp\left(-\frac{\kappa}{2}\sum_{i=1}^{n}(y_i-m)^2-\frac{\lambda}{2}(m-\mu)^2 \right) \\
+&= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\left(\frac{\lambda}{2\pi}\right)^{\frac{1}{2}}
+\exp\left(-\frac{\kappa}{2}\sum_{i=1}^{n}(y_i^2-2y_im+m^2)-\frac{\lambda}{2}(m^2-2m\mu+\mu^2) \right) \\
+&= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\left(\frac{\lambda}{2\pi}\right)^{\frac{1}{2}}
+\exp\left(-\frac{\kappa}{2}\left(\sum_{i=1}^{n}y_i^2-2n\bar{y}m+n m^2\right)-\frac{\lambda}{2}(m^2-2m\mu+\mu^2) \right) \\
+&= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\left(\frac{\lambda}{2\pi}\right)^{\frac{1}{2}}
+\exp\left(-\frac{1}{2}\left((n\kappa+\lambda)m^2-2m(\kappa n\bar{y}+\lambda\mu)+\kappa\sum_{i=1}^{n}y_i^2+\lambda\mu^2 \right) \right) \\
+&= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\left(\frac{\lambda}{2\pi}\right)^{\frac{1}{2}}
+\exp\left(-\frac{n\kappa+\lambda}{2}\left(m^2-2m\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}+\frac{\kappa\sum_{i=1}^{n}y_i^2+\lambda\mu^2}{n\kappa+\lambda} \right) \right) \\
+&= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\left(\frac{\lambda}{2\pi}\right)^{\frac{1}{2}}
+\exp\left(-\frac{n\kappa+\lambda}{2}\left(\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2-\left(\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}\right)^2+\frac{\kappa\sum_{i=1}^{n}y_i^2+\lambda\mu^2}{n\kappa+\lambda} \right) \right) \\
+&= \underbrace{
+\left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\left(\frac{\lambda}{2\pi}\right)^{\frac{1}{2}}
+\exp\left(\frac{\kappa\sum_{i=1}^{n}y_i^2+\lambda\mu^2}{n\kappa+\lambda}-\left(\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}\right)^2\right)
+}_\text{constant}
+\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right) \\
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+f(m\mid y_1,\cdots, y_n)
+&= \frac{f(y_1,\cdots,y_n\mid m)f(m)}{f(y_1,\cdots,y_n)} \\
+&= \frac{f(y_1,\cdots,y_n\mid m)f(m)}{\int_{-\infty}^{\infty}f(y_1,\cdots,y_n\mid m)f(m)\textrm{d}m} \\
+&= \frac{\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)}
+{\int_{-\infty}^{\infty}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)}  \\
+&= \sqrt{\frac{n\kappa+\lambda}{2\pi}}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right) 
+\end{aligned}
+$$
+
+$$
+m\mid y_1,\cdots,y_n\sim \mathcal{N}
+\left(\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}, \frac{1}{n\kappa+\lambda}\right)
+$$
+
+Note:
+
+$$
+\int_{-\infty}^{\infty}e^{-a(x+b)^2}\textrm{d}x=\sqrt{\frac{\pi}{\alpha}}
+$$
+
+Source: [Gaussian Integral](https://en.wikipedia.org/wiki/Gaussian_integral)
+
+### Exercise 4 (Conjugate Bayesian analysis in practice)
+
+$$
+\begin{aligned}
+y_1,\cdots,y_n\mid m  & \overset{i.i.d}{\sim} \mathcal{N}(m,\kappa^{-1}) \\
+m & \: \sim \:\mathcal{N}(\mu,\lambda^{-1}) 
+\end{aligned}
+$$
+
+$$
+\kappa=\frac{1}{900},\quad \mu=161, \quad \lambda=\frac{1}{70}
+$$
+
+#### 4(a)
+
+```{r}
+height <- c(166, 168, 168, 177, 160, 170, 172, 159, 175, 164, 175, 167, 164)
+table(height)
+```
+
+
+```{r, out.width="50%", fig.align='center', fig.cap="Histogram of the height measurements\\label{fig:hist}"}
+hist(height, breaks=length(height), freq=FALSE)
+lines(density(height), col="red")
+```
+
+```{r}
+## Sample size
+sample.n <- length(height); sample.n
+
+## Sample meam
+sample.mean <- mean(height); sample.mean
+
+## Sample standard deviation
+sample.sd <- sd(height); sample.sd
+
+## Sample standard error
+sample.se <- sample.sd / sqrt(sample.n); sample.se
+```
+
+```{r}
+## Significance level
+alpha <- 0.05
+
+## Degrees of freedom
+df <- sample.n - 1
+
+## t-score
+t.score <- qt(p=alpha/2, df=df, lower.tail=FALSE); t.score
+```
+
+```{r}
+## Contract the 95% confidence interval
+lower.bound <- sample.mean - t.score * sample.se
+upper.bound <- sample.mean + t.score * sample.se
+print(c(lower.bound, upper.bound))
+```
+
+**Interpretation**: there is a probability of 95% that the true mean will fall into the interval $(164.6722, 171.4816)$.
+
+#### 4(b)
+
+$$
+P[m>200]=1-P[m\leq200]
+$$
+
+```{r}
+## 2.5%, 50%(i.e. median), 97.5% quantiles of N(161,70)
+qnorm(c(0.025, 0.5, 0.975), mean=161, sd=sqrt(70))
+
+## P[m>200]
+pnorm(200, mean=161, sd=sqrt(70), lower.tail=FALSE)
+```
+
+
+\begin{itemize}
+  \item Plot: see Figure \ref{fig:prior-post}
+  \item Summary statistics: see Table \ref{tab:summary}
+\end{itemize}
+
+#### 4(c)
+
+$$
+\begin{aligned}
+y_1,\cdots,y_n\mid m  & \overset{i.i.d}{\sim} \mathcal{N}(m,\kappa^{-1}) \\
+m & \: \sim \:\mathcal{N}(\mu,\lambda^{-1}) \\
+m\mid y_1,\cdots,y_n & \:\sim\: \mathcal{N}
+\left(\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}, (n\kappa+\lambda)^{-1} \right)
+\end{aligned}
+$$
+
+```{r}
+## Posterior mean
+((1/900)*2185+(1/70)*161 ) / (13*(1/900)+(1/70) )
+
+## Posterior variance
+(13*(1/900)+(1/70))^(-1)
+```
+
+$$
+\begin{aligned}
+y_1,\cdots,y_n &\sim \mathcal{N}(m, 900) \\
+m &\sim \mathcal{N}(161,70) \\
+m\mid y_1,\cdots,y_n &\sim \mathcal{N}(164.558, 34.80663)
+\end{aligned}
+$$
+
+```{r, out.width="50%", fig.align='center', fig.cap="Prior vs. Posterior\\label{fig:prior-post}"}
+m <- seq(101, 221)
+plot(m, dnorm(m, mean=161, sd=sqrt(70)), type="l", ylab="density", col="red", 
+     ylim=c(0,0.08), main="Prior vs Posterior")
+lines(m, dnorm(m, mean=164.558, sd=sqrt(34.80663)), col="blue")
+legend("topright", legend=c("prior: N(161,70)", "posterior: N(164.56, 34.81)"), 
+       lty=1, col=c("red", "blue"), cex=.8)
+```
+
+```{r}
+qnorm(c(0.025, 0.5, 0.975), mean=164.558, sd=sqrt(34.80663))
+```
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Summary statistics of the prior and posterior distributions}
+    \begin{tabular}{lcccc}
+    \hline
+                           & Mean              & SD         & Median   & Equi-tailed $95\%$ CI/CrI \\
+    \hline
+    $m$                    & $161.000$         & $8.3666$   & $161.000$    & $(144.6018,177.3982)$ \\
+    $m\mid y_i,\cdots,y_n$ & $164.558$         & $5.8997$   & $164.558$    & $(152.9948,176.1212)$ \\
+    \hline
+    \end{tabular}
+    \label{tab:summary}
+\end{table}
+
+**Interpretation:** there is a posterior probability of 95% that the true mean falls into the interval between 152.9948 and 176.1212, given a $\mathcal{N}(m, 900)$ prior is assumed.
+
+#### 4(d)
+
+```{r}
+## P[m>200|y1,...,yn]
+pnorm(200, mean=164.558, sd=sqrt(34.80663), lower.tail=FALSE)
+```
+
+#### 4(e)
+
+$$
+\begin{aligned}
+\textrm{Prior} &\to \textrm{Posterior} \\
+\mathcal{N}(161,70) &\to \mathcal{N}(164.558, 34.80663) \\
+P[m>200] &\to P[m>200\mid y_1,\cdots,y_n] \\
+1.570393\times 10^{-6} &\to 9.425552\times 10^{-10}
+\end{aligned}
+$$
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Belief updating: Comparision between prior and posterior}
+    \begin{tabular}{lcc}
+    \hline
+                                & Prior                    & Posterior                        \\
+    \hline
+    Mean                        & $161$                    & $164.558$                        \\
+    Variance                    & $70$                     & $34.80663$                       \\
+    $\mathcal{N}(\mu,\sigma^2)$ & $\mathcal{N}(161,70)$    & $\mathcal{N}(164.558, 34.80663)$ \\
+    $P[m>200]$                  & $1.570393\times 10^{-6}$ & $9.425552\times 10^{-10}$        \\
+    \hline
+    \end{tabular}
+    \label{tab:prior-posterior}
+\end{table}
+
+### Exercise 5 (Bayesian learning)
+
+Prior distribution:
+
+$$
+p\sim \textrm{Beta}(\alpha,\beta)
+$$
+
+Posterior distribution:
+
+$$
+p\mid y_1,\cdots,y_n \sim \textrm{Beta}(\alpha+n\bar{y},\beta+n-n\bar{y})
+$$
+
+#### 5(a)
+
+$\alpha=\beta=0.5,\quad \textrm{Beta}(0.5,0.5)$
+
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Response rate for each stage under $B(0.5,0.5)$ prior}
+    \begin{tabular}{lcccc}
+    \hline
+            & $n$    & Responders       & Prior                      & Posterior                        \\
+    Stage   &        & $x\:(\%)$        & $\textrm{B}(\alpha,\beta)$ & $\textrm{B}(\alpha+x,\beta+n-x)$ \\
+    \hline
+    Interim & $12$   & $3\:(25\%)$      & $\textrm{B}(0.5,0.5)$      & $\textrm{B}(3.5,9.5)$            \\
+            &        &                  &                            &                                  \\
+    Final   & $64$   & $14\:(21.875\%)$ & $\textrm{B}(0.5,0.5)$      & $\textrm{B}(14.5,50.5)$          \\
+    \hline
+    \end{tabular}
+    \label{tab:tab1}
+\end{table}
+
+
+```{r, figures-side, fig.show="hold", out.width="50%"}
+p <- seq(1e-3,1, length=200)
+
+plot(p, dbeta(p, 0.5, 0.5), type="l", ylab="density", col="red", 
+     ylim=c(0, 10), main="Intermediate study")
+lines(p, dbeta(p, 3.5, 9.5), ylab="density", col="blue")
+
+legend("topright", legend=c("prior: B(0.5,0.5)", "posterior: B(3.5,9.5)"), 
+       col=c("red", "blue"), lty=1, cex=.8)
+
+plot(p, dbeta(p, 0.5, 0.5), type="l", ylab="density", col="red", 
+     ylim=c(0, 10), main="Final study")
+lines(p, dbeta(p, 14.5, 50.5), ylab="density", col="blue")
+
+legend("topright", legend=c("prior: B(0.5,0.5)", "posterior: B(14.5,50.5)"), 
+       col=c("red", "blue"), lty=1, cex=.8)
+```
+
+$$
+P[\textrm{response rate}>0.4]=P[p>0.4]=1-P[p\leq 0.4]
+$$
+
+```{r}
+# Intermediate study
+pbeta(0.4, 3.5, 9.5, lower.tail=FALSE)
+
+# Final study
+pbeta(0.4, 14.5, 50.5, lower.tail=FALSE)
+```
+
+```{r}
+# Intermediate study
+## 2.5%, 50%, 97.5% quantiles of Beta(3.5, 9.5)
+qbeta(c(0.025, 0.5, 0.975), 3.5, 9.5)
+
+# Final study
+## 2.5%, 50%, 97.5% quantiles of Beta(14.5, 50.5)
+qbeta(c(0.025, 0.5, 0.975), 14.5, 50.5)
+```
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Summary statistics of posterior distribution ($B(0.5,0.5)$ prior)}
+    \begin{tabular}{llccc}
+    \hline
+                 &                   & Mean       & Median   & $95\%$ CrI          \\
+    Stage        & $B(\alpha,\beta)$ &            &          &                     \\
+    \hline
+    Interim      & $B(3.5,9.5)$      & $0.2692$   & $0.2571$ & $(0.0759, 0.5292)$  \\
+                 &                   &            &          &                     \\
+    Final        & $B(22,74)$        & $0.2292$   & $0.2202$ & $(0.1313, 0.3310)$  \\
+    \hline
+    \end{tabular}
+    \label{tab:tab4}
+\end{table}
+
+#### 5(b)
+
+$\alpha=8,\beta=24,\quad \textrm{Beta}(8,24)$
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Response rate for each stage under $B(8,24)$ prior}
+    \begin{tabular}{lcccc}
+    \hline
+            & $n$    & Responders       & Prior                      & Posterior                        \\
+    Stage   &        & $x\:(\%)$        & $\textrm{B}(\alpha,\beta)$ & $\textrm{B}(\alpha+x,\beta+n-x)$ \\
+    \hline
+    Interim & $12$   & $3\:(25\%)$      & $\textrm{B}(8,24)$         & $\textrm{B}(11, 33)$             \\
+            &        &                  &                            &                                  \\
+    Final   & $64$   & $14\:(21.875\%)$ & $\textrm{B}(8,24)$         & $\textrm{B}(22,74)$              \\
+    \hline
+    \end{tabular}
+    \label{tab:tab1}
+\end{table}
+
+```{r, fig.show="hold", out.width="50%"}
+p <- seq(1e-3,1, length=200)
+
+plot(p, dbeta(p, 8, 24), type="l", ylab="density", col="red", 
+     ylim=c(0, 10), main="Intermediate study")
+lines(p, dbeta(p, 11, 33), ylab="density", col="blue")
+
+legend("topright", legend=c("prior: B(8,24)", "posterior: B(11,33)"), 
+       col=c("red", "blue"), lty=1, cex=.8)
+
+plot(p, dbeta(p, 8, 24), type="l", ylab="density", col="red", 
+     ylim=c(0, 10), main="Final study")
+lines(p, dbeta(p, 22, 74), ylab="density", col="blue")
+
+legend("topright", legend=c("prior: B(8,24)", "posterior: B(22,74)"), 
+       col=c("red", "blue"), lty=1, cex=.8)
+```
+
+$$
+P[\textrm{response rate}>0.4]=P[p>0.4]=1-P[p\leq 0.4]
+$$
+
+```{r}
+# Intermediate study
+pbeta(0.4, 11, 33, lower.tail=FALSE)
+
+# Final study
+pbeta(0.4, 22, 74, lower.tail=FALSE)
+```
+
+```{r}
+# Intermediate study
+## 2.5%, 50%, 97.5% quantiles of Beta(11, 33)
+qbeta(c(0.025, 0.5, 0.975), 11, 33)
+
+# Final study
+## 2.5%, 50%, 97.5% quantiles of Beta(22, 74)
+qbeta(c(0.025, 0.5, 0.975), 22, 74)
+```
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Summary statistics of posterior distribution ($B(8,24)$ prior)}
+    \begin{tabular}{llccc}
+    \hline
+                 &                   & Mean       & Median   & $95\%$ CrI          \\
+    Stage        & Posterior         &            &          &                     \\
+    \hline
+    Interim      & $B(11,33)$        & $0.2500$   & $0.2461$ & $(0.1352, 0.3863)$  \\
+                 &                   &            &          &                     \\
+    Final        & $B(22,74)$        & $0.2292$   & $0.2273$ & $(0.1512, 0.3178)$  \\
+    \hline
+    \end{tabular}
+    \label{tab:tab4}
+\end{table}
