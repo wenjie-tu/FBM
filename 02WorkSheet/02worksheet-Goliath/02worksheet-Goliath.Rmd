@@ -241,7 +241,7 @@ $$
 
 \begin{table}[!htbp]
     \centering
-    \caption{Belief updating: Comparision between prior and posterior}
+    \caption{Comparision between prior and posterior}
     \begin{tabular}{lcc}
     \hline
                                 & Prior                    & Posterior                        \\
