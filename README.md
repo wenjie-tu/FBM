@@ -3,7 +3,7 @@
 ## Course Information
 
 * [Syllabus](Info/syllabus_STA421_FBM_FS22.pdf)
-* [Chapter 1](Script/script_fbm2022_chapters_1-2.pdf)
+* [Script](Script/script_fbm2022_chapters_1-2.pdf)
 
 
 
