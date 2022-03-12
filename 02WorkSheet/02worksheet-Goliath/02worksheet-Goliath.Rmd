@@ -1,6 +1,6 @@
 ---
 title: "Worksheet 2"
-author: 'Group: Goliath'
+author: 'Goliath : Wenje Tu, Lea Bührer, ...'
 date: "Spring Semester 2022"
 output: pdf_document
 # bibliography: biblio.bib
@@ -16,13 +16,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Exercise 3 (Conjugate Bayes: analytical derivation)
 
+Assumptions: 
+
 $$
 \begin{aligned}
 y_1,\cdots,y_n\mid m  & \overset{i.i.d}{\sim} \mathcal{N}(m,\kappa^{-1}) \\
 m & \: \sim \:\mathcal{N}(\mu,\lambda^{-1})
 \end{aligned}
 $$
-
+The Likelihood is equal 
 $$
 \begin{aligned}
 f(y_1,\cdots,y_n\mid m)
@@ -31,11 +33,11 @@ f(y_1,\cdots,y_n\mid m)
 &= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\exp\left(-\frac{\kappa}{2}\sum_{i=1}^{n}(y_i-m)^2 \right)
 \end{aligned}
 $$
-
+Prior density distribution of m: 
 $$
 f(m)=\sqrt{\frac{\lambda}{2\pi}}\exp\left(-\frac{\lambda}{2}(m-\mu)^2 \right)
 $$
-
+In a next step the likelihood and prior density function of m are multiplied: 
 $$
 \begin{aligned}
 &\quad\quad f(y_1,\cdots,y_n\mid m)f(m) \\
@@ -60,7 +62,7 @@ $$
 \exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right) \\
 \end{aligned}
 $$
-
+According to the Bayes formula, which has been rewritten in terms of densities, we get: 
 $$
 \begin{aligned}
 f(m\mid y_1,\cdots, y_n)
@@ -85,7 +87,12 @@ $$
 
 Source: [Gaussian Integral](https://en.wikipedia.org/wiki/Gaussian_integral)
 
+
+
 ### Exercise 4 (Conjugate Bayesian analysis in practice)
+
+
+Assumptions: 
 
 $$
 \begin{aligned}
@@ -110,6 +117,18 @@ table(height)
 hist(height, breaks=length(height), freq=FALSE)
 lines(density(height), col="red")
 ```
+```{r, out.width="50%", fig.align='center', fig.cap="Q-Q Plot of the Measurements\\label{fig:qqhueght}"}
+
+library(car)
+qqPlot(height, main="Normal Q-Q Plot", ylab="Sample", xlab="Norm Quantiles")
+
+# or alternatively without library(car)
+qqnorm(height)
+qqline(height)
+```
+
+In the Q-Q Plot it can be seen that all sample values lie within the area where normal distribution of the data can be assumed. Due to the fact that we only have 13 observations the 95%-CI has been calculated assuming a t-distribution. 
+
 
 ```{r}
 ## Sample size
@@ -146,6 +165,18 @@ print(c(lower.bound, upper.bound))
 **Interpretation**: there is a probability of 95% that the true mean will fall into the interval $(164.6722, 171.4816)$.
 
 #### 4(b)
+
+
+```{r, out.width="50%", fig.align='center', fig.cap="Prior Distribution\\label{fig:prior}"}
+## Plot of the Prior Distribution: 
+m <- seq(101, 221)
+plot(m, dnorm(m, mean=161, sd=sqrt(70)), type="l", ylab="density", col="red", 
+     ylim=c(0,0.07), main="Prior vs Posterior", lwd=2)
+legend("topright", legend=c("prior: N(161,70)"), 
+       lty=1, col=c("red"), cex=.8)
+```
+```
+
 
 $$
 P[m>200]=1-P[m\leq200]
@@ -223,6 +254,10 @@ qnorm(c(0.025, 0.5, 0.975), mean=164.558, sd=sqrt(34.80663))
 
 #### 4(d)
 
+$$
+P[m>200| y_1, ..., y_n]
+$$
+
 ```{r}
 ## P[m>200|y1,...,yn]
 pnorm(200, mean=164.558, sd=sqrt(34.80663), lower.tail=FALSE)
@@ -254,6 +289,8 @@ $$
     \end{tabular}
     \label{tab:prior-posterior}
 \end{table}
+
+It is noticeable that the variance in particular has decreased from prior to posterior distribution. Thus the dispersion is smaller. This leads to the distribution becoming narrower and the probabilities around the mean increase. Thus, the probability of observing a value greater than 200 also decreases. 
 
 ### Exercise 5 (Bayesian learning)
 
