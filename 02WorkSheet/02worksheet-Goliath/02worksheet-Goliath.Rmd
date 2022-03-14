@@ -1,6 +1,6 @@
 ---
 title: "Worksheet 2"
-author: 'Goliath : Wenje Tu, Lea Bührer, ...'
+author: 'Goliath : Wenje Tu, Lea Bührer, Jerome Sepin, ...'
 date: "Spring Semester 2022"
 output: pdf_document
 # bibliography: biblio.bib
@@ -162,7 +162,7 @@ upper.bound <- sample.mean + t.score * sample.se
 print(c(lower.bound, upper.bound))
 ```
 
-**Interpretation**: there is a probability of 95% that the true mean will fall into the interval $(164.6722, 171.4816)$.
+**Interpretation**: Based on our data, the interval $(164.6722, 171.4816)$ gives us a range of parameters which are, based on this data, the best 95% parameters for the true unknown parameter of interest (mean). We do not know whether this Confidence Interval covers the parameter of interest but it is constructed in a way that if repeated sampling, estimation and construction of the confidence interval in 95\% of all cases the confidence interval covers the true unknown parameter of interest.
 
 #### 4(b)
 
