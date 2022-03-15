@@ -1,0 +1,109 @@
+---
+title: "Worksheet 2"
+author: "Goliath"
+date: "Spring Semester 2022"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+subtile: Foundations of Bayesian Methodology
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(lang="us_en")
+rm(list=ls())
+```
+
+### Group Contribution
+
+Write a short program in \texttt{R} to estimate the area of the unit circle $x^2+y^2=1$ by dropping randomly points (independent Monte Carlo sampling) on it.
+
+* Simulate a large number of points uniformly distributed in the square $[-1,1]\times[-1,1]$.
+* Check the distance of the point from the origin.
+* Calculate the ratio of the number of points with a distance from origin less than 1 to the total number of points simulated.
+* The ratio is an estimate of the ratio of the area of the unit circle to the area of the square.
+
+$$
+\frac{\textrm{area of unit circle}}{\textrm{area of square}}
+\approx\frac{\textrm{# of points within the circle}}{\textrm{# of total points}}
+$$
+
+#### Creating a Function
+
+```{r, warning=FALSE, message=FALSE}
+# Define a function
+## Parameter:
+##   trials: the number of points in MC simulation
+
+estCircleArea <- function(trials = 1000) {
+  ## Library dependencies
+  library(dplyr)
+  library(ggplot2)
+  
+  ## Generate random coordinates within the square
+  d.points <- data.frame(
+    x = runif(trials, min=-1, max=1),
+    y = runif(trials, min=-1, max=1)
+  )
+  
+  ## Adding two columns to the data frame
+  d.points <- d.points %>% mutate(
+    radius = sqrt(x^2 + y^2),                       # add radius variable
+    withinCircle = ifelse(radius <= 1, TRUE, FALSE) # add boolean variable
+  )
+  
+  ## Generate plot
+  plot <- ggplot(d.points) + 
+    geom_point(aes(x=x, y=y, color=withinCircle)) +
+    coord_fixed(ratio=1) + 
+    theme_minimal()
+  
+  ## Estimate the area
+  ratio <- mean(d.points$withinCircle == TRUE) 
+  # points within circle : total points ~ circle area : square area
+  
+  area <- ratio * 4 # the estimated area of unit circle
+  
+  # cat(sprintf("The estimated area of the unit circle is %.4f", area))
+  return(list(plot=plot, area=area))
+}
+```
+
+#### Visualization
+
+```{r, warning=FALSE, message=FALSE}
+## Set seed for reproducible results
+set.seed(2022)
+
+## Visualization
+est <- estCircleArea(trials = 5000)
+
+est$area
+est$plot
+```
+
+#### Traceplot
+
+```{r}
+## Set seed for reproducible results
+set.seed(2022)
+
+## Number of simulations
+iterations <- 500 
+
+## Initialize a vector to store estimated area for unit circle
+vec.area <- as.numeric(iterations)
+
+for (i in 1:iterations) {
+  est <- estCircleArea(trials = i*100)
+  vec.area[i] <- est$area
+}
+
+## Traceplot
+plot(1:iterations, vec.area, type="l", ylab="Area of unit circle",
+     xlab="Iterations with a step size of 100", main="Traceplot")
+abline(h=pi, lty=3, col="red", lwd=2)
+```
+
