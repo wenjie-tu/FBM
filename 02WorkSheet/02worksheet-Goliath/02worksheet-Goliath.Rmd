@@ -24,7 +24,9 @@ y_1,\cdots,y_n\mid m  & \overset{i.i.d}{\sim} \mathcal{N}(m,\kappa^{-1}) \\
 m & \: \sim \:\mathcal{N}(\mu,\lambda^{-1})
 \end{aligned}
 $$
-The Likelihood is equal 
+
+The Likelihood is equal to:
+
 $$
 \begin{aligned}
 f(y_1,\cdots,y_n\mid m)
@@ -33,11 +35,15 @@ f(y_1,\cdots,y_n\mid m)
 &= \left(\frac{\kappa}{2\pi} \right)^{\frac{n}{2}}\exp\left(-\frac{\kappa}{2}\sum_{i=1}^{n}(y_i-m)^2 \right)
 \end{aligned}
 $$
-Prior density distribution of m: 
+
+Prior density distribution of $m$: 
+
 $$
 f(m)=\sqrt{\frac{\lambda}{2\pi}}\exp\left(-\frac{\lambda}{2}(m-\mu)^2 \right)
 $$
+
 In a next step the likelihood and prior density function of m are multiplied: 
+
 $$
 \begin{aligned}
 &\quad\quad f(y_1,\cdots,y_n\mid m)f(m) \\
@@ -62,7 +68,9 @@ $$
 \exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right) \\
 \end{aligned}
 $$
+
 According to the Bayes formula, which has been rewritten in terms of densities, we get: 
+
 $$
 \begin{aligned}
 f(m\mid y_1,\cdots, y_n)
@@ -117,8 +125,8 @@ table(height)
 hist(height, breaks=length(height), freq=FALSE)
 lines(density(height), col="red")
 ```
-```{r, out.width="50%", fig.align='center', fig.cap="Q-Q Plot of the Measurements\\label{fig:qqhueght}"}
 
+```{r, message=FALSE, warning=FALSE, fig.show="hold", out.width="50%", fig.cap="Q-Q Plot of the Measurements\\label{fig:qqhueght}"}
 library(car)
 qqPlot(height, main="Normal Q-Q Plot", ylab="Sample", xlab="Norm Quantiles")
 
@@ -127,7 +135,7 @@ qqnorm(height)
 qqline(height)
 ```
 
-In the Q-Q Plot it can be seen that all sample values lie within the area where normal distribution of the data can be assumed. Due to the fact that we only have 13 observations the 95%-CI has been calculated assuming a t-distribution. 
+In the Figure \ref{fig:qqhueght} (i.e. Q-Q Plot), it can be seen that all sample values lie within the area where normal distribution of the data can be assumed. Due to the fact that we only have 13 observations the 95%-CI has been calculated assuming a t-distribution. 
 
 
 ```{r}
@@ -162,21 +170,18 @@ upper.bound <- sample.mean + t.score * sample.se
 print(c(lower.bound, upper.bound))
 ```
 
-**Interpretation**: Based on our data, the interval $(164.6722, 171.4816)$ gives us a range of parameters which are, based on this data, the best 95% parameters for the true unknown parameter of interest (mean). We do not know whether this Confidence Interval covers the parameter of interest but it is constructed in a way that if repeated sampling, estimation and construction of the confidence interval in 95\% of all cases the confidence interval covers the true unknown parameter of interest.
+**Interpretation**: Based on our data, the interval $(164.6722, 171.4816)$ gives us a range of parameters which are, based on this data, the best 95% parameters for the true unknown parameter of interest (mean). We do not know whether this Confidence Interval covers the parameter of interest but it is constructed in a way that if repeated sampling, estimation and construction of the confidence interval in 95% of all cases the confidence interval covers the true unknown parameter of interest.
 
 #### 4(b)
-
 
 ```{r, out.width="50%", fig.align='center', fig.cap="Prior Distribution\\label{fig:prior}"}
 ## Plot of the Prior Distribution: 
 m <- seq(101, 221)
 plot(m, dnorm(m, mean=161, sd=sqrt(70)), type="l", ylab="density", col="red", 
-     ylim=c(0,0.07), main="Prior vs Posterior", lwd=2)
-legend("topright", legend=c("prior: N(161,70)"), 
+     ylim=c(0,0.07), main="Prior distribution", lwd=2)
+legend("topright", legend=c("prior: N(161,70)"), lwd=2, 
        lty=1, col=c("red"), cex=.8)
 ```
-```
-
 
 $$
 P[m>200]=1-P[m\leq200]
@@ -226,10 +231,10 @@ $$
 ```{r, out.width="50%", fig.align='center', fig.cap="Prior vs. Posterior\\label{fig:prior-post}"}
 m <- seq(101, 221)
 plot(m, dnorm(m, mean=161, sd=sqrt(70)), type="l", ylab="density", col="red", 
-     ylim=c(0,0.08), main="Prior vs Posterior")
-lines(m, dnorm(m, mean=164.558, sd=sqrt(34.80663)), col="blue")
+     ylim=c(0,0.08), main="Prior vs Posterior", lwd=2)
+lines(m, dnorm(m, mean=164.558, sd=sqrt(34.80663)), col="blue", lwd=2)
 legend("topright", legend=c("prior: N(161,70)", "posterior: N(164.56, 34.81)"), 
-       lty=1, col=c("red", "blue"), cex=.8)
+       lty=1, col=c("red", "blue"), cex=.8, lwd=2)
 ```
 
 ```{r}
@@ -255,7 +260,7 @@ qnorm(c(0.025, 0.5, 0.975), mean=164.558, sd=sqrt(34.80663))
 #### 4(d)
 
 $$
-P[m>200| y_1, ..., y_n]
+P[m>200\mid y_1, ..., y_n]
 $$
 
 ```{r}
@@ -267,28 +272,16 @@ pnorm(200, mean=164.558, sd=sqrt(34.80663), lower.tail=FALSE)
 
 $$
 \begin{aligned}
-\textrm{Prior} &\to \textrm{Posterior} \\
-\mathcal{N}(161,70) &\to \mathcal{N}(164.558, 34.80663) \\
-P[m>200] &\to P[m>200\mid y_1,\cdots,y_n] \\
-1.570393\times 10^{-6} &\to 9.425552\times 10^{-10}
+\textrm{Prior} 
+&\to \textrm{Posterior} \\
+\mathcal{N}(161,70) 
+&\to \mathcal{N}(164.558, 34.80663) \\
+P[m>200] 
+&\to P[m>200\mid y_1,\cdots,y_n] \\
+1.570393\times 10^{-6} 
+&\to 9.425552\times 10^{-10}
 \end{aligned}
 $$
-
-\begin{table}[!htbp]
-    \centering
-    \caption{Comparision between prior and posterior}
-    \begin{tabular}{lcc}
-    \hline
-                                & Prior                    & Posterior                        \\
-    \hline
-    Mean                        & $161$                    & $164.558$                        \\
-    Variance                    & $70$                     & $34.80663$                       \\
-    $\mathcal{N}(\mu,\sigma^2)$ & $\mathcal{N}(161,70)$    & $\mathcal{N}(164.558, 34.80663)$ \\
-    $P[m>200]$                  & $1.570393\times 10^{-6}$ & $9.425552\times 10^{-10}$        \\
-    \hline
-    \end{tabular}
-    \label{tab:prior-posterior}
-\end{table}
 
 It is noticeable that the variance in particular has decreased from prior to posterior distribution. Thus the dispersion is smaller. This leads to the distribution becoming narrower and the probabilities around the mean increase. Thus, the probability of observing a value greater than 200 also decreases. 
 
@@ -310,40 +303,22 @@ $$
 
 $\alpha=\beta=0.5,\quad \textrm{Beta}(0.5,0.5)$
 
-
-\begin{table}[!htbp]
-    \centering
-    \caption{Response rate for each stage under $B(0.5,0.5)$ prior}
-    \begin{tabular}{lcccc}
-    \hline
-            & $n$    & Responders       & Prior                      & Posterior                        \\
-    Stage   &        & $x\:(\%)$        & $\textrm{B}(\alpha,\beta)$ & $\textrm{B}(\alpha+x,\beta+n-x)$ \\
-    \hline
-    Interim & $12$   & $3\:(25\%)$      & $\textrm{B}(0.5,0.5)$      & $\textrm{B}(3.5,9.5)$            \\
-            &        &                  &                            &                                  \\
-    Final   & $64$   & $14\:(21.875\%)$ & $\textrm{B}(0.5,0.5)$      & $\textrm{B}(14.5,50.5)$          \\
-    \hline
-    \end{tabular}
-    \label{tab:tab1}
-\end{table}
-
-
-```{r, figures-side, fig.show="hold", out.width="50%"}
+```{r, figures-side, fig.show="hold", out.width="50%", fig.cap="Prior B(0.5,0.5)"}
 p <- seq(1e-3,1, length=200)
 
 plot(p, dbeta(p, 0.5, 0.5), type="l", ylab="density", col="red", 
-     ylim=c(0, 10), main="Intermediate study")
-lines(p, dbeta(p, 3.5, 9.5), ylab="density", col="blue")
+     ylim=c(0, 10), main="Intermediate study", lwd=2)
+lines(p, dbeta(p, 3.5, 9.5), ylab="density", col="blue", lwd=2)
 
 legend("topright", legend=c("prior: B(0.5,0.5)", "posterior: B(3.5,9.5)"), 
-       col=c("red", "blue"), lty=1, cex=.8)
+       col=c("red", "blue"), lty=1, cex=.8, lwd=2)
 
 plot(p, dbeta(p, 0.5, 0.5), type="l", ylab="density", col="red", 
-     ylim=c(0, 10), main="Final study")
-lines(p, dbeta(p, 14.5, 50.5), ylab="density", col="blue")
+     ylim=c(0, 10), main="Final study", lwd=2)
+lines(p, dbeta(p, 14.5, 50.5), ylab="density", col="blue", lwd=2)
 
 legend("topright", legend=c("prior: B(0.5,0.5)", "posterior: B(14.5,50.5)"), 
-       col=c("red", "blue"), lty=1, cex=.8)
+       col=c("red", "blue"), lty=1, cex=.8, lwd=2)
 ```
 
 $$
@@ -368,58 +343,26 @@ qbeta(c(0.025, 0.5, 0.975), 3.5, 9.5)
 qbeta(c(0.025, 0.5, 0.975), 14.5, 50.5)
 ```
 
-\begin{table}[!htbp]
-    \centering
-    \caption{Summary statistics of posterior distribution ($B(0.5,0.5)$ prior)}
-    \begin{tabular}{llccc}
-    \hline
-                 &                   & Mean       & Median   & $95\%$ CrI          \\
-    Stage        & $B(\alpha,\beta)$ &            &          &                     \\
-    \hline
-    Interim      & $B(3.5,9.5)$      & $0.2692$   & $0.2571$ & $(0.0759, 0.5292)$  \\
-                 &                   &            &          &                     \\
-    Final        & $B(14.5,50.5)$        & $0.2292$   & $0.2202$ & $(0.1313, 0.3310)$  \\
-    \hline
-    \end{tabular}
-    \label{tab:tab4}
-\end{table}
-
 #### 5(b)
 
 $\alpha=8,\beta=24,\quad \textrm{Beta}(8,24)$
 
-\begin{table}[!htbp]
-    \centering
-    \caption{Response rate for each stage under $B(8,24)$ prior}
-    \begin{tabular}{lcccc}
-    \hline
-            & $n$    & Responders       & Prior                      & Posterior                        \\
-    Stage   &        & $x\:(\%)$        & $\textrm{B}(\alpha,\beta)$ & $\textrm{B}(\alpha+x,\beta+n-x)$ \\
-    \hline
-    Interim & $12$   & $3\:(25\%)$      & $\textrm{B}(8,24)$         & $\textrm{B}(11, 33)$             \\
-            &        &                  &                            &                                  \\
-    Final   & $64$   & $14\:(21.875\%)$ & $\textrm{B}(8,24)$         & $\textrm{B}(22,74)$              \\
-    \hline
-    \end{tabular}
-    \label{tab:tab1}
-\end{table}
-
-```{r, fig.show="hold", out.width="50%"}
+```{r, fig.show="hold", out.width="50%", fig.cap="Prior B(8,24)"}
 p <- seq(1e-3,1, length=200)
 
 plot(p, dbeta(p, 8, 24), type="l", ylab="density", col="red", 
-     ylim=c(0, 10), main="Intermediate study")
-lines(p, dbeta(p, 11, 33), ylab="density", col="blue")
+     ylim=c(0, 10), main="Intermediate study", lwd=2)
+lines(p, dbeta(p, 11, 33), ylab="density", col="blue", lwd=2)
 
 legend("topright", legend=c("prior: B(8,24)", "posterior: B(11,33)"), 
-       col=c("red", "blue"), lty=1, cex=.8)
+       col=c("red", "blue"), lty=1, cex=.8, lwd=2)
 
 plot(p, dbeta(p, 8, 24), type="l", ylab="density", col="red", 
-     ylim=c(0, 10), main="Final study")
-lines(p, dbeta(p, 22, 74), ylab="density", col="blue")
+     ylim=c(0, 10), main="Final study", lwd=2)
+lines(p, dbeta(p, 22, 74), ylab="density", col="blue", lwd=2)
 
 legend("topright", legend=c("prior: B(8,24)", "posterior: B(22,74)"), 
-       col=c("red", "blue"), lty=1, cex=.8)
+       col=c("red", "blue"), lty=1, cex=.8, lwd=2)
 ```
 
 $$
@@ -446,16 +389,41 @@ qbeta(c(0.025, 0.5, 0.975), 22, 74)
 
 \begin{table}[!htbp]
     \centering
-    \caption{Summary statistics of posterior distribution ($B(8,24)$ prior)}
-    \begin{tabular}{llccc}
+    \caption{Evidence $P(\textrm{response rate}>0.4)$ for each stage under different priors}
+    \begin{tabular}{llllll}
     \hline
-                 &                   & Mean       & Median   & $95\%$ CrI          \\
-    Stage        & Posterior         &            &          &                     \\
+    Prior             & Stage    & \#   & Responders        & Posterior               & $p$-value from Posterior        \\
+    $B(\alpha,\beta)$ &          & $n$  & $x\:(\%)$         & $B(\alpha+x,\beta+n-x)$ & $P(\textrm{response rate}>0.4)$ \\
     \hline
-    Interim      & $B(11,33)$        & $0.2500$   & $0.2461$ & $(0.1352, 0.3863)$  \\
-                 &                   &            &          &                     \\
-    Final        & $B(22,74)$        & $0.2292$   & $0.2273$ & $(0.1512, 0.3178)$  \\
+                      & Interim  & $12$ & $3\:(25\%)$       & $B(3.5,9.5)$            & $0.1437649$                     \\
+    $B(0.5,0.5)$      &          &      &                   &                         &                                 \\
+                      & Final    & $64$ & $14\:(21.875\%)$  & $B(14.5,50.5)$          & $0.001075757$                   \\
+                      &          &      &                   &                         &                                 \\
+                      & Interim  & $12$ & $3\:(25\%)$       & $B(11, 33)$             & $0.01621346$                    \\
+    $B(8,24)$         &          &      &                   &                         &                                 \\
+                      & Final    & $64$ & $14\:(21.875\%)$  & $B(22,74)$              & $0.0001727695$                  \\
     \hline
     \end{tabular}
-    \label{tab:tab4}
+    \label{tab:response}
+\end{table}
+
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Summary statistics of posterior distributions}
+    \begin{tabular}{lllccc}
+    \hline
+                 &          & Posterior         & Mean                          & Median        & Equi-tailed $95\%$ CrI \\
+    Prior        & Stage    & $B(\alpha,\beta)$ & $\frac{\alpha}{\alpha+\beta}$ & 50\% quantile &                        \\
+    \hline
+                 & Interim  & $B(3.5,9.5)$      & $0.2692$   & $0.2571$ & $(0.0759, 0.5292)$  \\
+    $B(0.5,0.5)$ &          &                   &            &          &                     \\
+                 & Final    & $B(14.5,50.5)$    & $0.2231$   & $0.2202$ & $(0.1313, 0.3310)$  \\
+                 &          &                   &            &          &                     \\
+                 & Interim  & $B(11,33)$        & $0.2500$   & $0.2461$ & $(0.1352, 0.3863)$  \\
+    $B(8,24)$    &          &                   &            &          &                     \\
+                 & Final    & $B(22,74)$        & $0.2292$   & $0.2273$ & $(0.1512, 0.3178)$  \\
+    \hline
+    \end{tabular}
+    \label{tab:post-summary}
 \end{table}
