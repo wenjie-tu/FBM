@@ -174,6 +174,8 @@ print(c(lower.bound, upper.bound))
 
 #### 4(b)
 
+We first plot the prior distribution of m:
+
 ```{r, out.width="50%", fig.align='center', fig.cap="Prior Distribution\\label{fig:prior}"}
 ## Plot of the Prior Distribution: 
 m <- seq(101, 221)
@@ -183,9 +185,12 @@ legend("topright", legend=c("prior: N(161,70)"), lwd=2,
        lty=1, col=c("red"), cex=.8)
 ```
 
+We want to predict the probability that m > 200. We therefore first compute the expectation, standard deviation, median and equi-tailed 95% interval of the prior distribution. 
+
 $$
 P[m>200]=1-P[m\leq200]
 $$
+The expected value as well as the standard deviation do not need to be calculated due to the fact that they are given. Using a normal distribution we know $\mu$ and $\sigma^2$ which are the estimates for the expected value and the variance. 
 
 ```{r}
 ## 2.5%, 50%(i.e. median), 97.5% quantiles of N(161,70)
@@ -196,9 +201,9 @@ pnorm(200, mean=161, sd=sqrt(70), lower.tail=FALSE)
 ```
 
 
+
 \begin{itemize}
-  \item Plot: see Figure \ref{fig:prior-post}
-  \item Summary statistics: see Table \ref{tab:summary}
+    \item Summary statistics: see Table \ref{tab:summary}
 \end{itemize}
 
 #### 4(c)
@@ -265,8 +270,11 @@ $$
 
 ```{r}
 ## P[m>200|y1,...,yn]
-pnorm(200, mean=164.558, sd=sqrt(34.80663), lower.tail=FALSE)
+pnorm(200, mean=164.558, sd=sqrt(34.80663), lower.tail=FALSE) 
+# or
+1-pnorm(200, mean=164.558, sd=sqrt(34.80663))
 ```
+The probability of having a value for m that's larger than 200, given the above defined posterior and prior distribution is $9.426 e-10$.
 
 #### 4(e)
 
