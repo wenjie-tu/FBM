@@ -4,7 +4,7 @@ author: 'Goliath : Wenje Tu, Lea Bührer, Jerome Sepin, ...'
 date: "Spring Semester 2022"
 output: pdf_document
 # bibliography: biblio.bib
-nocite: '@*'
+# nocite: '@*'
 subtitle: Foundations of Bayesian Methodology
 papersize: a4
 fontsize: 10pt
@@ -17,7 +17,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Exercise 3 (Conjugate Bayes: analytical derivation)
 
 Assumptions: 
-
 $$
 \begin{aligned}
 y_1,\cdots,y_n\mid m  & \overset{i.i.d}{\sim} \mathcal{N}(m,\kappa^{-1}) \\
@@ -25,8 +24,7 @@ m & \: \sim \:\mathcal{N}(\mu,\lambda^{-1})
 \end{aligned}
 $$
 
-The Likelihood is equal to:
-
+Likelihood function:
 $$
 \begin{aligned}
 f(y_1,\cdots,y_n\mid m)
@@ -37,13 +35,11 @@ f(y_1,\cdots,y_n\mid m)
 $$
 
 Prior density distribution of $m$: 
-
 $$
 f(m)=\sqrt{\frac{\lambda}{2\pi}}\exp\left(-\frac{\lambda}{2}(m-\mu)^2 \right)
 $$
 
-In a next step the likelihood and prior density function of m are multiplied: 
-
+Multiply likelihood function by prior: 
 $$
 \begin{aligned}
 &\quad\quad f(y_1,\cdots,y_n\mid m)f(m) \\
@@ -69,8 +65,7 @@ $$
 \end{aligned}
 $$
 
-According to the Bayes formula, which has been rewritten in terms of densities, we get: 
-
+Using Bayes formula, we can write posterior as a function of prior and likelihood:
 $$
 \begin{aligned}
 f(m\mid y_1,\cdots, y_n)
@@ -88,17 +83,14 @@ m\mid y_1,\cdots,y_n\sim \mathcal{N}
 $$
 
 Note:
-
 $$
 \int_{-\infty}^{\infty}e^{-a(x+b)^2}\textrm{d}x=\sqrt{\frac{\pi}{\alpha}}
 $$
-
 Source: [Gaussian Integral](https://en.wikipedia.org/wiki/Gaussian_integral)
 
-
+$~$
 
 ### Exercise 4 (Conjugate Bayesian analysis in practice)
-
 
 Assumptions: 
 
@@ -115,11 +107,12 @@ $$
 
 #### 4(a)
 
+Summary statistics:
+
 ```{r}
 height <- c(166, 168, 168, 177, 160, 170, 172, 159, 175, 164, 175, 167, 164)
-table(height)
+summary(height)
 ```
-
 
 ```{r, out.width="50%", fig.align='center', fig.cap="Histogram of the height measurements\\label{fig:hist}"}
 hist(height, breaks=length(height), freq=FALSE)
@@ -141,6 +134,9 @@ In the Figure \ref{fig:qqhueght} (i.e. Q-Q Plot), it can be seen that all sample
 ```{r}
 ## Sample size
 sample.n <- length(height); sample.n
+
+## Sample median
+sample.med <- median(height); sample.med
 
 ## Sample meam
 sample.mean <- mean(height); sample.mean
@@ -170,11 +166,26 @@ upper.bound <- sample.mean + t.score * sample.se
 print(c(lower.bound, upper.bound))
 ```
 
-**Interpretation**: Based on our data, the interval $(164.6722, 171.4816)$ gives us a range of parameters which are, based on this data, the best 95% parameters for the true unknown parameter of interest (mean). We do not know whether this Confidence Interval covers the parameter of interest but it is constructed in a way that if repeated sampling, estimation and construction of the confidence interval in 95% of all cases the confidence interval covers the true unknown parameter of interest.
+\begin{table}[!htbp]
+    \centering
+    \caption{Summary statistics of the sample distribution}
+    \begin{tabular}{lcccc}
+    \hline
+                      & Mean       & Standard deviation & Median     & $95\%$ CI              \\
+    \hline
+    $y_1,\cdots,y_n$  & $168.0769$ & $5.6341$           & $168.0000$ & $(164.6722, 171.4816)$ \\
+    \hline
+    \end{tabular}
+    \label{tab:summary}
+\end{table}
+
+**Interpretation**: For repeated random samples from a normal distribution with unknown but fixed mean, the 95% confidence interval $(164.6722, 171.4816)$ will cover the true unknown mean in 95% of all cases.
+
+<!-- Based on our data, the interval $(164.6722, 171.4816)$ gives us a range of parameters which are, based on this data, the best 95% parameters for the true unknown parameter of interest (mean). We do not know whether this Confidence Interval covers the parameter of interest but it is constructed in a way that if repeated sampling, estimation and construction of the confidence interval in 95% of all cases the confidence interval covers the true unknown parameter of interest. -->
 
 #### 4(b)
 
-We first plot the prior distribution of m:
+We first plot the prior distribution of $m$:
 
 ```{r, out.width="50%", fig.align='center', fig.cap="Prior Distribution\\label{fig:prior}"}
 ## Plot of the Prior Distribution: 
@@ -185,12 +196,15 @@ legend("topright", legend=c("prior: N(161,70)"), lwd=2,
        lty=1, col=c("red"), cex=.8)
 ```
 
-We want to predict the probability that m > 200. We therefore first compute the expectation, standard deviation, median and equi-tailed 95% interval of the prior distribution. 
+<!-- We want to predict the probability that m > 200. We therefore first compute the expectation, standard deviation, median and equi-tailed 95% interval of the prior distribution.  -->
+
+The expectation and the standard deviation can be explicitly obtained from the given information. Hence, we only need to compute the median and equi-tailed 95% interval. We use \texttt{qnorm()} function in \texttt{R} to serve this purpose. Regarding the estimation of $P[m>200]$, we simply use \texttt{pnorm()} in \texttt{R} to obtain the corresponding probability.
 
 $$
 P[m>200]=1-P[m\leq200]
 $$
-The expected value as well as the standard deviation do not need to be calculated due to the fact that they are given. Using a normal distribution we know $\mu$ and $\sigma^2$ which are the estimates for the expected value and the variance. 
+
+<!-- The expected value as well as the standard deviation do not need to be calculated due to the fact that they are given. Using a normal distribution we know $\mu$ and $\sigma^2$ which are the estimates for the expected value and the variance.  -->
 
 ```{r}
 ## 2.5%, 50%(i.e. median), 97.5% quantiles of N(161,70)
@@ -200,11 +214,7 @@ qnorm(c(0.025, 0.5, 0.975), mean=161, sd=sqrt(70))
 pnorm(200, mean=161, sd=sqrt(70), lower.tail=FALSE)
 ```
 
-
-
-\begin{itemize}
-    \item Summary statistics: see Table \ref{tab:summary}
-\end{itemize}
+Summary statistics: see Table \ref{tab:summary}
 
 #### 4(c)
 
@@ -234,6 +244,7 @@ m\mid y_1,\cdots,y_n &\sim \mathcal{N}(164.558, 34.80663)
 $$
 
 ```{r, out.width="50%", fig.align='center', fig.cap="Prior vs. Posterior\\label{fig:prior-post}"}
+## Visualization of prior and posterior
 m <- seq(101, 221)
 plot(m, dnorm(m, mean=161, sd=sqrt(70)), type="l", ylab="density", col="red", 
      ylim=c(0,0.08), main="Prior vs Posterior", lwd=2)
@@ -248,19 +259,20 @@ qnorm(c(0.025, 0.5, 0.975), mean=164.558, sd=sqrt(34.80663))
 
 \begin{table}[!htbp]
     \centering
-    \caption{Summary statistics of the prior and posterior distributions}
+    \caption{Summary statistics of the sample, prior and posterior distributions}
     \begin{tabular}{lcccc}
     \hline
-                           & Mean              & SD         & Median   & Equi-tailed $95\%$ CI/CrI \\
+                           & Mean       & Standard deviation & Median     & Equi-tailed $95\%$ CI/CrI \\
     \hline
-    $m$                    & $161.000$         & $8.3666$   & $161.000$    & $(144.6018,177.3982)$ \\
-    $m\mid y_i,\cdots,y_n$ & $164.558$         & $5.8997$   & $164.558$    & $(152.9948,176.1212)$ \\
+    $y_1,\cdots,y_n$       & $168.0769$ & $5.6341$           & $168.0000$ & $(164.6722, 171.4816)$ \\
+    $m$                    & $161.0000$ & $8.3666$           & $161.0000$  & $(144.6018,177.3982)$           \\
+    $m\mid y_i,\cdots,y_n$ & $164.5580$  & $5.8997$          & $164.5580$  & $(152.9948,176.1212)$           \\
     \hline
     \end{tabular}
     \label{tab:summary}
 \end{table}
 
-**Interpretation:** there is a posterior probability of 95% that the true mean falls into the interval between 152.9948 and 176.1212, given a $\mathcal{N}(m, 900)$ prior is assumed.
+**Interpretation:** the posterior probability of the \texttt{Height} $m$ lies between 152.9948 and 176.1212 with a probability of 95%, given a $\mathcal{N}(161,70)$ prior is assumed.
 
 #### 4(d)
 
@@ -272,9 +284,12 @@ $$
 ## P[m>200|y1,...,yn]
 pnorm(200, mean=164.558, sd=sqrt(34.80663), lower.tail=FALSE) 
 # or
-1-pnorm(200, mean=164.558, sd=sqrt(34.80663))
+1 - pnorm(200, mean=164.558, sd=sqrt(34.80663))
 ```
-The probability of having a value for m that's larger than 200, given the above defined posterior and prior distribution is $9.426 e-10$.
+
+The posterior probability that an adult Swiss female has a height larger than 200 is $9.426\times10^{-10}$.
+
+<!-- The probability of having a value for m that's larger than 200, given the above defined posterior and prior distribution is $9.426 e-10$. -->
 
 #### 4(e)
 
@@ -291,21 +306,73 @@ P[m>200]
 \end{aligned}
 $$
 
-It is noticeable that the variance in particular has decreased from prior to posterior distribution. Thus the dispersion is smaller. This leads to the distribution becoming narrower and the probabilities around the mean increase. Thus, the probability of observing a value greater than 200 also decreases. 
+From prior to posterior, we see an increase in the mean of $m$ from 161 to 164.558 and a decrease in the variance of $m$ from 70 to 34.80663. Figure \ref{fig:prior-post-likelihood} displays a huge overlap between the prior distribution and the likelihood density, it is not surprising that the posterior mean lies somewhere between the prior mean and the sample mean and that the posterior variance lies somewhere between the prior variance and sample variance. Since both prior and likelihood mostly agree, we see a more concentrated posterior distribution with light tails. Thus, the probability of observing a Swiss female with a height greater than 200 also decreases. 
+
+<!-- It is noticeable that the variance in particular has decreased from prior to posterior distribution. Thus the dispersion is smaller. This leads to the distribution becoming narrower and the probabilities around the mean increase. Thus, the probability of observing a value greater than 200 also decreases.  -->
+
+```{r, out.width="50%", fig.align='center', fig.cap="Prior vs. Likelihood vs. Posterior \\label{fig:prior-post-likelihood}"}
+m <- seq(101, 221)
+plot(m, dnorm(m, mean=161, sd=sqrt(70)), type="l", ylab="density", col="red", 
+     ylim=c(0,0.08), main="Prior vs Likelihood vs Posterior", lwd=2)
+lines(m, dnorm(m, mean=164.558, sd=sqrt(34.80663)), col="blue", lwd=2)
+lines(density(height), col="orange", lwd=2)
+legend("topright", lty=1, col=c("red", "blue", "orange"), cex=.8, lwd=2, 
+       legend=c("prior: N(161,70)", "posterior: N(164.56, 34.81)", "likelihood density"))
+```
+
+$~$
 
 ### Exercise 5 (Bayesian learning)
 
 Prior distribution:
-
 $$
 p\sim \textrm{Beta}(\alpha,\beta)
 $$
 
 Posterior distribution:
-
 $$
 p\mid y_1,\cdots,y_n \sim \textrm{Beta}(\alpha+n\bar{y},\beta+n-n\bar{y})
 $$
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Evidence $P(\textrm{response rate}>0.4)$ for each stage under different priors}
+    \begin{tabular}{llllll}
+    \hline
+    Prior             & Stage    & \#   & Responders        & Posterior               & Evidence                        \\
+    $B(\alpha,\beta)$ &          & $n$  & $x\:(\%)$         & $B(\alpha+x,\beta+n-x)$ & $P(\textrm{response rate}>0.4)$ \\
+    \hline
+                      & No data  & $0$  & $0$               & $B(0.5,0.5)$            & $0.5640942$                     \\
+    $B(0.5,0.5)$      & Interim  & $12$ & $3\:(25\%)$       & $B(3.5,9.5)$            & $0.1437649$                     \\
+                      & Final    & $64$ & $14\:(21.875\%)$  & $B(14.5,50.5)$          & $0.001075757$                   \\
+                      &          &      &                   &                         &                                 \\
+                      & No data  & $0$  & $0$               & $B(8,24)$               & $0.03298768$                    \\
+    $B(8,24)$         & Interim  & $12$ & $3\:(25\%)$       & $B(11, 33)$             & $0.01621346$                    \\
+                      & Final    & $64$ & $14\:(21.875\%)$  & $B(22,74)$              & $0.0001727695$                  \\
+    \hline
+    \end{tabular}
+    \label{tab:response}
+\end{table}
+
+\begin{table}[!htbp]
+    \centering
+    \caption{Summary statistics of posterior distributions}
+    \begin{tabular}{lllccc}
+    \hline
+                 &          & Posterior         & Mean                          & Median        & Equi-tailed $95\%$ CrI \\
+    Prior        & Stage    & $B(\alpha,\beta)$ & $\frac{\alpha}{\alpha+\beta}$ & 50\% quantile &                        \\
+    \hline
+                 & No data  & $B(0.5,0.5)$      & $0.5000$   & $0.5000$ & $(0.0015, 0.9985)$  \\
+    $B(0.5,0.5)$ & Interim  & $B(3.5,9.5)$      & $0.2692$   & $0.2571$ & $(0.0759, 0.5292)$  \\
+                 & Final    & $B(14.5,50.5)$    & $0.2231$   & $0.2202$ & $(0.1313, 0.3310)$  \\
+                 &          &                   &            &          &                     \\
+                 & No data  & $B(8,24)$         & $0.2500$   & $0.2447$ & $(0.1186, 0.4110)$  \\
+    $B(8,24)$    & Interim  & $B(11,33)$        & $0.2500$   & $0.2461$ & $(0.1352, 0.3863)$  \\
+                 & Final    & $B(22,74)$        & $0.2292$   & $0.2273$ & $(0.1512, 0.3178)$  \\
+    \hline
+    \end{tabular}
+    \label{tab:post-summary}
+\end{table}
 
 #### 5(a)
 
@@ -334,6 +401,9 @@ P[\textrm{response rate}>0.4]=P[p>0.4]=1-P[p\leq 0.4]
 $$
 
 ```{r}
+# Before seeing any data (i.e. only prior belief)
+pbeta(0.4, 0.5, 0.5, lower.tail=FALSE)
+
 # Intermediate study
 pbeta(0.4, 3.5, 9.5, lower.tail=FALSE)
 
@@ -342,6 +412,10 @@ pbeta(0.4, 14.5, 50.5, lower.tail=FALSE)
 ```
 
 ```{r}
+# Before observing data
+## 2.5%, 50%, 97.5% quantiles of Beta(0.5, 0.5)
+qbeta(c(0.025, 0.5, 0.975), 0.5, 0.5)
+
 # Intermediate study
 ## 2.5%, 50%, 97.5% quantiles of Beta(3.5, 9.5)
 qbeta(c(0.025, 0.5, 0.975), 3.5, 9.5)
@@ -354,6 +428,10 @@ qbeta(c(0.025, 0.5, 0.975), 14.5, 50.5)
 #### 5(b)
 
 $\alpha=8,\beta=24,\quad \textrm{Beta}(8,24)$
+
+$$
+P[\textrm{response rate}>0.4]=P[p>0.4]=1-P[p\leq 0.4]
+$$
 
 ```{r, fig.show="hold", out.width="50%", fig.cap="Prior B(8,24)"}
 p <- seq(1e-3,1, length=200)
@@ -373,11 +451,10 @@ legend("topright", legend=c("prior: B(8,24)", "posterior: B(22,74)"),
        col=c("red", "blue"), lty=1, cex=.8, lwd=2)
 ```
 
-$$
-P[\textrm{response rate}>0.4]=P[p>0.4]=1-P[p\leq 0.4]
-$$
-
 ```{r}
+# Before seeing any data
+pbeta(0.4, 8, 24, lower.tail=FALSE)
+
 # Intermediate study
 pbeta(0.4, 11, 33, lower.tail=FALSE)
 
@@ -386,6 +463,10 @@ pbeta(0.4, 22, 74, lower.tail=FALSE)
 ```
 
 ```{r}
+# Before observing data
+## 2.5%, 50%, 97.5% quantiles of Beta(8, 24)
+qbeta(c(0.025, 0.5, 0.975), 8, 24)
+
 # Intermediate study
 ## 2.5%, 50%, 97.5% quantiles of Beta(11, 33)
 qbeta(c(0.025, 0.5, 0.975), 11, 33)
@@ -394,44 +475,3 @@ qbeta(c(0.025, 0.5, 0.975), 11, 33)
 ## 2.5%, 50%, 97.5% quantiles of Beta(22, 74)
 qbeta(c(0.025, 0.5, 0.975), 22, 74)
 ```
-
-\begin{table}[!htbp]
-    \centering
-    \caption{Evidence $P(\textrm{response rate}>0.4)$ for each stage under different priors}
-    \begin{tabular}{llllll}
-    \hline
-    Prior             & Stage    & \#   & Responders        & Posterior               & $p$-value from Posterior        \\
-    $B(\alpha,\beta)$ &          & $n$  & $x\:(\%)$         & $B(\alpha+x,\beta+n-x)$ & $P(\textrm{response rate}>0.4)$ \\
-    \hline
-                      & Interim  & $12$ & $3\:(25\%)$       & $B(3.5,9.5)$            & $0.1437649$                     \\
-    $B(0.5,0.5)$      &          &      &                   &                         &                                 \\
-                      & Final    & $64$ & $14\:(21.875\%)$  & $B(14.5,50.5)$          & $0.001075757$                   \\
-                      &          &      &                   &                         &                                 \\
-                      & Interim  & $12$ & $3\:(25\%)$       & $B(11, 33)$             & $0.01621346$                    \\
-    $B(8,24)$         &          &      &                   &                         &                                 \\
-                      & Final    & $64$ & $14\:(21.875\%)$  & $B(22,74)$              & $0.0001727695$                  \\
-    \hline
-    \end{tabular}
-    \label{tab:response}
-\end{table}
-
-
-\begin{table}[!htbp]
-    \centering
-    \caption{Summary statistics of posterior distributions}
-    \begin{tabular}{lllccc}
-    \hline
-                 &          & Posterior         & Mean                          & Median        & Equi-tailed $95\%$ CrI \\
-    Prior        & Stage    & $B(\alpha,\beta)$ & $\frac{\alpha}{\alpha+\beta}$ & 50\% quantile &                        \\
-    \hline
-                 & Interim  & $B(3.5,9.5)$      & $0.2692$   & $0.2571$ & $(0.0759, 0.5292)$  \\
-    $B(0.5,0.5)$ &          &                   &            &          &                     \\
-                 & Final    & $B(14.5,50.5)$    & $0.2231$   & $0.2202$ & $(0.1313, 0.3310)$  \\
-                 &          &                   &            &          &                     \\
-                 & Interim  & $B(11,33)$        & $0.2500$   & $0.2461$ & $(0.1352, 0.3863)$  \\
-    $B(8,24)$    &          &                   &            &          &                     \\
-                 & Final    & $B(22,74)$        & $0.2292$   & $0.2273$ & $(0.1512, 0.3178)$  \\
-    \hline
-    \end{tabular}
-    \label{tab:post-summary}
-\end{table}
