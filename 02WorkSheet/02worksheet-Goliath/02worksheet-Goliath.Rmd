@@ -1,6 +1,6 @@
 ---
 title: "Worksheet 2"
-author: 'Goliath : Wenje Tu, Lea Bührer, Jerome Sepin, ...'
+author: 'Goliath : Wenje Tu, Lea Bührer, Jerome Sepin, Zhixuan Li'
 date: "Spring Semester 2022"
 output: pdf_document
 # bibliography: biblio.bib
@@ -230,6 +230,9 @@ m\mid y_1,\cdots,y_n & \:\sim\: \mathcal{N}
 $$
 
 ```{r}
+## Sum of measurements
+(sum(height))
+
 ## Posterior mean
 ((1/900)*2185+(1/70)*161 ) / (13*(1/900)+(1/70) )
 
