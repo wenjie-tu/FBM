@@ -72,7 +72,9 @@ f(m\mid y_1,\cdots, y_n)
 &= \frac{f(y_1,\cdots,y_n\mid m)f(m)}{f(y_1,\cdots,y_n)} \\
 &= \frac{f(y_1,\cdots,y_n\mid m)f(m)}{\int_{-\infty}^{\infty}f(y_1,\cdots,y_n\mid m)f(m)\textrm{d}m} \\
 &= \frac{\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)}
-{\int_{-\infty}^{\infty}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)}  \\
+{\int_{-\infty}^{\infty}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)dm}  \\
+&= \frac{\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)}
+{\frac{1}{\sqrt{\frac{n\kappa+\lambda}{2\pi}}} \underbrace{\int_{-\infty}^{\infty}\sqrt{\frac{n\kappa+\lambda}{2\pi}}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)dm}_\text{integrates to 1}}  \\
 &= \sqrt{\frac{n\kappa+\lambda}{2\pi}}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right) 
 \end{aligned}
 $$
@@ -272,7 +274,7 @@ qnorm(c(0.025, 0.5, 0.975), mean=164.558, sd=sqrt(34.80663))
     \label{tab:summary}
 \end{table}
 
-**Interpretation:** the posterior probability of the \texttt{Height} $m$ lies between 152.9948 and 176.1212 with a probability of 95%, given a $\mathcal{N}(161,70)$ prior is assumed.
+**Interpretation:** the posterior belief about the mean \texttt{Height} $m$ lies between 152.9948 and 176.1212 with a probability of 95%, given a $\mathcal{N}(161,70)$ prior is assumed.
 
 #### 4(d)
 
