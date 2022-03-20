@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/W32TeX) (preloaded format=pdflatex 2020.11.27)  20 MAR 2022 22:00
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/W32TeX) (preloaded format=pdflatex 2020.11.27)  21 MAR 2022 00:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -575,40 +575,41 @@ LaTeX Font Warning: Font shape `T1/lmtt/bx/it' in size <10> not available
 [3 <./02worksheet-Goliath_files/figure-latex/unnamed-chunk-2-1.pdf>] [4 <./02wo
 rksheet-Goliath_files/figure-latex/unnamed-chunk-3-1.pdf> <./02worksheet-Goliat
 h_files/figure-latex/unnamed-chunk-3-2.pdf>]
-<02worksheet-Goliath_files/figure-latex/unnamed-chunk-7-1.pdf, id=82, 469.755pt
+<02worksheet-Goliath_files/figure-latex/unnamed-chunk-7-1.pdf, id=81, 469.755pt
  x 325.215pt>
 File: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-7-1.pdf Graphic file
  (type pdf)
 <use 02worksheet-Goliath_files/figure-latex/unnamed-chunk-7-1.pdf>
 Package pdftex.def Info: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-7
--1.pdf  used on input line 398.
+-1.pdf  used on input line 406.
 (pdftex.def)             Requested size: 226.48334pt x 156.79616pt.
 [5 <./02worksheet-Goliath_files/figure-latex/unnamed-chunk-7-1.pdf>]
-<02worksheet-Goliath_files/figure-latex/unnamed-chunk-10-1.pdf, id=100, 469.755
-pt x 325.215pt>
+<02worksheet-Goliath_files/figure-latex/unnamed-chunk-10-1.pdf, id=97, 469.755p
+t x 325.215pt>
 File: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-10-1.pdf Graphic fil
 e (type pdf)
 <use 02worksheet-Goliath_files/figure-latex/unnamed-chunk-10-1.pdf>
 Package pdftex.def Info: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-1
-0-1.pdf  used on input line 507.
+0-1.pdf  used on input line 515.
 (pdftex.def)             Requested size: 226.48334pt x 156.79616pt.
-[6 <./02worksheet-Goliath_files/figure-latex/unnamed-chunk-10-1.pdf>]
-<02worksheet-Goliath_files/figure-latex/unnamed-chunk-13-1.pdf, id=115, 469.755
+[6]
+<02worksheet-Goliath_files/figure-latex/unnamed-chunk-13-1.pdf, id=108, 469.755
 pt x 325.215pt>
 File: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-13-1.pdf Graphic fil
 e (type pdf)
 <use 02worksheet-Goliath_files/figure-latex/unnamed-chunk-13-1.pdf>
 Package pdftex.def Info: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-1
-3-1.pdf  used on input line 616.
+3-1.pdf  used on input line 624.
 (pdftex.def)             Requested size: 226.48334pt x 156.79616pt.
-[7] [8 <./02worksheet-Goliath_files/figure-latex/unnamed-chunk-13-1.pdf>]
+[7 <./02worksheet-Goliath_files/figure-latex/unnamed-chunk-10-1.pdf>] [8 <./02w
+orksheet-Goliath_files/figure-latex/unnamed-chunk-13-1.pdf>]
 <02worksheet-Goliath_files/figure-latex/figures-side-1.pdf, id=139, 469.755pt x
  325.215pt>
 File: 02worksheet-Goliath_files/figure-latex/figures-side-1.pdf Graphic file (t
 ype pdf)
 <use 02worksheet-Goliath_files/figure-latex/figures-side-1.pdf>
 Package pdftex.def Info: 02worksheet-Goliath_files/figure-latex/figures-side-1.
-pdf  used on input line 703.
+pdf  used on input line 711.
 (pdftex.def)             Requested size: 226.48334pt x 156.79616pt.
 <02worksheet-Goliath_files/figure-latex/figures-side-2.pdf, id=140, 469.755pt x
  325.215pt>
@@ -616,10 +617,10 @@ File: 02worksheet-Goliath_files/figure-latex/figures-side-2.pdf Graphic file (t
 ype pdf)
 <use 02worksheet-Goliath_files/figure-latex/figures-side-2.pdf>
 Package pdftex.def Info: 02worksheet-Goliath_files/figure-latex/figures-side-2.
-pdf  used on input line 703.
+pdf  used on input line 711.
 (pdftex.def)             Requested size: 226.48334pt x 156.79616pt.
 
-Overfull \hbox (2.221pt too wide) in paragraph at lines 703--703
+Overfull \hbox (2.221pt too wide) in paragraph at lines 711--711
 [][] [] 
  []
 
@@ -631,7 +632,7 @@ File: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-16-1.pdf Graphic fil
 e (type pdf)
 <use 02worksheet-Goliath_files/figure-latex/unnamed-chunk-16-1.pdf>
 Package pdftex.def Info: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-1
-6-1.pdf  used on input line 809.
+6-1.pdf  used on input line 817.
 (pdftex.def)             Requested size: 226.48334pt x 156.79616pt.
 <02worksheet-Goliath_files/figure-latex/unnamed-chunk-16-2.pdf, id=160, 469.755
 pt x 325.215pt>
@@ -639,10 +640,10 @@ File: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-16-2.pdf Graphic fil
 e (type pdf)
 <use 02worksheet-Goliath_files/figure-latex/unnamed-chunk-16-2.pdf>
 Package pdftex.def Info: 02worksheet-Goliath_files/figure-latex/unnamed-chunk-1
-6-2.pdf  used on input line 809.
+6-2.pdf  used on input line 817.
 (pdftex.def)             Requested size: 226.48334pt x 156.79616pt.
 
-Overfull \hbox (2.221pt too wide) in paragraph at lines 809--809
+Overfull \hbox (2.221pt too wide) in paragraph at lines 817--817
 [][] [] 
  []
 
@@ -658,11 +659,11 @@ LaTeX Warning: There were multiply-defined labels.
 Here is how much of TeX's memory you used:
  11278 strings out of 481433
  165015 string characters out of 5918819
- 474696 words of memory out of 5000000
+ 472152 words of memory out of 5000000
  27806 multiletter control sequences out of 15000+600000
  578627 words of font info for 70 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 66i,19n,72p,514b,361s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 66i,19n,72p,514b,368s stack positions out of 5000i,500n,10000p,200000b,80000s
 {c:/Users/89358/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.e
 nc}{c:/Users/89358/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.
 enc}{c:/Users/89358/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ma
@@ -685,7 +686,7 @@ Data/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb><c:/Users/8935
 Users/89358/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb
 ><c:/Users/89358/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti
 10.pfb>
-Output written on 02worksheet-Goliath.pdf (11 pages, 346768 bytes).
+Output written on 02worksheet-Goliath.pdf (11 pages, 347282 bytes).
 PDF statistics:
  253 PDF objects out of 1000 (max. 8388607)
  202 compressed objects within 3 object streams
