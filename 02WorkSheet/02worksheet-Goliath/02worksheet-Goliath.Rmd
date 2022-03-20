@@ -1,6 +1,12 @@
 ---
 title: "Worksheet 2"
-author: 'Goliath : Wenje Tu, Lea Bührer, Jerome Sepin, Zhixuan Li'
+author: 
+  - Wenje Tu
+  - Lea Bührer
+  - Jerome Sepin
+  - Zhixuan Li
+  - Elia-Leonid Mastropietro
+  - Jonas Raphael Füglistaler
 date: "Spring Semester 2022"
 output: pdf_document
 # bibliography: biblio.bib
@@ -72,9 +78,9 @@ f(m\mid y_1,\cdots, y_n)
 &= \frac{f(y_1,\cdots,y_n\mid m)f(m)}{f(y_1,\cdots,y_n)} \\
 &= \frac{f(y_1,\cdots,y_n\mid m)f(m)}{\int_{-\infty}^{\infty}f(y_1,\cdots,y_n\mid m)f(m)\textrm{d}m} \\
 &= \frac{\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)}
-{\int_{-\infty}^{\infty}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)dm}  \\
+{\int_{-\infty}^{\infty}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)\textrm{d}m}  \\
 &= \frac{\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)}
-{\frac{1}{\sqrt{\frac{n\kappa+\lambda}{2\pi}}} \underbrace{\int_{-\infty}^{\infty}\sqrt{\frac{n\kappa+\lambda}{2\pi}}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)dm}_\text{integrates to 1}}  \\
+{\frac{1}{\sqrt{\frac{n\kappa+\lambda}{2\pi}}} \underbrace{\int_{-\infty}^{\infty}\sqrt{\frac{n\kappa+\lambda}{2\pi}}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right)\textrm{d}m}_\text{integrates to 1}}  \\
 &= \sqrt{\frac{n\kappa+\lambda}{2\pi}}\exp\left(-\frac{n\kappa+\lambda}{2}\left(m-\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \right)^2  \right) 
 \end{aligned}
 $$
@@ -130,7 +136,7 @@ qqnorm(height)
 qqline(height)
 ```
 
-In the Figure \ref{fig:qqhueght} (i.e. Q-Q Plot), it can be seen that all sample values lie within the area where normal distribution of the data can be assumed. Due to the fact that we only have 13 observations the 95%-CI has been calculated assuming a t-distribution. 
+In the Figure \ref{fig:qqhueght} (i.e. Q-Q Plot), it can be seen that all sample values lie within the area where normal distribution of the data can be assumed. Due to the fact that we only have 13 observations the 95%-CI has been calculated assuming a $t$-distribution. 
 
 
 ```{r}
@@ -311,7 +317,7 @@ P[m>200]
 \end{aligned}
 $$
 
-From prior to posterior, we see an increase in the mean of $m$ from 161 to 164.558 and a decrease in the variance of $m$ from 70 to 34.80663. Figure \ref{fig:prior-post-likelihood} displays a huge overlap between the prior distribution and the likelihood density, it is not surprising that the posterior mean lies somewhere between the prior mean and the sample mean and that the posterior variance lies somewhere between the prior variance and sample variance. Since both prior and likelihood mostly agree, we see a more concentrated posterior distribution with light tails. Thus, the probability of observing a Swiss female with a height greater than 200 also decreases. 
+From prior to posterior, we see an increase in the mean of $m$ from 161 to 164.558 and a decrease in the variance of $m$ from 70 to 34.80663. Figure \ref{fig:prior-post-likelihood} displays a huge overlap between the prior distribution and the likelihood density, it is not surprising to see that the posterior mean lies somewhere between the prior mean and the sample mean and that the posterior variance lies somewhere between the prior variance and sample variance. Since both prior and likelihood mostly agree, we see a more concentrated posterior distribution with light tails. Thus, the probability of observing a Swiss female with a height greater than 200 also decreases. 
 
 <!-- It is noticeable that the variance in particular has decreased from prior to posterior distribution. Thus the dispersion is smaller. This leads to the distribution becoming narrower and the probabilities around the mean increase. Thus, the probability of observing a value greater than 200 also decreases.  -->
 
@@ -383,7 +389,7 @@ $$
 
 $\alpha=\beta=0.5,\quad \textrm{Beta}(0.5,0.5)$
 
-```{r, figures-side, fig.show="hold", out.width="50%", fig.cap="Prior B(0.5,0.5)"}
+```{r, figures-side, fig.show="hold", out.width="50%", fig.cap="Posteriors at each stage given a prior B(0.5,0.5)"}
 p <- seq(1e-3,1, length=200)
 
 plot(p, dbeta(p, 0.5, 0.5), type="l", ylab="density", col="red", 
@@ -438,7 +444,7 @@ $$
 P[\textrm{response rate}>0.4]=P[p>0.4]=1-P[p\leq 0.4]
 $$
 
-```{r, fig.show="hold", out.width="50%", fig.cap="Prior B(8,24)"}
+```{r, fig.show="hold", out.width="50%", fig.cap="Posteriors at each stage given a prior B(8,24)"}
 p <- seq(1e-3,1, length=200)
 
 plot(p, dbeta(p, 8, 24), type="l", ylab="density", col="red", 
