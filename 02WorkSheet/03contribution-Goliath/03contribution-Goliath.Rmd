@@ -20,12 +20,17 @@ rm(list=ls())
 
 ### Group Contribution
 
-Write a short program in \texttt{R} to estimate the area of the unit circle $x^2+y^2=1$ by dropping randomly points (independent Monte Carlo sampling) on it.
+**Task:** Write a short program in R to estimate the area of the unit circle $x^2+y^2=1$ by randomly dropping points (independent Monte Carlo sampling) on it.
+
+The program proceeds as follows:
 
 * Simulate a large number of points uniformly distributed in the square $[-1,1]\times[-1,1]$.
 * Check the distance of the point from the origin.
 * Calculate the ratio of the number of points with a distance from origin less than 1 to the total number of points simulated.
 * The ratio is an estimate of the ratio of the area of the unit circle to the area of the square.
+* The estimated area of the unit circle is simply the product of the ratio and the area of the square.
+
+$~$
 
 #### Implementation with a function in R
 
@@ -80,6 +85,8 @@ estCircleArea <- function(n = 1000) {
 }
 ```
 
+$~$
+
 #### Visualization with animated plots
 
 ```{r, fig.align="center"}
@@ -111,7 +118,7 @@ p <- ggplot(d.points) +
   ggtitle("Monte Carlo Simulation")
 
 animate(p, 
-        width = 600, # 900px wide
+        width = 600, # 600px wide
         height = 600, # 600px high
         duration = 20,
         renderer = gifski_renderer())
@@ -139,11 +146,13 @@ traceplot <- ggplot(dat, aes(x=Iteration, y=Estimate)) +
   transition_reveal(Iteration)
 
 animate(traceplot, 
-        width = 600, # 900px wide
-        height = 400, # 600px high
+        width = 600, # 600px wide
+        height = 400, # 400px high
         duration = 20,
         renderer = gifski_renderer())
 ```
+
+$~$
 
 #### Visualization with interactive Shiny
 

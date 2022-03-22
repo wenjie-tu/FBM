@@ -5,7 +5,7 @@
 Sys.setenv(lang="us_en")
 
 # Set the working directory
-setwd("F:/UZH/22Spring/FBM/Session3/R")
+# setwd("F:/UZH/22Spring/FBM/Session3/R")
 
 # Load libraries
 library(dplyr)
