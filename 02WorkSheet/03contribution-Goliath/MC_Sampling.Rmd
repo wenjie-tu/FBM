@@ -35,17 +35,17 @@ $$
 ```{r, warning=FALSE, message=FALSE}
 # Define a function
 ## Parameter:
-##   trials: the number of points in MC simulation
+##   n: the number of points in MC simulation
 
-estCircleArea <- function(trials = 1000) {
+estCircleArea <- function(n = 1000) {
   ## Library dependencies
   library(dplyr)
   library(ggplot2)
   
   ## Generate random coordinates within the square
   d.points <- data.frame(
-    x = runif(trials, min=-1, max=1),
-    y = runif(trials, min=-1, max=1)
+    x = runif(n, min=-1, max=1),
+    y = runif(n, min=-1, max=1)
   )
   
   ## Adding two columns to the data frame
@@ -74,17 +74,142 @@ estCircleArea <- function(trials = 1000) {
 #### Visualization
 
 ```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(gganimate)
+library(gifski)
+```
+
+```{r, message=FALSE, warning=FALSE}
+dat <- as.data.frame(matrix(nrow=500, ncol=2))
+colnames(dat) <- c("Iteration", "Estimate")
+
+for (i in 1:500) {
+  est <- estCircleArea(n = i*100)
+  dat[i, 1] <- i
+  dat[i, 2] <- est$area
+}
+
+ggplot(dat, aes(x=Iteration, y=Estimate)) + 
+  geom_line(color=3) + 
+  geom_point(color=3) + 
+  geom_hline(yintercept=pi, color=2, linetype="longdash") +
+  theme_minimal()
+
+p <- ggplot(dat, aes(x=Iteration, y=Estimate), 
+            label=paste("Estimate:", format())) + 
+  geom_line(color=3) + 
+  geom_point(color=3) + 
+  geom_hline(yintercept=pi, color=2, linetype="longdash") +
+  theme_minimal() + 
+  transition_reveal(Iteration)
+
+animate(p, # fps=50, 
+        width = 600, # 900px wide
+        height = 400, # 600px high
+        duration = 20,
+        renderer = gifski_renderer())
+```
+
+
+```{r}
+n <- 5000
+## Generate random coordinates within the square
+d.points <- data.frame(
+  points = 1:n, 
+  x = runif(n, min=-1, max=1),
+  y = runif(n, min=-1, max=1)
+)
+
+## Adding two columns to the data frame
+d.points <- d.points %>% mutate(
+  run = rep(1:50, each=100), 
+  radius = sqrt(x^2 + y^2),                       # add radius variable
+  withinCircle = ifelse(radius <= 1, TRUE, FALSE) # add boolean variable
+)
+```
+
+```{r}
+ggplot(d.points, aes(x=x, y=y, color=withinCircle)) + 
+  geom_point() +
+  coord_fixed(ratio=1) + 
+  theme_minimal()
+
+p <- ggplot(d.points) + 
+  geom_point(aes(x=x, y=y, color=withinCircle)) +
+  coord_fixed(ratio=1) + 
+  theme_minimal() + 
+  transition_states(run) + 
+  shadow_mark()
+
+animate(p, # fps=50, 
+        width = 400, # 900px wide
+        height = 400, # 600px high
+        duration = 20,
+        renderer = gifski_renderer())
+```
+
+
+```{r, warning=FALSE, message=FALSE}
 ## Set seed for reproducible results
 set.seed(2022)
 
 ## Visualization
-est <- estCircleArea(trials = 5000)
+est <- estCircleArea(n = 5000)
 
 est$area
 est$plot
 ```
 
 #### Traceplot
+
+```{r}
+library(gganimate)
+library(gapminder)
+library(gifski)
+dat <- as.data.frame(matrix(nrow=500, ncol=2))
+colnames(dat) <- c("Iteration", "Estimate")
+
+for (i in 1:500) {
+  est <- estCircleArea(trials = i*100)
+  dat[i, 1] <- i
+  dat[i, 2] <- est$area
+}
+
+p <- ggplot(dat, aes(x=Iteration, y=Estimate)) + 
+  geom_line() + 
+  geom_point() + 
+  transition_reveal(Iteration)
+
+anim_save("demo.gif")
+```
+
+```{r}
+ggplot(dat, aes(x=Iteration, y=Estimate)) + 
+  geom_line(color=3) + 
+  geom_point(color=3) + 
+  geom_hline(yintercept=pi, color=2, linetype="longdash",) + 
+  labs(x="Iteration with a step size of 100", y="Estimate", title="Monte Carlo") +
+  theme_minimal()
+```
+
+
+```{r}
+library(gapminder)
+library(ggplot2)
+library(gganimate)
+data(gapminder)
+p <- ggplot(
+gapminder,
+aes(x = gdpPercap, y=lifeExp, size = pop, colour = country)
+) +
+geom_point(show.legend = FALSE, alpha = 0.7) +
+scale_color_viridis_d() +
+scale_size(range = c(2, 12)) +
+scale_x_log10() +
+labs(x = "GDP per capita", y = "Life expectancy")
+p + transition_time(year)
+```
+
 
 ```{r}
 ## Set seed for reproducible results
@@ -105,5 +230,43 @@ for (i in 1:iterations) {
 plot(1:iterations, vec.area, type="l", ylab="Area of unit circle",
      xlab="Iterations with a step size of 100", main="Traceplot")
 abline(h=pi, lty=3, col="red", lwd=2)
+```
+
+```{r}
+## Library dependencies
+library(dplyr)
+library(ggplot2)
+
+dat <- as.data.frame(matrix(nrow=55000, ncol=6))
+colnames(dat) <- c("points", "x", "y", "radius", "withinCricle")
+
+for (i in 1:10) {
+  for (j in )
+}
+
+for (i in 1:4) {
+  n.points <- i * 1000 # number of points
+
+  ## Generate random coordinates within the square
+  d.points <- data.frame(
+    x = runif(n.points, min=-1, max=1),
+    y = runif(n.points, min=-1, max=1)
+  )
+  
+  ## Adding two columns to the data frame
+  d.points <- d.points %>% mutate(
+    radius = sqrt(x^2 + y^2),                       # add radius variable
+    withinCircle = ifelse(radius <= 1, TRUE, FALSE) # add Boolean variable
+  )
+  
+  ## Generate plot
+  plot <- ggplot(d.points) + 
+    geom_point(aes(x=x, y=y, color=withinCircle)) +
+    coord_fixed(ratio=1) + 
+    theme_minimal()
+  return(plot)
+}
+
+
 ```
 

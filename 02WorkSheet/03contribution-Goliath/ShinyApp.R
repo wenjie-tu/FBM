@@ -22,7 +22,7 @@ ui <- pageWithSidebar(
     sliderInput("N",
                 "Number of random points:",
                 min = 1000,
-                max = 17000,
+                max = 19000,
                 step = 1000,
                 value = 1000),
   ),
