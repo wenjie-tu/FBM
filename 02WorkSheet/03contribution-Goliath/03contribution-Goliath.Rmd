@@ -20,7 +20,7 @@ rm(list=ls())
 
 ### Group Contribution
 
-**Task:** Write a short program in R to estimate the area of the unit circle $x^2+y^2=1$ by randomly dropping points (independent Monte Carlo sampling) on it.
+**Task:** Write a short program in $\texttt{R}$ to estimate the area of the unit circle $x^2+y^2=1$ by randomly dropping points (independent Monte Carlo sampling) on it.
 
 The program proceeds as follows:
 
