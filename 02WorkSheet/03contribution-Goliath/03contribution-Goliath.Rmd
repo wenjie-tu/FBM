@@ -25,10 +25,15 @@ rm(list=ls())
 The program proceeds as follows:
 
 * Simulate a large number of points uniformly distributed in the square $[-1,1]\times[-1,1]$.
-* Check the distance of the point from the origin.
-* Calculate the ratio of the number of points with a distance from origin less than 1 to the total number of points simulated.
-* The ratio is an estimate of the ratio of the area of the unit circle to the area of the square.
-* The estimated area of the unit circle is simply the product of the ratio and the area of the square.
+* Calculate the distance from the origin to each point.
+* Calculate the ratio of the number of points with a distance less than 1 to the total number of points simulated.
+* This ratio is nothing else than the estimate of the area of the unit circle divided by the area of the square.
+* The estimated area of the unit circle is simply the ratio times the area of the square.
+
+$$
+\frac{\textrm{area of unit circle}}{\textrm{area of square}}
+\approx\frac{\textrm{# of points within the circle}}{\textrm{# of points simulated}}
+$$
 
 $~$
 
@@ -48,7 +53,7 @@ library(shiny)
 set.seed(2022)
 
 ## Define a function
-## Parameter:
+## Argument:
 ##   n: the number of points in MC simulation
 
 estCircleArea <- function(n = 1000) {
@@ -64,15 +69,9 @@ estCircleArea <- function(n = 1000) {
   
   ## Adding two columns to the data frame
   d.points <- d.points %>% mutate(
-    radius = sqrt(x^2 + y^2),                       # add radius variable
-    withinCircle = ifelse(radius <= 1, TRUE, FALSE) # add boolean variable
+    distance = sqrt(x^2 + y^2),                       # add distance variable
+    withinCircle = ifelse(distance <= 1, TRUE, FALSE) # add boolean variable
   )
-  
-  ## Generate plot
-  plot <- ggplot(d.points) + 
-    geom_point(aes(x=x, y=y, color=withinCircle)) +
-    coord_fixed(ratio=1) + 
-    theme_minimal()
   
   ## Estimate the area
   ratio <- mean(d.points$withinCircle == TRUE) 
@@ -80,7 +79,12 @@ estCircleArea <- function(n = 1000) {
   
   area <- ratio * 4 # the estimated area of unit circle
   
-  # cat(sprintf("The estimated area of the unit circle is %.4f", area))
+  ## Generate plot
+  plot <- ggplot(d.points) + 
+    geom_point(aes(x=x, y=y, color=withinCircle)) +
+    coord_fixed(ratio=1) + 
+    theme_minimal()
+  
   return(list(plot=plot, area=area))
 }
 ```
@@ -105,8 +109,8 @@ d.points <- data.frame(
 ## Adding two columns to the data frame
 d.points <- d.points %>% mutate(
   run = rep(1:(n/step), each=step), 
-  radius = sqrt(x^2 + y^2),                       # add radius variable
-  withinCircle = ifelse(radius <= 1, TRUE, FALSE) # add boolean variable
+  distance = sqrt(x^2 + y^2),                       # add distance variable
+  withinCircle = ifelse(distance <= 1, TRUE, FALSE) # add boolean variable
 )
 
 p <- ggplot(d.points) + 
@@ -194,8 +198,8 @@ server <- function(input, output) {
     
     ## Adding two columns to the data frame
     d.points <- d.points %>% mutate(
-      radius = sqrt(x^2 + y^2),                       # add radius variable
-      withinCircle = ifelse(radius <= 1, TRUE, FALSE) # add boolean variable
+      distance = sqrt(x^2 + y^2),                       # add distance variable
+      withinCircle = ifelse(distance <= 1, TRUE, FALSE) # add boolean variable
     )
     
     ## Generate plot
@@ -219,8 +223,8 @@ server <- function(input, output) {
     
     ## Adding two columns to the data frame
     d.points <- d.points %>% mutate(
-      radius = sqrt(x^2 + y^2),                       # add radius variable
-      withinCircle = ifelse(radius <= 1, TRUE, FALSE) # add boolean variable
+      distance = sqrt(x^2 + y^2),                       # add distance variable
+      withinCircle = ifelse(distance <= 1, TRUE, FALSE) # add boolean variable
     )
     
     ## Estimate the area
