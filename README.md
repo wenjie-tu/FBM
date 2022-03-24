@@ -9,18 +9,18 @@
 
 # Agenda
 
-## [Worksheet 1](./01WorkSheet/01worksheet)
+## [Worksheet 1](./01WorkSheet/01worksheet.pdf)
 
 - [x] Crosschecking
 
 - [x] Proofreading
 
-## [Worksheet 2](./02WorkSheet/02worksheet)
+## [Worksheet 2](./02WorkSheet/02worksheet.pdf)
 
 - [x] Crosschecking
 - [x] Proofreading
 
-## [Worksheet 3](./03WorkSheet/03worksheet)
+## [Worksheet 3](./03WorkSheet/03worksheet.pdf)
 
 * [ ] Crosschecking
 * [ ] Proofreading
