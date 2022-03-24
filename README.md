@@ -3,19 +3,24 @@
 ## Course Information
 
 * [Syllabus](Info/syllabus_STA421_FBM_FS22.pdf)
-* [Script](Script/script_fbm2022_chapters_1-2.pdf)
+* [Script](Script/script_fbm2022_chapters_1-3.pdf)
 
 
 
 # Agenda
 
-## Worksheet 1
+## [Worksheet 1](./01WorkSheet/01worksheet)
 
 - [x] Crosschecking
 
 - [x] Proofreading
 
-## Worksheet 2
+## [Worksheet 2](./02WorkSheet/02worksheet)
 
-- [ ] Crosschecking
-- [ ] Proofreading
+- [x] Crosschecking
+- [x] Proofreading
+
+## [Worksheet 3](./03WorkSheet/03worksheet)
+
+* [ ] Crosschecking
+* [ ] Proofreading
