@@ -1,0 +1,174 @@
+---
+title: "Metropolis Hastings Algorithm Example"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+## 1st Example:
+
+
+We simulate MC samples (iid) from a binomial distribution.
+
+$$P(X=k) = \cases{\binom{n}{k} \times p^k\times (1-p)^{n-k},  & if k element \{0,1,...,n\} \\
+{0}, & \text{                     otherwise}}$$
+
+
+We create the proposals in the follwing way:
+
+- From state k, either k-1 or k+1 is proposed with a probability of 0.5
+
+- At the margin the state k is propsed with a probablity of 0.5.
+
+
+```{r}
+binom_dist <- function(k,n,p){
+  # k = current state
+  # n = amount of samples per simulation
+  # p = Success Rate
+  dbinom(x=k, size=n,p)}
+
+proposal <- function(state){
+  if (state ==0){
+    nextstate <- sample(0:1, size=1) #lower margin
+  }
+  else if (state ==n){
+    nextstate <- sample(n-1:n, size=1) #upper margin
+  }
+  else{
+    nextstate <- state+sample(c(-1,1), size=1) 
+  }
+}
+
+mcmc <- function(nsim, start, n, p){
+  # nsim = total count of simulations
+  # n = amount of samples per simulation
+  # p = Success Rate
+  # start = Number of observations to throw away due to Burn in
+  
+  out <- c(start, rep(NA,nsim))
+  k <- start
+  for (i  in 2:(nsim+1)){
+    k_proposal <- proposal(k)
+    alpha <- binom_dist(k_proposal,n,p)/binom_dist(k,n,p)
+    if(runif(1) < alpha) k<- k_proposal
+    out[i] <- k }
+  out
+}
+```
+
+
+```{r}
+n = 20
+p = 0.83
+
+traj <- mcmc(nsim=10000, start=0,n=n, p=p)
+plot(traj, type="l")
+traj <- traj[-(1:3000)] #burn in phase
+
+```
+
+
+```{r}
+tab <- table(traj)
+kgrid <- 0:n
+plot(kgrid, dbinom(kgrid, n, p), type="h")
+lines(as.integer(names(tab))+0.1, tab/sum(tab), type="h", col="red")
+legend("topleft", c("~Bin (20,0.83)", "MCMC"), fill=c("black", "red"))
+
+```
+
+
+Being in state k=16, what is the probability that the next state is k-1 = 15 or k+1 = 17?
+
+```{r}
+k=16
+n=20
+p=0.83
+
+alpha15 =binom_dist(15,n,p)/binom_dist(k,n,p); (min(1,alpha15))
+alpha17 = binom_dist(17,n,p)/binom_dist(k,n,p); (min(1,alpha17))
+```
+Comment: 
+The binomial distribution with n=20 and p=0.83 peaks at k=17 (P(k=17)=0.2358). 
+
+$P(k=17)> P(k=16) \Longrightarrow a_{i,j} = 1:$
+
+If it is proposed to change from k=16 to k=17, the acceptance rate $\alpha_{16,17}=1$. Because it is likelier to be in state k=17 then in k=16, we will alwayse accept the change of state.
+
+$P(k=15) < P(k=16) \Longrightarrow a_{i,j} < 1:$
+If it is proposed to change from k=16 to k=15 the acceptance rate equals $\alpha_{16,15}=0.655$. 
+
+
+## 2nd Example:
+
+$$X \sim Pois(\lambda)$$
+Prior Distribution:
+$$ \lambda \sim Gamma(\alpha=9, \beta=0.5) $$
+
+
+We obtain a $x=10$.
+
+Posterior Distribution: 
+$$ h(\lambda|x) = constant \times P(x=10|\lambda) \times f(\lambda)$$
+```{r, message=F, warning=F}
+posterior <- function(lambda, alpha, beta, k){
+  ifelse(lambda >= 0, dpois(x=k, lambda = lambda)*
+      dgamma(x=lambda, shape=alpha, scale = beta),0)}
+
+
+library(MCMCpack)
+
+metropolis <- MCMCmetrop1R(
+  fun = posterior, theta.init = 0.1,
+  tune=1, burnin = 5000, mcmc = 5000, thin=1, logfun =F,
+  V=matrix(1), alpha=9, beta=0.5, k=10)
+```
+
+```{r}
+traject <- as.vector(metropolis[,1])
+hist(traject, xlab="lambda", main="Histogramm of MCMC Sample")
+
+plot(traject[1:100], type="l", main="Traceplot", xlab="Index", ylab="lambda")
+#abline(h=lambda)
+
+lambda=median(traject); lambda
+
+x = seq(0,15,0.001)
+hist(traject, 50, freq = F, main="Prior, Likelihood, Posterior", xlim=c(0,15), xlab="lambda")
+lines(1:15, dpois(1:15, lambda), type="l", col="forestgreen", lwd=2)
+lines(x, dgamma(x, scale = 0.5,shape=9), type="l", col="gold", lwd=2)
+legend("topright", legend=c("Prior", "Likelihood", "Posterior"), fill=c("gold", "forestgreen", "black"))
+```
+
+Comment:
+
+We obtain a acceptance rate of 78.3%. 
+At low acceptance rates, the same values are often repeated, high acceptance rates are accompanied by small movements (horizontal in the trajectory). In both cases, the Markov chain remains in the same area of the parameter space for a long time. 
+
+A rule of thumb says that an acceptance rate of 20% is optimal. This can be changed with the tune parameter (standard deviation).
+
+
+```{r}
+metropolis2 <- MCMCmetrop1R(
+  fun = posterior, theta.init = 0.1,
+  tune=8.6, burnin = 5000, mcmc = 5000, thin=1, logfun =F,
+  V=matrix(1), alpha=9, beta=0.5, k=10)
+```
+
+
+```{r}
+traject2 <- as.vector(metropolis2[,1])
+hist(traject2, xlab="lambda", main="Histogramm of MCMC Sample")
+
+plot(traject2[1:100], type="l", main="Traceplot", xlab="Index", ylab="lambda")
+
+lambda2=median(traject2); lambda2
+
+x = seq(0,15,0.001)
+hist(traject2, 50, freq = F, main="Prior, Likelihood, Posterior", xlim=c(0,15), xlab="lambda")
+lines(1:15, dpois(1:15, lambda2), type="l", col="forestgreen", lwd=2)
+lines(x, dgamma(x, scale = 0.5,shape=9), type="l", col="gold", lwd=2)
+legend("topright", legend=c("Prior", "Likelihood", "Posterior"), fill=c("gold", "forestgreen", "black"))
+```
