@@ -329,6 +329,7 @@ plot(m, dnorm(m, mean=161, sd=sqrt(70)), type="l", ylab="density", col="red",
      ylim=c(0,0.08), main="Prior vs Likelihood vs Posterior", lwd=2)
 lines(m, dnorm(m, mean=164.558, sd=sqrt(34.80663)), col="blue", lwd=2)
 lines(density(height), col="orange", lwd=2)
+curve(dnorm())
 legend("topright", lty=1, col=c("red", "blue", "orange"), cex=.8, lwd=2, 
        legend=c("prior: N(161,70)", "posterior: N(164.56, 34.81)", "likelihood density"))
 ```
