@@ -130,7 +130,7 @@ $$
 m\mid y_1,\cdots,y_n\sim\mathcal{N}\left(\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}, (n\kappa+\lambda)^{-1}\right)=\mathcal{N}(164.558, 34.80663)
 $$
 
-```{r, eval=FALSE}
+```{r, include=FALSE}
 curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), xlim=c(120, 200), 
       col=2, lwd=2, xlab="Height", ylab="Density", main="Prior predictive distribution")
 ```
@@ -318,7 +318,7 @@ hist(mc.SIG, breaks=50, freq=FALSE, ylim=c(0, 2), xlab="Z",
 curve(dsqrtinvgamma(x, a, b), add=TRUE, col=4, lwd=2)
 ```
 
-```{r, fig.show="hold", out.width="33.3%", eval=FALSE}
+```{r, fig.show="hold", out.width="33.3%", include=FALSE}
 hist(mc.G, breaks=50, freq=FALSE)
 curve(dgamma(x, a, b), add=TRUE, col=2, lwd=2)
 
@@ -330,7 +330,7 @@ curve(dsqrtinvgamma(x, a, b), add=TRUE, col=4, lwd=2)
 ```
 
 
-```{r, eval=FALSE}
+```{r, include=FALSE}
 hist(mc.G, breaks=50, freq=FALSE)
 curve(dgamma(x, a, b), from=min(mc.G), to=max(mc.G), add=TRUE, col=2, lwd=2)
 
