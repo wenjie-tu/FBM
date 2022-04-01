@@ -126,7 +126,7 @@ So the expectation for $y$ equals $\mu = 161$ and the standard deviation is $\la
 Prior predictive distribution:
 ```{r, include=T, echo=F, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Prior Predictive Distribution"}
 curve(dnorm(x, mean=161, sd=sqrt(970)), ylim=c(0, 0.015), xlim=c(25, 275), 
-      col=2, lwd=2, xlab="Height", ylab="Density", main="Prior predictive distribution")
+      col=2, lwd=2, xlab="Height", ylab="Density", main="Prior Predictive Distribution")
 ```
 
 
@@ -183,9 +183,9 @@ With
 - $\bar{y} =  E[y_1,...,y_n] = 168.0769$
 
 
-```{r, fig.show="hold", out.width="50%", fig.align='center', fig.cap="Posterior Predictive Distribution"}
+```{r, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Posterior Predictive Distribution", echo=FALSE}
 curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), ylim=c(0, 0.015), xlim=c(61, 261), col=4, 
-      lwd=2, xlab="Height", ylab="Density", main="")
+      lwd=2, xlab="Height", ylab="Density", main="Posterior Predictive Distribution")
 ```
 
 
@@ -200,7 +200,7 @@ As a result we obtain a probability of 12.3% that a future observation of height
 
 Comparison between posterior, prior predictive, and posterior distributions
 
-```{r, fig.show="hold", out.width="50%", fig.align='center', fig.cap="Comparison of Posterior, Prior Predictive and Posterior Predictive Distribution for Height."}
+```{r, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Comparison of Posterior, Prior Predictive and Posterior Predictive Distribution for Height.", echo=F}
 curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), xlim=c(111, 211), 
       col=2, lwd=2, xlab="Height", ylab="Density")
 curve(dnorm(x, mean=161, sd=sqrt(970)), col=3, lwd=2, add=TRUE)
@@ -309,7 +309,7 @@ b <- 0.4
 ```
 
 
-```{r, fig.show="hold", out.width="50%"}
+```{r, fig.show="hold", out.width="50%", fig.cap="Density Plots."}
 curve(dgamma(x, shape=a, rate=b), ylim=c(0, 0.2), col=2, lwd=3, 
       xlab="X", ylab="Density", main="Density of X")
 legend("topleft", legend="G", col=2, lwd=2)
