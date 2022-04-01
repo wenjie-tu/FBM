@@ -113,28 +113,37 @@ $$
 
 ### Exercise 4 (Conjugate Bayesian analysis in practice)
 
+#### 4(a)
+Plot the prior predictive distribution for one observation y and compute its expectation
+and standard deviation. Estimate P[y > 200] for one future observation of Height.
+
 Prior predictive distribution:
 $$
 y\sim \mathcal{N}(\mu, \lambda^{-1}+\kappa^{-1})=\mathcal{N}(161, 970)
 $$
+So the expectation for $y$ equals $\mu = 161$ and the standard deviation is $\lambda^{-1}+\kappa^{-1} = 900+70=970$.
+
+Prior predictive distribution:
+```{r, include=T, echo=F, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Prior Predictive Distribution"}
+curve(dnorm(x, mean=161, sd=sqrt(970)), ylim=c(0, 0.015), xlim=c(25, 275), 
+      col=2, lwd=2, xlab="Height", ylab="Density", main="Prior predictive distribution")
+```
 
 
 ```{r}
-## P[y>200]
+## P[y>200] for one future observation of Height
 pnorm(200, mean=161, sd=sqrt(970), lower.tail=F)
 ```
+The probability that an observation of Height larger than 200 cm is made equals 0.105. So it can be concluded that we expect around 10% of future observation to be larger than 200 cm. 
 
+
+
+#### 4(b)
 
 Posterior distribution:
 $$
 m\mid y_1,\cdots,y_n\sim\mathcal{N}\left(\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}, (n\kappa+\lambda)^{-1}\right)=\mathcal{N}(164.558, 34.80663)
 $$
-
-```{r, include=FALSE}
-curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), xlim=c(120, 200), 
-      col=2, lwd=2, xlab="Height", ylab="Density", main="Prior predictive distribution")
-```
-
 
 Posterior predictive distribution:
 $$
@@ -142,23 +151,56 @@ y_{n+1}\mid y_1,\cdots,y_n\sim\mathcal{N}
 \left(\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}, (n\kappa+\lambda)^{-1}+\kappa^{-1}\right)
 =\mathcal{N}(164.558, 934.80663)
 $$
+Compute the expectation and standard error:
 
-```{r, fig.show="hold", out.width="50%", fig.align='center'}
-curve(dnorm(x, mean=161, sd=sqrt(970)), ylim=c(0, 0.015), xlim=c(61, 261), col=3, 
-      lwd=2, xlab="Height", ylab="Density", main="Prior (Posterior) predictive distribution")
-curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
-legend("topleft", legend=c("Prior predictive", "Posterior predictive"), col=3:4, lwd=2)
+```{r, include=T, echo=T}
+height <- c(166,168,168,177,160,170,172,159,175,164,175,167,164)
+n = length(height)
+y_bar = mean(height)
+kappa = 1/900
+mu = 161
+lambda = 1/70
+
+mu_post = (kappa*n*y_bar+lambda*mu)/(n*kappa+lambda)
+mu_post
+
+sd_post = (n*kappa+lambda)^-1+kappa^-1
+sd_post
 ```
 
+Derived with the help of the formula above we obtain an expected value for $y_{n+1} = 164.558$ and a standard deviation of $934.80663$.
+
+With 
+
+- $n = 13$
+
+- $\kappa = \frac{1}{900}$
+
+- $\lambda = \frac{1}{70}$
+
+- $\mu = 161$
+
+- $\bar{y} =  E[y_1,...,y_n] = 168.0769$
+
+
+```{r, fig.show="hold", out.width="50%", fig.align='center', fig.cap="Posterior Predictive Distribution"}
+curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), ylim=c(0, 0.015), xlim=c(61, 261), col=4, 
+      lwd=2, xlab="Height", ylab="Density", main="")
+```
+
+
+Estimate for $P[y_{n+1}> 200|y_1,...,y_n]$ for one future observation $y_n+1$:
 ```{r}
 pnorm(200, mean=164.558, sd=sqrt(934.80663), lower.tail=F)
 ```
+As a result we obtain a probability of 12.3% that a future observation of height will be larger than 200 cm.
+
 
 #### 4(c)
 
 Comparison between posterior, prior predictive, and posterior distributions
 
-```{r, fig.show="hold", out.width="50%", fig.align='center'}
+```{r, fig.show="hold", out.width="50%", fig.align='center', fig.cap="Comparison of Posterior, Prior Predictive and Posterior Predictive Distribution for Height."}
 curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), xlim=c(111, 211), 
       col=2, lwd=2, xlab="Height", ylab="Density")
 curve(dnorm(x, mean=161, sd=sqrt(970)), col=3, lwd=2, add=TRUE)
@@ -166,6 +208,9 @@ curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
 legend("topleft", legend=c("posterior", "prior predictive", "posterior predcitive"), 
        col=2:4, lwd=2)
 ```
+
+ADD DISCUSSION, INTERPRETATION
+
 
 ### Exercise 5 (The change-of-variables formula)
 
@@ -274,6 +319,9 @@ curve(dinvgamma(x, a, b), xlim=c(0, 0.5), col=3, lwd=2,
 curve(dsqrtinvgamma(x, a, b), add=TRUE, col=4, lwd=2)
 legend("topleft", legend=c("IG", "SIG"), col=c(3, 4), lwd=2)
 ```
+
+
+ADD INTERPRETATION: Interpret the shape of densities of Y and Z close to 0.
 
 ### Exercise 6 (Monte Carlo: transformations of random variables)
 
