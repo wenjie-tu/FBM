@@ -192,7 +192,7 @@ Estimate for $P[y_{n+1}> 200\mid y_1,...,y_n]$ for one future observation $y_{n+
 ```{r}
 pnorm(200, mean=mu.post, sd=sqrt(1/lambda.post+1/kappa), lower.tail=F)
 ```
-$P[y_{n+1}> 200\mid y_1,...,y_n]$ for one future observation $y_{n+1}$ of `Height`.
+$P[y_{n+1}> 200\mid y_1,...,y_n]$ for one future observation $y_{n+1}$ of `Height` is 0.123.
 
 <!-- As a result we obtain a probability of 12.3% that a future observation of height will be larger than 200 cm. -->
 
