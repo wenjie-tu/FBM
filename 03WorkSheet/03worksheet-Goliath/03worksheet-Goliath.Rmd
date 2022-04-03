@@ -200,7 +200,7 @@ As a result we obtain a probability of 12.3% that a future observation of height
 
 Comparison between posterior, prior predictive, and posterior distributions
 
-```{r, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Comparison of Posterior, Prior Predictive and Posterior Predictive Distribution for Height.", echo=F}
+```{r, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Comparison of Posterior, Prior Predictive and Posterior Predictive Distribution for Height.\\label{fig:comparison4}", echo=F}
 curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), xlim=c(111, 211), 
       col=2, lwd=2, xlab="Height", ylab="Density")
 curve(dnorm(x, mean=161, sd=sqrt(970)), col=3, lwd=2, add=TRUE)
@@ -208,6 +208,9 @@ curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
 legend("topleft", legend=c("posterior", "prior predictive", "posterior predcitive"), 
        col=2:4, lwd=2)
 ```
+
+
+Figure \ref{fig:comparison4} illustrates the posterior, the prior predictive and the posterior predictive distribution. It can be seen that the two predictive functions are very common having a high variance, while the posterior distribution has a lower variance. 
 
 ADD DISCUSSION, INTERPRETATION
 
