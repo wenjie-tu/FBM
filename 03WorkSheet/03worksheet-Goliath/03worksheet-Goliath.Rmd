@@ -133,12 +133,13 @@ kappa  <- 1/900          # precision for data
 mu     <- 161            # prior mean
 lambda <- 1/70           # prior precision
 
-## Compute posterior mean and precision
+## Compute standard deviation, posterior mean and precision
+std_dev <- sqrt((1/lambda) + (1/kappa))
 mu.post     <- (kappa*n*y.bar + lambda*mu) / (n*kappa + lambda)
 lambda.post <- n*kappa + lambda
 ```
 
-So the expectation for $y$ equals $\mu = 161$ and the variance is $\lambda^{-1}+\kappa^{-1} = 900+70=970$.
+So the expectation for $y$ equals $\mu = 161$ and the standard deviation is $\sqrt{\lambda^{-1}+\kappa^{-1}} =$  `r format(std_dev, digits = 4)`.
 
 Prior predictive distribution:
 ```{r, fig.show="hold", out.width="75%", fig.align='center', fig.cap="Prior Predictive Distribution"}
