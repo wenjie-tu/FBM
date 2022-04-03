@@ -102,7 +102,7 @@ $$
 $$
 f(y_{n+1}\mid y_1,\cdots,y_n)
 =\int_{-\infty}^{\infty}\sqrt{\frac{\kappa}{2\pi}}\exp\left(-\frac{\kappa}{2}(y_{n+1}-m)^2 \right)
-\sqrt{\frac{\lambda_\text{post}}{2\pi}}\exp\left(-\frac{\lambda_\text{post}}{2}\left(m-\mu_\text{post} \right)^2  \right)\text{d}m 
+\underbrace{\sqrt{\frac{\lambda_\text{post}}{2\pi}}\exp\left(-\frac{\lambda_\text{post}}{2}\left(m-\mu_\text{post} \right)^2  \right)}_{\text{posterior distribution}}\text{dm} 
 $$
 
 Repeating the same derivation steps as for the prior predictive distribution, we obtain the posterior predictive distribution:
@@ -182,7 +182,7 @@ where $\mu_\text{post}=\dfrac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}$ and 
 
 
 ```{r, fig.show="hold", out.width="75%", fig.align='center', fig.cap="Posterior Predictive Distribution"}
-curve(dnorm(x, mean=mu.post, sd=sqrt(1/lambda.post+1/kappa)), ylim=c(0, 0.015), 
+curve(dnorm(x, mean=mu.post, sd=sqrt(1/lambda.post + 1/kappa)), ylim=c(0, 0.015), 
       xlim=c(61, 261), col=4, lwd=2, xlab="Height", ylab="Density", 
       main="Posterior Predictive Distribution")
 ```
@@ -202,11 +202,13 @@ Comparison between posterior, prior predictive, and posterior distributions
 ```{r, fig.show="hold", out.width="50%"}
 curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), xlim=c(111, 211), 
       col=2, lwd=2, xlab="Height", ylab="Density", 
-      main="Posterior, prior predictive and posterior predictive distributions")
-curve(dnorm(x, mean=161, sd=sqrt(970)), col=3, lwd=2, add=TRUE)
+      main="Posterior and prior distributions")
+curve(dnorm(x, mean=161, sd=sqrt(70)), col=1, lwd=2, add=TRUE)
+curve(dnorm(x, mean=161, sd=sqrt(970)), ylim=c(0, 0.015), xlim=c(61, 261), col=3, lwd=2, 
+      add=T)
 curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
-legend("topleft", legend=c("posterior", "prior predictive", "posterior predcitive"), 
-       col=2:4, lwd=2)
+legend("topleft", legend=c("prior", "posterior","prior predictive", "posterior predictive"), 
+       col=c(1:4), lwd=2)
 
 curve(dnorm(x, mean=161, sd=sqrt(970)), ylim=c(0, 0.015), xlim=c(61, 261), col=3, lwd=2, 
       xlab="Height", ylab="Density", main="Prior and posterior predictive distributions")
@@ -216,11 +218,11 @@ legend("topleft", legend=c("prior predictive", "posterior predictive"), col=3:4,
 
 ```{r}
 df <- data.frame(
-  Mean=c(mu.post, mu, mu.post), 
-  Variance=c(1/lambda.post, 1/lambda+1/kappa, 1/lambda.post+1/kappa), 
-  SD=c(sqrt(1/lambda.post), sqrt(1/lambda+1/kappa), sqrt(1/lambda.post+1/kappa))
+  Mean=c(mu, mu.post, mu, mu.post), 
+  Variance=c(1/lambda, 1/lambda.post, 1/lambda+1/kappa, 1/lambda.post+1/kappa), 
+  SD=c(sqrt(1/lambda),sqrt(1/lambda.post), sqrt(1/lambda+1/kappa), sqrt(1/lambda.post+1/kappa))
 )
-rownames(df) <- c("Posterior", "Prior predictive", "Posterior predictive")
+rownames(df) <- c("Prior","Posterior", "Prior predictive", "Posterior predictive")
 knitr::kable(df, align="c", caption="Summary statistics")
 ```
 
@@ -271,6 +273,7 @@ $$
 $$
 Y=\frac{1}{X} \implies X=\frac{1}{Y}
 $$
+Thus $g^{-1}(y)=y^{-1}$ with the derivative $g^{-1}(y)\frac{d}{dy}=-y^{-2}$
 
 $$
 \begin{aligned}
@@ -285,6 +288,9 @@ $$
 $$
 Z=\sqrt{\frac{1}{X}} \implies X=\frac{1}{Z^2}
 $$
+
+Thus $g^{-1}(z)=z^{-2}$ with the derivative $g^{-1}(z)\frac{d}{dz}=-2z^{-3}$
+
 
 $$
 \begin{aligned}
@@ -307,7 +313,7 @@ dinvgamma <- function(x, a, b) {
 ## Define square root inverse-gamma distribution function
 dsqrtinvgamma <- function(x, a, b) {
   return(
-    2 * (b^a)/gamma(a) * (1/x)^(2*a+1) * exp(-b/x^2)
+    2 * (b^a)/gamma(a) * (1/x)^(2*a+1) * exp(-b/(x^2))
   )
 }
 ```
@@ -458,8 +464,26 @@ cat(sprintf(
 ```
 We obtain different values for $X$, $Y$, and $Z$ if we do back-transformation operations on their means.
 
+Let us further look at the shape of the transformation and check if the Jensens inequality holds:
+
+```{r,echo = F, fig.width=4, fig.height=3,fig.align='center'}
+par(mfrow = c(1,2))
+x <- seq(from =0, to = 2, length.out = 100)
+plot(x=x, y = 1/x,type = "l")
+plot(x=x, y = sqrt(1/x), type = "l")
+```
+
+```{r}
+#Because both are convex
+1/meanG <= meanIG
+sqrt(1/meanG) <= meanSIG
+```
+
+
 **Reasoning:** 
 
 * Inverse Gamma $Y$: we conduct inverse transformation on the original data. The inverse transformation only reverses the ranking of the data but does not change the 50% quantile (median) of the data, which allows us to back transform the sample median of $Y$ to obtain the same sample median as in the original data $X$.
 * Square root Inverse Gamma $Z$: we simply do square root transformation on the top of the inverse transformation. Square root transformation is a monotonic transformation and does not change the ranking of the data, and $Y$ and $Z$ have exactly the same ranking (quantile) for the data. Hence, the median of $Z$ can also be transformed back to the median of $X$.
-* In the Gamma ($\text{shape}=a,\text{rate}=b$) distribution, the mean and median do not coincide. Since inverse transformation and square root transformation are nonlinear transformations, the positions of the sample means are different in $X$, $Y$, and $Z$. Thus the relation does not apply to sample means.
+* In the Gamma ($\text{shape}=a,\text{rate}=b$) distribution, the mean and median do not coincide. This can be explained with the Jensens Inequality. It says that for a **convex** function $\rho$ it holds $\rho(E(X))\leq E(\rho(X))$. Since the inverse- and squared-inverse functions are both convex functions, this can be applied. 
+
+
