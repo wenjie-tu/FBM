@@ -92,11 +92,10 @@ $$
 Denote:
 
 $$
-\mu_\text{post}=\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \\
-$$
-
-$$
-\lambda_\text{post}=n\kappa+\lambda
+\begin{aligned}
+  \mu_\text{post} &= \frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda} \\
+  \lambda_\text{post} &= n\kappa+\lambda
+\end{aligned}
 $$
 
 $$
@@ -133,18 +132,17 @@ kappa  <- 1/900          # precision for data
 mu     <- 161            # prior mean
 lambda <- 1/70           # prior precision
 
-## Compute standard deviation, posterior mean and precision
-std_dev <- sqrt((1/lambda) + (1/kappa))
+## Compute posterior mean and precision
 mu.post     <- (kappa*n*y.bar + lambda*mu) / (n*kappa + lambda)
 lambda.post <- n*kappa + lambda
 ```
 
-So the expectation for $y$ equals $\mu = 161$ and the standard deviation is $\sqrt{\lambda^{-1}+\kappa^{-1}} =$  `r format(std_dev, digits = 4)`.
+The expectation of the prior predictive distribution for one observation $y$ is `r format(mu, digits=4)` and the standard deviation is $\sqrt{\lambda^{-1}+\kappa^{-1}} =$  `r format(sqrt((1/lambda) + (1/kappa)), digits = 4)`.
 
 Prior predictive distribution:
-```{r, fig.show="hold", out.width="75%", fig.align='center', fig.cap="Prior Predictive Distribution"}
+```{r, fig.show="hold", out.width="75%", fig.align='center'}
 curve(dnorm(x, mean=mu, sd=sqrt(1/kappa)), ylim=c(0, 0.015), xlim=c(71, 251), 
-      col=2, lwd=2, xlab="Height", ylab="Density", main="Prior Predictive Distribution")
+      col=2, lwd=2, xlab="Height", ylab="Density", main="Prior predictive distribution")
 ```
 
 
@@ -152,7 +150,7 @@ curve(dnorm(x, mean=mu, sd=sqrt(1/kappa)), ylim=c(0, 0.015), xlim=c(71, 251),
 ## P[y > 200] for one future observation of Height
 pnorm(200, mean=mu, sd=sqrt(1/lambda + 1/kappa), lower.tail=F)
 ```
-The probability that an observation of Height larger than 200 cm is made equals 0.105. So it can be concluded that we expect around 10% of future observation to be larger than 200 cm. 
+$P[y>200]$ for one future observation of `Height` is 0.105. So it can be concluded that we expect around 10% of future observation to be larger than 200 cm. 
 
 
 **4 (b)**
@@ -179,13 +177,14 @@ y_{n+1}\mid y_1,\cdots,y_n
 \sim\mathcal{N}\left(\mu_\text{post}, \lambda_\text{post}^{-1}+\kappa^{-1}\right)
 \equiv\mathcal{N}(164.558, 934.8066)
 $$
-where $\mu_\text{post}=\dfrac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}$ and $\lambda_\text{post}=n\kappa+\lambda$
+where $\mu_\text{post}=\dfrac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}$ and $\lambda_\text{post}=n\kappa+\lambda$.
 
+The expectation of the posterior predictive distribution for one observation $y_{n+1}$ is `r format(mu.post, digits = 4)` and the standard deviation is $\sqrt{\lambda_\text{post}^{-1}+\kappa^{-1}} =$  `r format(sqrt((1/lambda.post) + (1/kappa)), digits = 4)`.
 
-```{r, fig.show="hold", out.width="75%", fig.align='center', fig.cap="Posterior Predictive Distribution"}
+```{r, fig.show="hold", out.width="75%", fig.align='center'}
 curve(dnorm(x, mean=mu.post, sd=sqrt(1/lambda.post + 1/kappa)), ylim=c(0, 0.015), 
       xlim=c(61, 261), col=4, lwd=2, xlab="Height", ylab="Density", 
-      main="Posterior Predictive Distribution")
+      main="Posterior predictive distribution")
 ```
 
 
@@ -193,7 +192,9 @@ Estimate for $P[y_{n+1}> 200\mid y_1,...,y_n]$ for one future observation $y_{n+
 ```{r}
 pnorm(200, mean=mu.post, sd=sqrt(1/lambda.post+1/kappa), lower.tail=F)
 ```
-As a result we obtain a probability of 12.3% that a future observation of height will be larger than 200 cm.
+$P[y_{n+1}> 200\mid y_1,...,y_n]$ for one future observation $y_{n+1}$ of `Height`.
+
+<!-- As a result we obtain a probability of 12.3% that a future observation of height will be larger than 200 cm. -->
 
 
 **4 (c)**
@@ -201,6 +202,21 @@ As a result we obtain a probability of 12.3% that a future observation of height
 Comparison between posterior, prior predictive, and posterior distributions
 
 ```{r, fig.show="hold", out.width="50%"}
+curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), 
+      xlim=c(111, 211), col=2, lwd=2, xlab="Height", ylab="Density", 
+      main="Posterior, prior predictive and posterior predictive distributions")
+curve(dnorm(x, mean=161, sd=sqrt(970)), col=3, lwd=2, add=TRUE)
+curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
+legend("topleft", col=2:4, lwd=2, 
+       legend=c("posterior", "prior predictive", "posterior predcitive"))
+
+curve(dnorm(x, mean=161, sd=sqrt(970)), ylim=c(0, 0.015), xlim=c(61, 261), col=3, lwd=2,
+      xlab="Height", ylab="Density", main="Prior and posterior predictive distributions")
+curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
+legend("topleft", legend=c("prior predictive", "posterior predictive"), col=3:4, lwd=2)
+```
+
+```{r, fig.show="hold", out.width="50%", include=FALSE}
 curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), xlim=c(111, 211), 
       col=2, lwd=2, xlab="Height", ylab="Density", 
       main="Posterior and prior distributions")
@@ -217,7 +233,7 @@ curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
 legend("topleft", legend=c("prior predictive", "posterior predictive"), col=3:4, lwd=2)
 ```
 
-```{r}
+```{r, include=FALSE}
 df <- data.frame(
   Mean=c(mu, mu.post, mu, mu.post), 
   Variance=c(1/lambda, 1/lambda.post, 1/lambda+1/kappa, 1/lambda.post+1/kappa), 
@@ -226,6 +242,17 @@ df <- data.frame(
 rownames(df) <- c("Prior","Posterior", "Prior predictive", "Posterior predictive")
 knitr::kable(df, align="c", caption="Summary statistics")
 ```
+
+```{r}
+df <- data.frame(
+Mean=c(mu.post, mu, mu.post),
+Variance=c(1/lambda.post, 1/lambda+1/kappa, 1/lambda.post+1/kappa),
+SD=c(sqrt(1/lambda.post), sqrt(1/lambda+1/kappa), sqrt(1/lambda.post+1/kappa))
+)
+rownames(df) <- c("Posterior", "Prior predictive", "Posterior predictive")
+knitr::kable(df, align="c", caption="Summary statistics")
+```
+
 
 In this example, the prior predictive and posterior predictive distributions do not differ too much. However, the posterior distribution differs dramatically from the other two predictive distributions, and this is attributed to the difference in the variance of the distributions. 
 
@@ -248,7 +275,8 @@ $$
 P(Y\leq y)
 &=P(g(X)\leq y) \\
 &=P(X\leq g^{-1}(y)) \\
-F_Y(y)&=F_X(g^{-1}(y))
+F_Y(y)
+&=F_X(g^{-1}(y))
 \end{aligned}
 $$
 
@@ -465,26 +493,43 @@ cat(sprintf(
 ```
 We obtain different values for $X$, $Y$, and $Z$ if we do back-transformation operations on their means.
 
-Let us further look at the shape of the transformation and check if the Jensens inequality holds:
+$$
+\text{Median}(Y)=\text{Median}\left(\frac{1}{X} \right)=\frac{1}{\text{Median}(X)}
+$$
 
-```{r,echo = F, fig.width=4, fig.height=3,fig.align='center'}
+$$
+\text{Median}(Z)=\text{Median}\left(\sqrt{\frac{1}{X}} \right)=\sqrt{\frac{1}{\text{Median}(X)}}
+$$
+
+$$
+\mathbb{E}[Y]=\mathbb{E}\left[\frac{1}{X} \right]\neq \frac{1}{\mathbb{E}[X]}
+$$
+
+$$
+\mathbb{E}[Z]=\mathbb{E}\left[\sqrt{\frac{1}{X}} \right]\neq \sqrt{\frac{1}{\mathbb{E}[X]}}
+$$
+
+**Reasoning:** 
+
+* The median value is fixed by its position.
+* Inverse transformation only reverses the ranking (quantile) of $X$ but does not change the 50% quantile of $X$. Therefore, the inverse transformation can be operated directly on the median of $X$ in order to obtain the median of $Y$.
+* Square root inverse transformation is simply to add square-root transformation on the top of inverse transformation. Square root transformation is a monotonic transformation and does not change the ranking (quantile) of the $Y$, which makes it possible for direct operations on the medians.
+* This is not necessarily true for the mean values. Inverse transformation and square root transformation are nonlinear transformation while expectation only allows for linear operations (e.g. $\mathbb{E}[X+Y]=\mathbb{E}[X]+\mathbb{E}[Y]$, $\mathbb{E}[aX]=a\mathbb{E}[X]$). Since the mean and the median are different in the target Gamma distribution, we cannot tell anything about the relation between the sample means of $X$, $Y$, and $Z$.
+
+<!-- Let us further look at the shape of the transformation and check if the Jensens inequality holds: -->
+
+```{r,echo = F, fig.width=4, fig.height=3,fig.align='center', include=FALSE}
 par(mfrow = c(1,2))
 x <- seq(from =0, to = 2, length.out = 100)
 plot(x=x, y = 1/x,type = "l")
 plot(x=x, y = sqrt(1/x), type = "l")
 ```
 
-```{r}
+```{r, include=FALSE}
 #Because both are convex
 1/meanG <= meanIG
 sqrt(1/meanG) <= meanSIG
 ```
 
-
-**Reasoning:** 
-
-* Inverse Gamma $Y$: we conduct inverse transformation on the original data. The inverse transformation only reverses the ranking of the data but does not change the 50% quantile (median) of the data, which allows us to back transform the sample median of $Y$ to obtain the same sample median as in the original data $X$.
-* Square root Inverse Gamma $Z$: we simply do square root transformation on the top of the inverse transformation. Square root transformation is a monotonic transformation and does not change the ranking of the data, and $Y$ and $Z$ have exactly the same ranking (quantile) for the data. Hence, the median of $Z$ can also be transformed back to the median of $X$.
-* In the Gamma ($\text{shape}=a,\text{rate}=b$) distribution, the mean and median do not coincide. This can be explained with the Jensens Inequality. It says that for a **convex** function $\rho$ it holds $\rho(E(X))\leq E(\rho(X))$. Since the inverse- and squared-inverse functions are both convex functions, this can be applied. 
 
 
