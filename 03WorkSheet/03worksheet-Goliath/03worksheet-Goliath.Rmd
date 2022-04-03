@@ -188,7 +188,7 @@ curve(dnorm(x, mean=mu.post, sd=sqrt(1/lambda.post+1/kappa)), ylim=c(0, 0.015),
 ```
 
 
-Estimate for $P[y_{n+1}> 200|y_1,...,y_n]$ for one future observation $y_{n+1}$:
+Estimate for $P[y_{n+1}> 200\mid y_1,...,y_n]$ for one future observation $y_{n+1}$:
 ```{r}
 pnorm(200, mean=mu.post, sd=sqrt(1/lambda.post+1/kappa), lower.tail=F)
 ```
@@ -199,11 +199,7 @@ As a result we obtain a probability of 12.3% that a future observation of height
 
 Comparison between posterior, prior predictive, and posterior distributions
 
-<<<<<<< Updated upstream
-```{r, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Comparison of Posterior, Prior Predictive and Posterior Predictive Distribution for Height.\\label{fig:comparison4}", echo=F}
-=======
 ```{r, fig.show="hold", out.width="50%"}
->>>>>>> Stashed changes
 curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), xlim=c(111, 211), 
       col=2, lwd=2, xlab="Height", ylab="Density", 
       main="Posterior, prior predictive and posterior predictive distributions")
@@ -218,12 +214,6 @@ curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
 legend("topleft", legend=c("prior predictive", "posterior predictive"), col=3:4, lwd=2)
 ```
 
-<<<<<<< Updated upstream
-
-Figure \ref{fig:comparison4} illustrates the posterior, the prior predictive and the posterior predictive distribution. It can be seen that the two predictive functions are very common having a high variance, while the posterior distribution has a lower variance. 
-
-ADD DISCUSSION, INTERPRETATION
-=======
 ```{r}
 df <- data.frame(
   Mean=c(mu.post, mu, mu.post), 
@@ -233,7 +223,6 @@ df <- data.frame(
 rownames(df) <- c("Posterior", "Prior predictive", "Posterior predictive")
 knitr::kable(df, align="c", caption="Summary statistics")
 ```
->>>>>>> Stashed changes
 
 In this example, the prior predictive and posterior predictive distributions do not differ too much. However, the posterior distribution differs dramatically from the other two predictive distributions, and this is attributed to the difference in the variance of the distributions. 
 
