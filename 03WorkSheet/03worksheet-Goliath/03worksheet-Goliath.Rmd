@@ -30,9 +30,9 @@ m & \: \sim \:\mathcal{N}(\mu,\lambda^{-1})
 \end{aligned}
 $$
 
-#### 3(a)
+**3 (a)**
 
-The prior predictive distribution of one future observation $y$ assuming that no observations have been collected yet.
+The prior predictive distribution of one future observation $y$ assuming that no observations have been collected yet:
 
 $$
 \begin{aligned}
@@ -72,9 +72,9 @@ $$
 \mathcal{N}(\mu, \lambda^{-1}+\kappa^{-1})
 $$
 
-#### 3(b)
+**3 (b)**
 
-The posterior predictive distribution of one future observation $y_{n+1}$ given that $y_1,\cdots,y_n$ have been observed.
+The posterior predictive distribution of one future observation $y_{n+1}$ given that $y_1,\cdots,y_n$ have been observed:
 
 $$
 \begin{aligned}
@@ -111,9 +111,12 @@ $$
 y_{n+1}\mid y_1,\cdots,y_n\sim\mathcal{N}(\mu_\text{post}, \lambda_\text{post}^{-1}+\kappa^{-1})
 $$
 
+$~$
+
 ### Exercise 4 (Conjugate Bayesian analysis in practice)
 
-#### 4(a)
+**4 (a)**
+
 Plot the prior predictive distribution for one observation y and compute its expectation
 and standard deviation. Estimate P[y > 200] for one future observation of Height.
 
@@ -121,99 +124,122 @@ Prior predictive distribution:
 $$
 y\sim \mathcal{N}(\mu, \lambda^{-1}+\kappa^{-1})=\mathcal{N}(161, 970)
 $$
-So the expectation for $y$ equals $\mu = 161$ and the standard deviation is $\lambda^{-1}+\kappa^{-1} = 900+70=970$.
+
+```{r}
+height <- c(166,168,168,177,160,170,172,159,175,164,175,167,164)
+n      <- length(height) # sample size
+y.bar  <- mean(height)   # sample mean
+kappa  <- 1/900          # precision for data
+mu     <- 161            # prior mean
+lambda <- 1/70           # prior precision
+
+## Compute posterior mean and precision
+mu.post     <- (kappa*n*y.bar + lambda*mu) / (n*kappa + lambda)
+lambda.post <- n*kappa + lambda
+```
+
+So the expectation for $y$ equals $\mu = 161$ and the variance is $\lambda^{-1}+\kappa^{-1} = 900+70=970$.
 
 Prior predictive distribution:
-```{r, include=T, echo=F, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Prior Predictive Distribution"}
-curve(dnorm(x, mean=161, sd=sqrt(970)), ylim=c(0, 0.015), xlim=c(25, 275), 
+```{r, fig.show="hold", out.width="75%", fig.align='center', fig.cap="Prior Predictive Distribution"}
+curve(dnorm(x, mean=mu, sd=sqrt(1/kappa)), ylim=c(0, 0.015), xlim=c(71, 251), 
       col=2, lwd=2, xlab="Height", ylab="Density", main="Prior Predictive Distribution")
 ```
 
 
 ```{r}
-## P[y>200] for one future observation of Height
-pnorm(200, mean=161, sd=sqrt(970), lower.tail=F)
+## P[y > 200] for one future observation of Height
+pnorm(200, mean=mu, sd=sqrt(1/lambda + 1/kappa), lower.tail=F)
 ```
 The probability that an observation of Height larger than 200 cm is made equals 0.105. So it can be concluded that we expect around 10% of future observation to be larger than 200 cm. 
 
 
+**4 (b)**
 
-#### 4(b)
+```{r}
+## Compute posterior mean and precision
+mu.post     <- (kappa*n*y.bar + lambda*mu) / (n*kappa + lambda)
+lambda.post <- n*kappa + lambda
+
+cat(sprintf("Posterior mean is %.4f \nPosterior inversed precision is %.4f", 
+            mu.post, 1/lambda.post))
+```
 
 Posterior distribution:
 $$
-m\mid y_1,\cdots,y_n\sim\mathcal{N}\left(\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}, (n\kappa+\lambda)^{-1}\right)=\mathcal{N}(164.558, 34.80663)
+m\mid y_1,\cdots,y_n
+\sim\mathcal{N}\left(\mu_\text{post}, \lambda_\text{post}^{-1}\right)
+\equiv\mathcal{N}(164.558, 34.8066)
 $$
 
 Posterior predictive distribution:
 $$
-y_{n+1}\mid y_1,\cdots,y_n\sim\mathcal{N}
-\left(\frac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}, (n\kappa+\lambda)^{-1}+\kappa^{-1}\right)
-=\mathcal{N}(164.558, 934.80663)
+y_{n+1}\mid y_1,\cdots,y_n
+\sim\mathcal{N}\left(\mu_\text{post}, \lambda_\text{post}^{-1}+\kappa^{-1}\right)
+\equiv\mathcal{N}(164.558, 934.8066)
 $$
-Compute the expectation and standard error:
-
-```{r, include=T, echo=T}
-height <- c(166,168,168,177,160,170,172,159,175,164,175,167,164)
-n = length(height)
-y_bar = mean(height)
-kappa = 1/900
-mu = 161
-lambda = 1/70
-
-mu_post = (kappa*n*y_bar+lambda*mu)/(n*kappa+lambda)
-mu_post
-
-sd_post = (n*kappa+lambda)^-1+kappa^-1
-sd_post
-```
-
-Derived with the help of the formula above we obtain an expected value for $y_{n+1} = 164.558$ and a standard deviation of $934.80663$.
-
-With 
-
-- $n = 13$
-
-- $\kappa = \frac{1}{900}$
-
-- $\lambda = \frac{1}{70}$
-
-- $\mu = 161$
-
-- $\bar{y} =  E[y_1,...,y_n] = 168.0769$
+where $\mu_\text{post}=\dfrac{\kappa n\bar{y}+\lambda\mu}{n\kappa+\lambda}$ and $\lambda_\text{post}=n\kappa+\lambda$
 
 
-```{r, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Posterior Predictive Distribution", echo=FALSE}
-curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), ylim=c(0, 0.015), xlim=c(61, 261), col=4, 
-      lwd=2, xlab="Height", ylab="Density", main="Posterior Predictive Distribution")
+```{r, fig.show="hold", out.width="75%", fig.align='center', fig.cap="Posterior Predictive Distribution"}
+curve(dnorm(x, mean=mu.post, sd=sqrt(1/lambda.post+1/kappa)), ylim=c(0, 0.015), 
+      xlim=c(61, 261), col=4, lwd=2, xlab="Height", ylab="Density", 
+      main="Posterior Predictive Distribution")
 ```
 
 
-Estimate for $P[y_{n+1}> 200|y_1,...,y_n]$ for one future observation $y_n+1$:
+Estimate for $P[y_{n+1}> 200|y_1,...,y_n]$ for one future observation $y_{n+1}$:
 ```{r}
-pnorm(200, mean=164.558, sd=sqrt(934.80663), lower.tail=F)
+pnorm(200, mean=mu.post, sd=sqrt(1/lambda.post+1/kappa), lower.tail=F)
 ```
 As a result we obtain a probability of 12.3% that a future observation of height will be larger than 200 cm.
 
 
-#### 4(c)
+**4 (c)**
 
 Comparison between posterior, prior predictive, and posterior distributions
 
+<<<<<<< Updated upstream
 ```{r, fig.show="hold", out.width="80%", fig.align='center', fig.cap="Comparison of Posterior, Prior Predictive and Posterior Predictive Distribution for Height.\\label{fig:comparison4}", echo=F}
+=======
+```{r, fig.show="hold", out.width="50%"}
+>>>>>>> Stashed changes
 curve(dnorm(x, mean=164.558, sd=sqrt(34.80663)), ylim=c(0, 0.07), xlim=c(111, 211), 
-      col=2, lwd=2, xlab="Height", ylab="Density")
+      col=2, lwd=2, xlab="Height", ylab="Density", 
+      main="Posterior, prior predictive and posterior predictive distributions")
 curve(dnorm(x, mean=161, sd=sqrt(970)), col=3, lwd=2, add=TRUE)
 curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
 legend("topleft", legend=c("posterior", "prior predictive", "posterior predcitive"), 
        col=2:4, lwd=2)
+
+curve(dnorm(x, mean=161, sd=sqrt(970)), ylim=c(0, 0.015), xlim=c(61, 261), col=3, lwd=2, 
+      xlab="Height", ylab="Density", main="Prior and posterior predictive distributions")
+curve(dnorm(x, mean=164.558, sd=sqrt(934.80663)), col=4, lwd=2, add=TRUE)
+legend("topleft", legend=c("prior predictive", "posterior predictive"), col=3:4, lwd=2)
 ```
 
+<<<<<<< Updated upstream
 
 Figure \ref{fig:comparison4} illustrates the posterior, the prior predictive and the posterior predictive distribution. It can be seen that the two predictive functions are very common having a high variance, while the posterior distribution has a lower variance. 
 
 ADD DISCUSSION, INTERPRETATION
+=======
+```{r}
+df <- data.frame(
+  Mean=c(mu.post, mu, mu.post), 
+  Variance=c(1/lambda.post, 1/lambda+1/kappa, 1/lambda.post+1/kappa), 
+  SD=c(sqrt(1/lambda.post), sqrt(1/lambda+1/kappa), sqrt(1/lambda.post+1/kappa))
+)
+rownames(df) <- c("Posterior", "Prior predictive", "Posterior predictive")
+knitr::kable(df, align="c", caption="Summary statistics")
+```
+>>>>>>> Stashed changes
 
+In this example, the prior predictive and posterior predictive distributions do not differ too much. However, the posterior distribution differs dramatically from the other two predictive distributions, and this is attributed to the difference in the variance of the distributions. 
+
+The posterior distribution refers to the distribution of the parameter $m$ while the prior (posterior) predictive distribution refers to the distribution of one future observation of `Height`. The posterior distribution has a more narrow shape (i.e. smaller variance) and it implies that we are more certain about the $m$. Under extreme circumstances where $\lim\limits_{n\to\infty}(n\kappa+\lambda)^{-1}\approx0$, there is little variance in the posterior distribution, but it does not mean that there is no variance in posterior predictive distribution. Posterior predictive distribution ensures that we are not too optimistic about the distribution of future observations.
+
+$~$
 
 ### Exercise 5 (The change-of-variables formula)
 
@@ -236,14 +262,12 @@ $$
 
 By differentiating the CDFs on both sides w.r.t. $y$, we can get the PDF of $Y$.
 
-If the function $g(\cdot)$ is monotonically increasing:
 $$
-f_Y(y)=f_X(g^{-1}(y))\cdot\frac{d}{dy}g^{-1}(y)
-$$
-
-If the function $g(\cdot)$ is monotonically decreasing:
-$$
-f_Y(y)=-f_X(g^{-1}(y))\cdot\frac{d}{dy}g^{-1}(y)
+f_Y(y)=
+\begin{cases}
+f_X(g^{-1}(y))\cdot\dfrac{d}{dy}g^{-1}(y)  & g(\cdot)\:\text{is monotonically increasing} \\
+-f_X(g^{-1}(y))\cdot\dfrac{d}{dy}g^{-1}(y) & g(\cdot)\:\text{is monotonically decreasing}
+\end{cases}
 $$
 
 Therefore:
@@ -252,12 +276,11 @@ f_Y(y)=f_X(g^{-1}(y))\cdot\left\lvert \frac{d}{dy}g^{-1}(y)\right\rvert
 $$
 
 $$
-Y=\frac{1}{X}\implies
-X=\frac{1}{Y}
+f(x)=\frac{b^a}{\Gamma(a)}x^{a-1}\exp(-bx)
 $$
 
 $$
-f(x)=\frac{b^a}{\Gamma(a)}x^{a-1}\exp(-bx)
+Y=\frac{1}{X} \implies X=\frac{1}{Y}
 $$
 
 $$
@@ -271,12 +294,7 @@ f_Y(y)
 $$
 
 $$
-Z=\sqrt{\frac{1}{X}}\implies
-X=\frac{1}{Z^2}
-$$
-
-$$
-f(x)=\frac{b^a}{\Gamma(a)}x^{a-1}\exp(-bx)
+Z=\sqrt{\frac{1}{X}} \implies X=\frac{1}{Z^2}
 $$
 
 $$
@@ -311,20 +329,29 @@ a <- 1.6
 b <- 0.4
 ```
 
+```{r, include=FALSE}
+curve(dgamma(x, shape=a, rate=b), xlim=c(0, 1.5), ylim=c(0, 2.5), col=2, lwd=3, 
+      xlab="X", ylab="Density", main="Density of X")
+curve(dinvgamma(x, a, b), col=3, lwd=2, add=TRUE)
+curve(dsqrtinvgamma(x, a, b), add=TRUE, col=4, lwd=2)
+legend("topright", legend=c("G", "IG", "SIG"), col=2:4, lwd=2)
+```
 
-```{r, fig.show="hold", out.width="50%", fig.cap="Density Plots."}
-curve(dgamma(x, shape=a, rate=b), ylim=c(0, 0.2), col=2, lwd=3, 
+```{r, fig.show="hold", out.width="50%"}
+curve(dgamma(x, shape=a, rate=b), xlim=c(0, 8), ylim=c(0, 0.2), col=2, lwd=3, 
       xlab="X", ylab="Density", main="Density of X")
 legend("topleft", legend="G", col=2, lwd=2)
 
 curve(dinvgamma(x, a, b), xlim=c(0, 0.5), col=3, lwd=2, 
-      main="Densities of Y and Z", y="Density", xlab="Variable")
+      main="Densities of Y and Z", y="Density", xlab="Y or Z")
 curve(dsqrtinvgamma(x, a, b), add=TRUE, col=4, lwd=2)
 legend("topleft", legend=c("IG", "SIG"), col=c(3, 4), lwd=2)
 ```
 
+By overlaying the densities of $Y$ and $Z$, we see that the shape of densities is nearly flat when $Y$ and $Z$ are very close to 0, which implies that it is very unlikely that a random draw from Inverse Gamma distribution or from Square root Inverse Gamma distribution would be very close to 0. Recall that a Gamma prior is used for the precision $\frac{1}{\sigma^2}$, an Inverse Gamma prior is used for the variance $\sigma^2$, and a Square root Inverse Gamma prior is used for the standard deviation $\sigma$. It also implies that the prior about the variance (or the standard deviation) **cannot** be infinitesimally small (i.e. very close to 0).
 
-ADD INTERPRETATION: Interpret the shape of densities of Y and Z close to 0.
+
+$~$
 
 ### Exercise 6 (Monte Carlo: transformations of random variables)
 
@@ -417,3 +444,33 @@ rownames(df) <- c("G", "IG", "SIG")
 knitr::kable(df, caption="Summary statistics", align="c")
 ```
 
+We know that the random variables $X$, $Y$, and $Z$ have the following relation:
+$$
+\begin{aligned}
+Y=\frac{1}{X} &\implies X=\frac{1}{Y} \\
+Z=\sqrt{\frac{1}{X}} &\implies X=\frac{1}{Z^2}
+\end{aligned}
+$$
+Let us see if such a relation holds for sample medians:
+```{r}
+cat(sprintf(
+  "Median of X: %.4f\nOne over median of Y: %.4f\nOne over squared median of Z: %.4f", 
+  medG, 1/medIG, 1/medSIG^2
+))
+```
+We see that the transformation of random variables does not change the relation of medians for $X$, $Y$, and $Z$.
+
+Let us further check if such a relation holds for sample means:
+```{r}
+cat(sprintf(
+  "Mean of X: %.4f\nOne over mean of Y: %.4f\nOne over squared mean of Z: %.4f", 
+  meanG, 1/meanIG, 1/meanSIG^2
+))
+```
+We obtain different values for $X$, $Y$, and $Z$ if we do back-transformation operations on their means.
+
+**Reasoning:** 
+
+* Inverse Gamma $Y$: we conduct inverse transformation on the original data. The inverse transformation only reverses the ranking of the data but does not change the 50% quantile (median) of the data, which allows us to back transform the sample median of $Y$ to obtain the same sample median as in the original data $X$.
+* Square root Inverse Gamma $Z$: we simply do square root transformation on the top of the inverse transformation. Square root transformation is a monotonic transformation and does not change the ranking of the data, and $Y$ and $Z$ have exactly the same ranking (quantile) for the data. Hence, the median of $Z$ can also be transformed back to the median of $X$.
+* In the Gamma ($\text{shape}=a,\text{rate}=b$) distribution, the mean and median do not coincide. Since inverse transformation and square root transformation are nonlinear transformations, the positions of the sample means are different in $X$, $Y$, and $Z$. Thus the relation does not apply to sample means.
