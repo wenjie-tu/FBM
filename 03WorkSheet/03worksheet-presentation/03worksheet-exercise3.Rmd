@@ -1,6 +1,6 @@
 ---
 title: "Worksheet 3"
-author: Wenje Tu
+author: Wenjie Tu
 date: "Spring Semester 2022"
 output: pdf_document
 # bibliography: biblio.bib
