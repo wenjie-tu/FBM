@@ -99,6 +99,10 @@ $$
 $$
 
 $$
+f(m\mid y_1,\cdots,y_n)=\sqrt{\frac{\lambda_\text{post}}{2\pi}}\exp\left(-\frac{\lambda_\text{post}}{2}\left(m-\mu_\text{post} \right)^2  \right)
+$$
+
+$$
 f(y_{n+1}\mid y_1,\cdots,y_n)
 =\int_{-\infty}^{\infty}\sqrt{\frac{\kappa}{2\pi}}\exp\left(-\frac{\kappa}{2}(y_{n+1}-m)^2 \right)
 \underbrace{\sqrt{\frac{\lambda_\text{post}}{2\pi}}\exp\left(-\frac{\lambda_\text{post}}{2}\left(m-\mu_\text{post} \right)^2  \right)}_{\text{posterior distribution}}\text{dm} 
