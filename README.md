@@ -3,7 +3,7 @@
 ## Course Information
 
 * [Syllabus](Info/syllabus_STA421_FBM_FS22.pdf)
-* [Script](Script/script_fbm2022_chapters_1-3.pdf)
+* [Script](Script/script_fbm2022_chapters_1-4.pdf)
 
 
 
@@ -22,5 +22,12 @@
 
 ## [Worksheet 3](./03WorkSheet/03worksheet.pdf)
 
-* [ ] Crosschecking
-* [ ] Proofreading
+- [x] Crosschecking
+- [x] Proofreading
+
+## [Worksheet 4](./04WorkSheet/04worksheet.pdf)
+
+Crosschecking
+
+- [ ] Proofreading
+- [ ] Proofreading
