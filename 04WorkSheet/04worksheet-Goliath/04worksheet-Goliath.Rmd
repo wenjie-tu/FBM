@@ -415,9 +415,9 @@ acf(beta_low, col=2, main="Autocorrelation plot of beta (low)")
 acf(beta_middle, col=3, main="Autocorrelation plot of beta (middle)")
 acf(beta_high, col=4, main="Autocorrelation plot of beta (high)")
 
-ccf(alpha_low, beta_low, main="Crosscorrelation plot of alpha and beta (low)")
-ccf(alpha_middle, beta_middle, main="Crosscorrelation plot of alpha and beta (middle)")
-ccf(alpha_high, beta_high, main="Crosscorrelation plot of alpha and beta (high)")
+ccf(alpha_low, beta_low, col=2, main="Crosscorrelation plot of alpha and beta (low)")
+ccf(alpha_middle, beta_middle, col=3, main="Crosscorrelation plot of alpha and beta (middle)")
+ccf(alpha_high, beta_high, col=4, main="Crosscorrelation plot of alpha and beta (high)")
 ```
 
 
