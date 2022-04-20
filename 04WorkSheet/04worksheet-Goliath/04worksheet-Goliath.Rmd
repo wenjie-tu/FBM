@@ -241,15 +241,50 @@ lines(inla.output$marginals.hyperpar[[1]],lwd=2)
 legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 ```
 
+
+\pagebreak
+
+
 ### Exercise 3 (Metropolis-Hastings sampler for a logistic regression)
 
 **3.1**
 
-Explain Metropolis-Hastings sampler
+The aim of the Metropolis-Hastings algorithm is to generate a collection of states (here parameters $\alpha,\beta$) that describe our target distribution, which is the logistic regression $f(\alpha,\beta|\boldsymbol{y,n,x})$. Via a Markov process, the state (the parameters) should converge to a stationary state which is the desired target distribution.
 
-**3.2**
+The algorithm starts with the so called condition of detailed balance and means simply that each transition, for example $\alpha\rightarrow\alpha'$, is reversible and happens with the same probability. More specifically this means the probability to be in state $\alpha$ and transitioning to state $\alpha'$ is equal to the probability to be in state $\alpha'$ and transitioning to state $\alpha$.
 
-```{r}
+$$
+\begin{aligned}
+\underbrace{P(\alpha'|\alpha)}_{\text{Transitioning to state }\alpha'\text{ given one is in }\alpha}\cdot\underbrace{f(\alpha,\beta|\boldsymbol{y,n,x})}_{\text{P to be in state }\alpha}&=P(\alpha|\alpha')f(\alpha',\beta|\boldsymbol{y,n,x})\\
+\text{Which can be rewritten as:}\\
+\frac{P(\alpha'|\alpha)}{P(\alpha|\alpha')}&=\frac{f(\alpha',\beta|\boldsymbol{y,n,x})}{f(\alpha,\beta|\boldsymbol{y,n,x})}
+\end{aligned}
+$$
+For simplicity we focus her on one transition, namely $P(\alpha'|\alpha)$ but the same procedures also hold for the back-transition $P(\alpha|\alpha')$. Now, the transition $P(\alpha'|\alpha)$ has to be split into two steps. The first one is to "propose" the next value ($\alpha'$) and the second one is to accept this proposal or not. The proposal distribution $q(\alpha'|\alpha)$ is in our case a normal distribution, so $\alpha'\sim\mathcal{N}(\alpha,\sigma_{\alpha}^2)$ and this means that the proposed value $\alpha'$ is depending on the current value $\alpha$ but the spread is defined by a tuning parameter $\sigma_{\alpha}^2$ which kind of defines the update step. The acceptance distribution $A(\alpha',\alpha)$ does not have to be defined here as we will see. We can now rewrite:
+
+$$
+\begin{aligned}
+\frac{A(\alpha',\alpha)\cdot q(\alpha'|\alpha)}{A(\alpha,\alpha')\cdot q(\alpha|\alpha')}&=\frac{f(\alpha',\beta|\boldsymbol{y,n,x})}{f(\alpha,\beta|\boldsymbol{y,n,x})}\\
+\frac{A(\alpha',\alpha)}{A(\alpha,\alpha')}&=\frac{f(\alpha',\beta|\boldsymbol{y,n,x})\cdot q(\alpha|\alpha')}{f(\alpha,\beta|\boldsymbol{y,n,x})\cdot q(\alpha'|\alpha)}\\
+\end{aligned}
+$$
+
+In case of the Metropolis-Hastings algorithm the acceptance ratio $\frac{A(\alpha',\alpha)}{A(\alpha,\alpha')}$ can be written as $A^{\alpha}$ and it is forced to be lower or equal to 1 by definition. When we achieve an acceptance ratio larger than 1, which is theoretically possible, we will assume an acceptance ratio of 1, meaning that we will change from the current state $\alpha$ to the proposed state $\alpha'$ with a probability of 100%. 
+
+$$
+\begin{aligned}
+A^{\alpha}&=\text{min}\left(1,\frac{f(\alpha',\beta|\boldsymbol{y,n,x})\cdot q(\alpha|\alpha')}{f(\alpha,\beta|\boldsymbol{y,n,x})\cdot q(\alpha'|\alpha)}\right)
+\end{aligned}
+$$
+
+Now, if we get a proposed value $\alpha'$ that is more probable then the current value $\alpha$ this means that the acceptance ratio $A^{\alpha}$ is higher than 1 and we should always accept this value. On the other hand, if we get a proposed value that is less likely we should sometimes accept it. This is achieved by adding a stochastic component in form of a random sample from the uniform distribution. If the acceptance ratio is higher then the random sample we still accept this point. If it is lower we reject and stick with the current value $\alpha$.
+
+
+
+\pagebreak
+
+
+```{r MHSampler}
 MH.sampler <- function(x,        # covariate values
                        y,        # number of mice deaths
                        n,        # total number of mice
@@ -260,7 +295,9 @@ MH.sampler <- function(x,        # covariate values
                        alpha = 0,     # starting point
                        beta = 0,      # starting point
                        s_alpha = 1,   # SD for normal proposal
-                       s_beta = 60    # SD for normal proposal
+                       s_beta = 60,    # SD for normal proposal
+                       alpha_yes_history = rep(0,n.burnin + n.iter*n.thin),
+                        beta_yes_history = rep(0,n.burnin + n.iter*n.thin)
                        ) {
   
   ####################
@@ -316,6 +353,7 @@ MH.sampler <- function(x,        # covariate values
     # generate a new proposal for beta
     beta_star <- rnorm(1, beta, sd=s_beta)
     
+    
     enum <- sum(dbinom(y, size=n, prob=mypi(alpha, beta_star, x), log=TRUE)) + 
       dnorm(beta_star, mean=0, sd=sqrt(sigma2), log=TRUE)
     denom<- sum(dbinom(y, size=n, prob=mypi(alpha, beta, x), log=TRUE)) + 
@@ -327,6 +365,8 @@ MH.sampler <- function(x,        # covariate values
       # accept the proposed value
       beta <- beta_star
       beta_yes <- beta_yes + 1
+      alpha_yes_history[count] <- 1
+      beta_yes_history[count] <- 1
     }
     
     # after the burnin save every kth sample
@@ -334,19 +374,25 @@ MH.sampler <- function(x,        # covariate values
       alpha_samples <- c(alpha_samples, alpha)
       beta_samples <- c(beta_samples, beta)
     }
+    
     if(i%%1000 ==0){
       # print the acceptance rates on the fly
-      cat(c(i, alpha_yes/count, beta_yes/count), "\n")
+      print(cbind("i"=as.integer(i), "acc.rate alpha"=alpha_yes/count,
+                  "acc.rate beta"=beta_yes/count))
     }
   }
-  return(list(alpha_samples=alpha_samples, 
-              beta_samples=beta_samples))
+  #output:
+  output <- list("alpha_samples"=alpha_samples, "beta_samples"=beta_samples,
+                 "alpha_yes"=alpha_yes, "beta_yes"=beta_yes,
+                 "alpha_yes_history"= alpha_yes_history,
+                 "beta_yes_history"= beta_yes_history)
+return(output)
 }
 ```
 
 ```{r}
 x_original <- c(0.0028, 0.0028, 0.0056, 0.0112, 0.0225, 0.0450)
-# the centered covariate values (centered dose)
+# the centered covariate values (centered dose) from the Mice data from Collett
 x <- x_original - mean(x_original)
 # number of mice deaths
 # y <- c(35, 21, 9, 6, 1)
@@ -370,7 +416,7 @@ middle <- c(1, 100)
 high <- c(50, 5000)
 
 set.seed(44566)
-cat("\n---------Low values---------\n")
+cat("\n------------Low values------------\n")
 low.sampler <- MH.sampler(x=x, y=y, n=n, s_alpha=low[1], s_beta=low[2])
 
 cat("\n---------Middle values---------\n")
@@ -380,7 +426,7 @@ cat("\n---------High values---------\n")
 high.sampler <- MH.sampler(x=x, y=y, n=n, s_alpha=high[1], s_beta=high[2])
 ```
 
-When the tuning parameters of the proposals are set to middle $(1, 100)$, the optimal acceptance rate is attained.
+**3.2**
 
 
 ```{r MH, fig.show='hold', out.width="33.3%"}
@@ -415,12 +461,63 @@ acf(beta_low, col=2, main="Autocorrelation plot of beta (low)")
 acf(beta_middle, col=3, main="Autocorrelation plot of beta (middle)")
 acf(beta_high, col=4, main="Autocorrelation plot of beta (high)")
 
-ccf(alpha_low, beta_low, col=2, main="Crosscorrelation plot of alpha and beta (low)")
-ccf(alpha_middle, beta_middle, col=3, main="Crosscorrelation plot of alpha and beta (middle)")
-ccf(alpha_high, beta_high, col=4, main="Crosscorrelation plot of alpha and beta (high)")
+ccf(alpha_low, beta_low, col=2, 
+    main="Crosscorrelation plot of alpha and beta (low)")
+ccf(alpha_middle, beta_middle, col=3, 
+    main="Crosscorrelation plot of alpha and beta (middle)")
+ccf(alpha_high, beta_high, col=4, 
+    main="Crosscorrelation plot of alpha and beta (high)")
 ```
 
+When the tuning parameters of the proposals are set to middle $(1, 100)$, the optimal acceptance rate is attained.
 
+With high tuning parameters s_alpha and s_beta which are in form of the standard deviations of the proposal distribution $\theta'\sim\mathcal{N}(\theta_i,\sigma^2_{\theta})$ the proposed value gets easier or harder accepted. If the standard devation is high, the proposed value is hardly accepted (low acceptance rate). This can also be seen in the traceplots for high $\alpha$ and $\beta$ values, where horizontal lines are obtained, which indicates a low acceptance rate and a "stucking" of the algorithm at the same value. 
+Additionally, the autocorrelation (ACF) and crosscorrelation (CCF) plots for high $\alpha$ an $\beta$ values show a high correlation between the steps. This comes from the fact that we obtain a small acceptance rate and therefore a large probability of staying with the same value for some time. 
+
+
+If the standard deviation is too low, the acceptance rate is high but each updating step only converges rather slowly which means the updated value is very very similar to the value before. This also means for the ACF and CCF plots that the correlation is rather high because the iterative values, although they are not the same, are still very similar leading to a high correlation.
+
+
+**3.3**
+
+```{r, fig.show="hold", out.width="100%", fig.cap="Acceptance rate versus number of iterations."}
+par(mfrow = c(1,2))
+plot(cumsum(low.sampler$alpha_yes_history)/
+       c(1:length(cumsum(low.sampler$alpha_yes_history))) ,
+     type = "l",main = "",ylab = "Acceptance Rate",xlab = "Iteration",
+     ylim=c(0,1))
+polygon(x = c(0,0,14000,14000), y=c( 0.2,0.4,0.4,0.2) ,col="pink")
+lines(cumsum(middle.sampler$alpha_yes_history)/
+        c(1:length(cumsum(middle.sampler$alpha_yes_history))),col = "red")
+lines(cumsum(high.sampler$alpha_yes_history)/
+        c(1:length(cumsum(high.sampler$alpha_yes_history))),col = "blue")
+abline(v = 4000,lty = 3, col ="gray")
+legend("center", col = c("black","red","blue"),lty = 1,
+       legend = c("low: 0.01","middle: 1","high: 50"),
+       title = expression(alpha), cex = 0.6,bg="white")
+
+plot(cumsum(low.sampler$beta_yes_history)/
+       c(1:length(cumsum(low.sampler$beta_yes_history))) ,
+     type = "l",main = "",ylab = "Acceptance Rate",xlab = "Iteration",
+     ylim=c(0,1))
+polygon( x = c(0,0,14000,14000), y=c( 0.2,0.4,0.4,0.2) ,col="pink")
+lines(cumsum(middle.sampler$beta_yes_history)/
+        c(1:length(cumsum(middle.sampler$beta_yes_history))),col = "red")
+lines(cumsum(high.sampler$beta_yes_history)/
+        c(1:length(cumsum(high.sampler$beta_yes_history))),col = "blue")
+abline(v = 4000,lty = 3, col ="gray")
+legend("center", col = c("black","red","blue"),lty = 1,
+       legend = c("low: 0.01","middle: 1","high: 50"),
+       title = expression(beta), cex = 0.6,bg="white")
+
+
+```
+
+According to the "Rule of thumb" the optimal acceptance rate is between 0.2 and 0.4. SO the optimal tuning parameters of the proposal distributions in this case are obtained when the $\alpha$ proposal distribution has a standard deviation of 1 and the $\beta$ proposal distribution has a standard deviation of 100.
+
+
+
+Approach with Histograms:
 ```{r, fig.show='hold', out.width="50%"}
 d.MH <- data.frame(
   alpha = alpha_middle, 
@@ -431,14 +528,21 @@ ggplot(d.MH, aes(x=alpha, y=..density..)) +
   geom_histogram(color=2, fill=2, alpha=0.5, bins=50) + 
   geom_density(color=2, lwd=1) + 
   labs(title="Histogram of alpha", x=expression(alpha)) + 
-  theme_minimal()
+  theme_minimal()+
+  geom_vline(xintercept =-1, color=2, lwd=2)
 
 ggplot(d.MH, aes(x=beta, y=..density..)) + 
   geom_histogram(color=3, fill=3, alpha=0.5, bins=50) + 
   geom_density(color=3, lwd=1) + 
   labs(title="Histogram of beta", x=expression(beta)) + 
-  theme_minimal()
+  theme_minimal()+
+  geom_vline(xintercept =-100, color=3, lwd=2)
 ```
+
+**3.4**
+
+The following table illustrates the summary statistics of the marginal posteriors for $\alpha$ and $\beta$ for the middle choice of tuning parameters (=($\alpha=1$, $\beta=100$)).
+
 
 ```{r}
 d.summary <- t(
@@ -457,7 +561,10 @@ knitr::kable(d.summary, align="c",
 ```
 
 
-```{r logistic, fig.show='hold', out.width='75%', fig.align='center'}
+
+**3.5**
+
+```{r logistic, fig.show='hold', out.width='75%', fig.align='center', fig.cap="Logistic Curve plotted together with mice Data from Collett [1]"}
 med.alpha <- d.summary$Median[1]
 med.beta <- d.summary$Median[2]
 
@@ -471,11 +578,16 @@ mypi <- function(alpha, beta, x){
 x.grid <- seq(min(x), max(x), length.out=100)
 y.pred <- mypi(alpha=med.alpha, beta=med.beta, x=x.grid)
 
-plot(x=x, y=y/n, col=2, xlab="centered dose", ylab="response probability", 
-     main="Logistic curve with data")
+plot(x=x, y=y/n, col=2, xlab="Centered Dose", ylab="Response Probability", 
+     main="")
 points(x=x, y=mypi(alpha=med.alpha, beta=med.beta, x=x), col=3, pch=2)
 lines(y.pred ~ x.grid, col=4)
 legend("topright", legend=c("data", "predictions", "logistic curve"), 
        col=2:4, lty=c(NA, NA, 1), pch=c(1, 2, NA))
 ```
 
+
+
+### References:
+
+[1] Collett, D. (2003). Modelling Binary Data. Second Edition. Chapman & Hall/CRC.
