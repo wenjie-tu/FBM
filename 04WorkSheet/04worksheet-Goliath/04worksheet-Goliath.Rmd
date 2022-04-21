@@ -260,7 +260,7 @@ $$
 \frac{P(\alpha'|\alpha)}{P(\alpha|\alpha')}&=\frac{f(\alpha',\beta|\boldsymbol{y,n,x})}{f(\alpha,\beta|\boldsymbol{y,n,x})}
 \end{aligned}
 $$
-For simplicity we focus her on one transition, namely $P(\alpha'|\alpha)$ but the same procedures also hold for the back-transition $P(\alpha|\alpha')$. Now, the transition $P(\alpha'|\alpha)$ has to be split into two steps. The first one is to "propose" the next value ($\alpha'$) and the second one is to accept this proposal or not. The proposal distribution $q(\alpha'|\alpha)$ is in our case a normal distribution, so $\alpha'\sim\mathcal{N}(\alpha,\sigma_{\alpha}^2)$ and this means that the proposed value $\alpha'$ is depending on the current value $\alpha$ but the spread is defined by a tuning parameter $\sigma_{\alpha}^2$ which kind of defines the update step. The acceptance distribution $A(\alpha',\alpha)$ does not have to be defined here as we will see. We can now rewrite:
+For simplicity we focus here on one transition, namely $P(\alpha'|\alpha)$ but the same procedures also hold for the back-transition $P(\alpha|\alpha')$. Now, the transition $P(\alpha'|\alpha)$ has to be split into two steps. The first one is to "propose" the next value ($\alpha'$) and the second one is to accept this proposal or not. The proposal distribution $q(\alpha'|\alpha)$ is in our case a normal distribution, so $\alpha'\sim\mathcal{N}(\alpha,\sigma_{\alpha}^2)$ and this means that the proposed value $\alpha'$ is depending on the current value $\alpha$ but the spread is defined by a tuning parameter $\sigma_{\alpha}^2$ which kind of defines the update step. The acceptance distribution $A(\alpha',\alpha)$ does not have to be defined here as we will see. We can now rewrite:
 
 $$
 \begin{aligned}
@@ -277,7 +277,7 @@ A^{\alpha}&=\text{min}\left(1,\frac{f(\alpha',\beta|\boldsymbol{y,n,x})\cdot q(\
 \end{aligned}
 $$
 
-Now, if we get a proposed value $\alpha'$ that is more probable then the current value $\alpha$ this means that the acceptance ratio $A^{\alpha}$ is higher than 1 and we should always accept this value. On the other hand, if we get a proposed value that is less likely we should sometimes accept it. This is achieved by adding a stochastic component in form of a random sample from the uniform distribution. If the acceptance ratio is higher then the random sample we still accept this point. If it is lower we reject and stick with the current value $\alpha$.
+Now, if we get a proposed value $\alpha'$ that is more probable then the current value $\alpha$ this means that the acceptance ratio $A^{\alpha}$ is higher than 1 and we should always accept this value. On the other hand, if we get a proposed value with an acceptance rate lower than 1 we have to add a stochastic component in the form of a random sample from the uniform distribution in order to determine if we accept the proposed value. If the acceptance ratio is higher than the random sample we still accept this point. If it is lower we reject and stick with the current value $\alpha$.
 
 
 
@@ -507,7 +507,7 @@ lines(cumsum(high.sampler$beta_yes_history)/
         c(1:length(cumsum(high.sampler$beta_yes_history))),col = "blue")
 abline(v = 4000,lty = 3, col ="gray")
 legend("center", col = c("black","red","blue"),lty = 1,
-       legend = c("low: 0.01","middle: 1","high: 50"),
+       legend = c("low: 1","middle: 100","high: 5000"),
        title = expression(beta), cex = 0.6,bg="white")
 
 
