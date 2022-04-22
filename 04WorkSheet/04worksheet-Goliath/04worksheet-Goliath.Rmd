@@ -36,7 +36,7 @@ $$
 \end{aligned}
 $$
 
-Distribution function of $p(x)$:
+Probability density function of $p(x)$:
 $$
 \begin{aligned}
   f(x) 
@@ -189,8 +189,8 @@ ggplot(d.gibbs, aes(x=inv_sigma2, y=..density..)) +
 d.summary <- t(
   rbind(
     colMeans(d.gibbs), 
-    sapply(d.gibbs, function(x) sd(x)), 
-    sapply(d.gibbs, function(x) quantile(x, probs=c(0.025, 0.5, 0.975)))
+    apply(d.gibbs, 2, function(x) sd(x)), 
+    apply(d.gibbs, 2, function(x) quantile(x, probs=c(0.025, 0.5, 0.975)))
   )
 )
 
@@ -205,7 +205,8 @@ knitr::kable(d.summary, align="c", caption="Summary statistics of the marginal p
 # plots (compare with INLA)
 # INLA is exact
 
-# Question: How long should we run the MCMC Gibbs chain to get close to the exact INLA approximation?
+# Question: How long should we run the MCMC Gibbs chain 
+#             to get close to the exact INLA approximation?
 # Run for 10 min, for 30 min, for 1h...
 
 library(INLA)
@@ -213,105 +214,145 @@ library(MASS)
 
 formula <- y ~ 1
 inla.output <- inla(formula,data=data.frame(y=y),
-                    control.family = list(hyper =
-                                            list(prec = list(prior="loggamma",param=c(a0,b0)))),
-                    control.fixed = list(mean.intercept=mu0, prec.intercept=1/sigma2_0))
+                    control.family=list(hyper=list(prec=list(prior="loggamma", 
+                                                             param=c(a0,b0)))),
+                    control.fixed=list(mean.intercept=mu0, prec.intercept=1/sigma2_0))
 ```
 
-```{r inla, fig.show='hold', out.width="75%", fig.align='center'}
+```{r inla, fig.show='hold', out.width="33.3%"}
 par(mfrow=c(1,1))
 # plot for mean
 rg <- range(inla.output$marginals.fixed$"(Intercept)"[,2])
 truehist(mu_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(mu))
 lines(density(mu_gibbs_samples),lty=3,lwd=3, col=2)
 lines(inla.output$marginals.fixed$"(Intercept)",lwd=2)
-legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
+legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
+       lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 
 # plot for variance
 m_var <-inla.tmarginal(function(x) 1/x, inla.output$marginals.hyperpar[[1]])
 truehist(sigma2_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(sigma^2))
 lines(density(sigma2_gibbs_samples),lty=3,lwd=3, col=2)
 lines(m_var,lwd=2)
-legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
+legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
+       lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 
 # plot for precision
 truehist(inv_sigma2_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(1/sigma^2))
 lines(density(inv_sigma2_gibbs_samples),lty=3,lwd=3, col=2)
 lines(inla.output$marginals.hyperpar[[1]],lwd=2)
-legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
+legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
+       lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 ```
-
-
-\pagebreak
-
 
 ### Exercise 3 (Metropolis-Hastings sampler for a logistic regression)
 
 **3.1**
 
-The aim of the Metropolis-Hastings algorithm is to generate a collection of states (here parameters $\alpha,\beta$) that describe our target distribution, which is the logistic regression $f(\alpha,\beta|\boldsymbol{y,n,x})$. Via a Markov process, the state (the parameters) should converge to a stationary state which is the desired target distribution.
+The aim of the Metropolis-Hastings algorithm is to generate a collection of states (here parameters $\theta=\{\alpha,\beta\}$) that describe our target distribution, which is the logistic regression $f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x})$. Via a Markov process, the state (the parameters) should converge to a stationary state which is the desired target distribution.
 
-The algorithm starts with the so called condition of detailed balance and means simply that each transition, for example $\alpha\rightarrow\alpha'$, is reversible and happens with the same probability. More specifically this means the probability to be in state $\alpha$ and transitioning to state $\alpha'$ is equal to the probability to be in state $\alpha'$ and transitioning to state $\alpha$.
-
-$$
-\begin{aligned}
-\underbrace{P(\alpha'|\alpha)}_{\text{Transitioning to state }\alpha'\text{ given one is in }\alpha}\cdot\underbrace{f(\alpha,\beta|\boldsymbol{y,n,x})}_{\text{P to be in state }\alpha}&=P(\alpha|\alpha')f(\alpha',\beta|\boldsymbol{y,n,x})\\
-\text{Which can be rewritten as:}\\
-\frac{P(\alpha'|\alpha)}{P(\alpha|\alpha')}&=\frac{f(\alpha',\beta|\boldsymbol{y,n,x})}{f(\alpha,\beta|\boldsymbol{y,n,x})}
-\end{aligned}
-$$
-For simplicity we focus here on one transition, namely $P(\alpha'|\alpha)$ but the same procedures also hold for the back-transition $P(\alpha|\alpha')$. Now, the transition $P(\alpha'|\alpha)$ has to be split into two steps. The first one is to "propose" the next value ($\alpha'$) and the second one is to accept this proposal or not. The proposal distribution $q(\alpha'|\alpha)$ is in our case a normal distribution, so $\alpha'\sim\mathcal{N}(\alpha,\sigma_{\alpha}^2)$ and this means that the proposed value $\alpha'$ is depending on the current value $\alpha$ but the spread is defined by a tuning parameter $\sigma_{\alpha}^2$ which kind of defines the update step. The acceptance distribution $A(\alpha',\alpha)$ does not have to be defined here as we will see. We can now rewrite:
+The algorithm starts with the so-called condition of detailed balance, which simply means that each transition, for example $\theta\to\theta'$, is reversible and happens with the same probability. More specifically, the probability of being in state $\theta$ and transitioning to state $\theta'$ is equal to the probability of being in state $\theta'$ and transitioning to state $\theta$.
 
 $$
 \begin{aligned}
-\frac{A(\alpha',\alpha)\cdot q(\alpha'|\alpha)}{A(\alpha,\alpha')\cdot q(\alpha|\alpha')}&=\frac{f(\alpha',\beta|\boldsymbol{y,n,x})}{f(\alpha,\beta|\boldsymbol{y,n,x})}\\
-\frac{A(\alpha',\alpha)}{A(\alpha,\alpha')}&=\frac{f(\alpha',\beta|\boldsymbol{y,n,x})\cdot q(\alpha|\alpha')}{f(\alpha,\beta|\boldsymbol{y,n,x})\cdot q(\alpha'|\alpha)}\\
+P(\theta'\mid \theta) \cdot f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x}) 
+&=P(\theta\mid \theta') \cdot f(\theta'\mid \mathbf{y},\mathbf{n},\mathbf{x}) \\
+\frac{P(\theta'\mid \theta)}{P(\theta\mid \theta')}
+&=\frac{f(\theta'\mid \mathbf{y},\mathbf{n},\mathbf{x}) }{f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x}) }
 \end{aligned}
 $$
 
-In case of the Metropolis-Hastings algorithm the acceptance ratio $\frac{A(\alpha',\alpha)}{A(\alpha,\alpha')}$ can be written as $A^{\alpha}$ and it is forced to be lower or equal to 1 by definition. When we achieve an acceptance ratio larger than 1, which is theoretically possible, we will assume an acceptance ratio of 1, meaning that we will change from the current state $\alpha$ to the proposed state $\alpha'$ with a probability of 100%. 
+* $P(\theta'\mid \theta)$: Transition probability from state $\theta$ to state $\theta'$
+* $f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x})$: the target distribution
+
+For simplicity we focus here on one transition, namely $P(\theta'\mid \theta)$ but the same procedures also hold for the back-transition $P(\theta'\mid \theta)$. Now, the transition $P(\theta'\mid \theta)$ has to be split into two steps. The first one is to "propose" the next value ($\theta'$) and the second one is to accept this proposal or not. The proposal distribution $q(\theta'\mid \theta)$ is in our case a normal distribution, so $\theta'\sim\mathcal{N}(\theta,\sigma_{\theta}^2)$ and this means that the proposed value $\theta'$ is depending on the current value $\theta$ but the spread is defined by a tuning parameter $\sigma_{\theta}^2$ which kind of defines the updating step. The acceptance distribution $A(\theta',\theta)$ does not have to be defined here as we will see. We can now rewrite:
 
 $$
 \begin{aligned}
-A^{\alpha}&=\text{min}\left(1,\frac{f(\alpha',\beta|\boldsymbol{y,n,x})\cdot q(\alpha|\alpha')}{f(\alpha,\beta|\boldsymbol{y,n,x})\cdot q(\alpha'|\alpha)}\right)
+\frac{A(\theta',\theta)\cdot q(\theta'\mid \theta)}{A(\theta, \theta')\cdot q(\theta\mid\theta')}
+&=\frac{f(\theta'\mid \mathbf{y},\mathbf{n},\mathbf{x})}
+{f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x})} \\
+\frac{A(\theta',\theta)}{A(\theta, \theta')}
+&=\frac{f(\theta'\mid \mathbf{y},\mathbf{n},\mathbf{x})\cdot q(\theta\mid\theta')}
+{f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x})\cdot q(\theta'\mid \theta)} 
 \end{aligned}
 $$
 
-Now, if we get a proposed value $\alpha'$ that is more probable then the current value $\alpha$ this means that the acceptance ratio $A^{\alpha}$ is higher than 1 and we should always accept this value. On the other hand, if we get a proposed value with an acceptance rate lower than 1 we have to add a stochastic component in the form of a random sample from the uniform distribution in order to determine if we accept the proposed value. If the acceptance ratio is higher than the random sample we still accept this point. If it is lower we reject and stick with the current value $\alpha$.
+* $A(\theta',\theta)$ is the probability to accept the proposed state $\theta'$ given the current state $\theta$
 
+In case of the Metropolis-Hastings algorithm the acceptance ratio $\frac{A(\theta', \theta)}{A(\theta, \theta')}$ can be written as $A$ and it is forced to be lower or equal to 1 by definition. If we achieve an acceptance ratio larger than 1, which is theoretically possible, we will assume an acceptance ratio of 1, meaning that we will move from the current state $\theta$ to the proposed state $\theta'$ with a probability of 100%. 
 
+$$
+\begin{aligned}
+A&=\text{min}\left(1,\frac{f(\theta'\mid \mathbf{y},\mathbf{n},\mathbf{x})\cdot q(\theta\mid\theta')}
+{f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x})\cdot q(\theta'\mid \theta)} \right) \\
+&=\text{min}\left(1,\frac{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid\theta')\cdot 
+f(\theta') \cdot q(\theta\mid\theta')}
+{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid \theta)\cdot f(\theta) \cdot q(\theta'\mid \theta)} \right) \\
+&=\text{min}\left(1,\frac{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid\theta')\cdot f(\theta') }
+{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid \theta)\cdot f(\theta)} \right) \\
+\end{aligned}
+$$
 
-\pagebreak
+* From line 1 to line 2, using Bayes rule for $f(\theta'\mid \mathbf{y},\mathbf{n},\mathbf{x})$ and $f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x})$
+* From line 2 to line 3, using the fact that the proposal distribution (i.e. univariate normal distribution) is symmetric hence $q(\theta\mid\theta')=q(\theta'\mid \theta)$
 
+Now, if we get a proposed value $\theta'$ that is more probable then the current value $\theta$ this means that the acceptance ratio $A$ is higher than 1 and we should always accept this value. On the other hand, if we get a proposed value with an acceptance rate lower than 1 we have to add a stochastic component in the form of a random sample from the uniform distribution in order to determine if we accept the proposed value. If the acceptance ratio is higher than the random sample we still accept this point. If it is lower we reject and stick with the current value $\theta$.
+
+The parameters of interest in this task are the intercept ($\alpha$) and the slope ($\beta$) of the logistical regression:
+
+$$
+\text{logit}(p_i)=\ln\left(\frac{p_i}{1-p_i} \right)=\alpha+\beta x_i
+$$
+
+* $p_i$ is the estimated relative frequency of deaths, which can be obtained from the data ($p_i=\dfrac{y_i}{n_i}$)
+
+Given two independent normal priors for $\alpha$ and $\beta$ with mean = 0 and variance = 10000, we have:
+
+$$
+\begin{aligned}
+A(\alpha)&=\text{min}\left(1,\frac{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid\alpha')\cdot f(\alpha') }
+{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid \alpha)\cdot f(\alpha)} \right) \\
+&=\min\left(1,\frac{\text{Bin}(n, \frac{y}{n}\mid\alpha')\cdot \text{N}(\alpha'\mid 0,100^2 )}
+{\text{Bin}(n, \frac{y}{n}\mid\alpha)\cdot \text{N}(\alpha\mid 0,100^2 )} \right)
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+A(\alpha)&=\text{min}\left(1,\frac{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid\beta')\cdot f(\beta') }
+{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid \beta)\cdot f(\beta)} \right) \\
+&=\min\left(1,\frac{\text{Bin}(n, \frac{y}{n}\mid\beta')\cdot \text{N}(\beta'\mid 0,100^2 )}
+{\text{Bin}(n, \frac{y}{n}\mid\beta)\cdot \text{N}(\beta\mid 0,100^2 )} \right)
+\end{aligned}
+$$
+
+In the `R` code, we use the sum of log probabilities instead of the product of probabilities as the product of probabilities can be very small, which is numerically unstable in programming.
 
 ```{r MHSampler}
-MH.sampler <- function(x,        # covariate values
-                       y,        # number of mice deaths
-                       n,        # total number of mice
+# inverse logit: logit^(-1)(alpha + beta*x)
+mypi <- function(alpha, beta, x){
+  tmp <- exp(alpha + beta*x)
+  pi <- tmp/(1+tmp)
+  return(pi)
+}
+
+MH.sampler <- function(x,               # covariate values
+                       y,               # number of mice deaths
+                       n,               # total number of mice
                        sigma2 = 10^(4), # variance of normal priors
                        n.iter = 10000,  # number of MCMC iterations
                        n.burnin = 4000, # burnin length
-                       n.thin = 1,       # thinning parameter
-                       alpha = 0,     # starting point
-                       beta = 0,      # starting point
-                       s_alpha = 1,   # SD for normal proposal
-                       s_beta = 60,    # SD for normal proposal
-                       alpha_yes_history = rep(0,n.burnin + n.iter*n.thin),
-                        beta_yes_history = rep(0,n.burnin + n.iter*n.thin)
+                       n.thin = 1,      # thinning parameter
+                       alpha = 0,       # starting point
+                       beta = 0,        # starting point
+                       s_alpha = 1,     # SD for normal proposal
+                       s_beta = 60      # SD for normal proposal
                        ) {
   
   ####################
   ## Bayesian analysis
   ####################
-  
-  # inverse logit: logit^(-1)(alpha + beta*x)
-  mypi <- function(alpha, beta, x){
-    tmp <- exp(alpha + beta*x)
-    pi <- tmp/(1+tmp)
-    return(pi)
-  }
-  
-  
   
   #####################################
   ## Step 1: R: (univariate proposal) Metropolis MCMC settings 
@@ -325,6 +366,11 @@ MH.sampler <- function(x,        # covariate values
   
   # counter
   count <- 0
+  
+  alpha_yes_history <- rep(0, n.burnin+n.iter*n.thin+1)
+  beta_yes_history <- rep(0, n.burnin+n.iter*n.thin+1)
+  
+  cat(sprintf("%5s", c("i", "acc_rate_alpha", "acc_rate_beta\n")))
   
   # start the MCMC algorithm (the first iteration after the burn-in is 1)
   for(i in -n.burnin:(n.iter*n.thin)){
@@ -347,6 +393,7 @@ MH.sampler <- function(x,        # covariate values
       # accept the proposed value
       alpha <- alpha_star
       alpha_yes <- alpha_yes + 1
+      alpha_yes_history[count] <- 1
     }
     
     ## update beta
@@ -365,7 +412,6 @@ MH.sampler <- function(x,        # covariate values
       # accept the proposed value
       beta <- beta_star
       beta_yes <- beta_yes + 1
-      alpha_yes_history[count] <- 1
       beta_yes_history[count] <- 1
     }
     
@@ -375,10 +421,12 @@ MH.sampler <- function(x,        # covariate values
       beta_samples <- c(beta_samples, beta)
     }
     
+    
     if(i%%1000 ==0){
       # print the acceptance rates on the fly
-      print(cbind("i"=as.integer(i), "acc.rate alpha"=alpha_yes/count,
-                  "acc.rate beta"=beta_yes/count))
+      # cat(c(i, alpha_yes/count, beta_yes/count), "\n")
+      cat(sprintf("%5.0f\t%1.6f\t%1.6f\n", 
+                  i, alpha_yes/count, beta_yes/count))
     }
   }
   #output:
@@ -410,24 +458,24 @@ colnames(d.mice) <- c("$x$", "$y$", "$n$", "centered $x$", "$p$")
 knitr::kable(d.mice, align="c", caption="Mice data from Collett (2003)")
 ```
 
+
 ```{r, results = "hold"}
 low <- c(0.01, 1)
 middle <- c(1, 100)
 high <- c(50, 5000)
 
 set.seed(44566)
-cat("\n------------Low values------------\n")
+cat("\n-------Low values (0.01, 1)-------\n")
 low.sampler <- MH.sampler(x=x, y=y, n=n, s_alpha=low[1], s_beta=low[2])
 
-cat("\n---------Middle values---------\n")
+cat("\n-------Middle values (1, 100)-------\n")
 middle.sampler <- MH.sampler(x=x, y=y, n=n, s_alpha=middle[1], s_beta=middle[2])
 
-cat("\n---------High values---------\n")
+cat("\n-------High values (50, 5000)-------\n")
 high.sampler <- MH.sampler(x=x, y=y, n=n, s_alpha=high[1], s_beta=high[2])
 ```
 
 **3.2**
-
 
 ```{r MH, fig.show='hold', out.width="33.3%"}
 alpha_low <- low.sampler$alpha_samples
@@ -453,35 +501,86 @@ plot(x=1:length(beta_middle), y=beta_middle, type="l", col=3,
 plot(x=1:length(beta_high), y=beta_high, type="l", col=4, 
      xlab="Iteration", ylab=expression(beta), main="Traceplot of beta (high)")
 
-acf(alpha_low, col=2, main="Autocorrelation plot of alpha (low)")
-acf(alpha_middle, col=3, main="Autocorrelation plot of alpha (middle)")
-acf(alpha_high, col=4, main="Autocorrelation plot of alpha (high)")
+acf(alpha_low, col=2, main="Autocorrelation plot of alpha (low)", lag.max=10000)
+acf(alpha_middle, col=3, main="Autocorrelation plot of alpha (middle)", lag.max=10000)
+acf(alpha_high, col=4, main="Autocorrelation plot of alpha (high)", lag.max=10000)
 
-acf(beta_low, col=2, main="Autocorrelation plot of beta (low)")
-acf(beta_middle, col=3, main="Autocorrelation plot of beta (middle)")
-acf(beta_high, col=4, main="Autocorrelation plot of beta (high)")
+acf(beta_low, col=2, main="Autocorrelation plot of beta (low)", lag.max=10000)
+acf(beta_middle, col=3, main="Autocorrelation plot of beta (middle)", lag.max=10000)
+acf(beta_high, col=4, main="Autocorrelation plot of beta (high)", lag.max=10000)
 
-ccf(alpha_low, beta_low, col=2, 
+ccf(alpha_low, beta_low, col=2, lag.max=10000, 
     main="Crosscorrelation plot of alpha and beta (low)")
-ccf(alpha_middle, beta_middle, col=3, 
+ccf(alpha_middle, beta_middle, col=3, lag.max=10000, 
     main="Crosscorrelation plot of alpha and beta (middle)")
-ccf(alpha_high, beta_high, col=4, 
+ccf(alpha_high, beta_high, col=4, lag.max=10000, 
     main="Crosscorrelation plot of alpha and beta (high)")
 ```
 
 When the tuning parameters of the proposals are set to middle $(1, 100)$, the optimal acceptance rate is attained.
 
-With high tuning parameters s_alpha and s_beta which are in form of the standard deviations of the proposal distribution $\theta'\sim\mathcal{N}(\theta_i,\sigma^2_{\theta})$ the proposed value gets easier or harder accepted. If the standard devation is high, the proposed value is hardly accepted (low acceptance rate). This can also be seen in the traceplots for high $\alpha$ and $\beta$ values, where horizontal lines are obtained, which indicates a low acceptance rate and a "stucking" of the algorithm at the same value. 
-Additionally, the autocorrelation (ACF) and crosscorrelation (CCF) plots for high $\alpha$ an $\beta$ values show a high correlation between the steps. This comes from the fact that we obtain a small acceptance rate and therefore a large probability of staying with the same value for some time. 
+With high tuning parameters _s_alpha_ and _s_beta_ which are in form of the standard deviations of the proposal distribution $\alpha'\sim\mathcal{N}(\alpha,\sigma^2_{\alpha})$ and $\beta'\sim\mathcal{N}(\beta,\sigma^2_{\beta})$ the proposed value gets easier or harder accepted. 
 
 
-If the standard deviation is too low, the acceptance rate is high but each updating step only converges rather slowly which means the updated value is very very similar to the value before. This also means for the ACF and CCF plots that the correlation is rather high because the iterative values, although they are not the same, are still very similar leading to a high correlation.
-
+* If the standard deviations of $\alpha$ and $\beta$ are too low, the acceptance rate is high but each updating step only converges rather slowly which means the updated value is highly similar to the value before. 
+  + The traceplots show that the chain explores pretty much locally rather than globally so it takes so much time and many iterations for the chain to explore the full target distribution.
+  + The ACF and CCF plots show that autocorrelation is very high at larger lags and it dies even more slowly. This is because for high values of parameters the samples accepted are still somewhat different while for low values of parameters the samples accepted are highly correlated.
+* If the standard deviations of $\alpha$ and $\beta$ are somewhere in the middle, the acceptance rate is around 23%, which is acceptable according to the "rule of thumb".
+  + The traceplots show that the chain seems to explore the full target distribution as there is no apparent anomalies.
+  + The ACF and CCF plots show that autocorrelation is large at short lags but it drops dramatically after several iterations.
+* If the standard deviations of $\alpha$ and $\beta$ are too  high, the proposed value is hardly accepted (low acceptance rate), which leads to inefficient sampling. 
+  + The traceplots show that many plateaus are reached or too many consecutive steps in one direction, which indicates the proposed sample is rejected for many iterations and the chain stays in the same state for too long.
+  + The ACF and CCF plots show that autocorrelation is very high even at large lags and it also dies out very slowly, which also indicates a very inefficient sampling compared to the i.i.d sampling.
 
 **3.3**
 
-```{r, fig.show="hold", out.width="100%", fig.cap="Acceptance rate versus number of iterations."}
-par(mfrow = c(1,2))
+```{r}
+d.alpha <- data.frame(
+  Iteration = rep(-4000:10000, times=3), 
+  AcceptRate = c(
+    cumsum(low.sampler$alpha_yes_history) / seq_along(low.sampler$alpha_yes_history), 
+    cumsum(middle.sampler$alpha_yes_history) / seq_along(middle.sampler$alpha_yes_history), 
+    cumsum(high.sampler$alpha_yes_history) / seq_along(high.sampler$alpha_yes_history)
+  ), 
+  ParamsType = factor(rep(c("Low", "Middle", "High"), each=14001), 
+                      levels=c("Low", "Middle", "High"))
+)
+
+
+d.beta <- data.frame(
+  Iteration = rep(-4000:10000, times=3), 
+  AcceptRate = c(
+    cumsum(low.sampler$beta_yes_history) / seq_along(low.sampler$beta_yes_history), 
+    cumsum(middle.sampler$beta_yes_history) / seq_along(middle.sampler$beta_yes_history), 
+    cumsum(high.sampler$beta_yes_history) / seq_along(high.sampler$beta_yes_history)
+  ), 
+  ParamsType = factor(rep(c("Low", "Middle", "High"), each=14001), 
+                      levels=c("Low", "Middle", "High"))
+)
+```
+
+
+```{r, fig.show="hold", out.width="50%"}
+ggplot(d.alpha, aes(x=Iteration, y=AcceptRate)) + 
+  geom_line(aes(color=ParamsType)) + 
+  geom_ribbon(aes(ymin=0.2, ymax=0.4), fill="grey12", alpha=0.2) + 
+  geom_text(aes(x=2500, y=0.3, label="optimal acceptance rate interval"), 
+            color="grey12", check_overlap=TRUE) + 
+  labs(title=paste("Traceplot of acceptance rate for alpha")) + 
+  theme_minimal()
+
+ggplot(d.beta, aes(x=Iteration, y=AcceptRate)) + 
+  geom_line(aes(color=ParamsType)) + 
+  geom_ribbon(aes(ymin=0.2, ymax=0.4), fill="grey12", alpha=0.2) + 
+  geom_text(aes(x=2500, y=0.3, label="optimal acceptance rate interval"), 
+            color="grey12", check_overlap=TRUE) + 
+  labs(title=paste("Traceplot of acceptance rate for beta")) + 
+  theme_minimal()
+```
+
+
+```{r, fig.show="hold", out.width="100%", fig.cap="Acceptance rate versus number of iterations.", eval=FALSE, include=FALSE}
+#par(mfrow = c(1,2))
 plot(cumsum(low.sampler$alpha_yes_history)/
        c(1:length(cumsum(low.sampler$alpha_yes_history))) ,
      type = "l",main = "",ylab = "Acceptance Rate",xlab = "Iteration",
@@ -516,8 +615,10 @@ legend("center", col = c("black","red","blue"),lty = 1,
 According to the "Rule of thumb" the optimal acceptance rate is between 0.2 and 0.4. SO the optimal tuning parameters of the proposal distributions in this case are obtained when the $\alpha$ proposal distribution has a standard deviation of 1 and the $\beta$ proposal distribution has a standard deviation of 100.
 
 
+**3.4**
 
-Approach with Histograms:
+We can visualize the marginal posteriors for $\alpha$ and $\beta$ for the middle choice of tuning parameters by plotting the histograms and density curves:
+
 ```{r, fig.show='hold', out.width="50%"}
 d.MH <- data.frame(
   alpha = alpha_middle, 
@@ -528,28 +629,23 @@ ggplot(d.MH, aes(x=alpha, y=..density..)) +
   geom_histogram(color=2, fill=2, alpha=0.5, bins=50) + 
   geom_density(color=2, lwd=1) + 
   labs(title="Histogram of alpha", x=expression(alpha)) + 
-  theme_minimal()+
-  geom_vline(xintercept =-1, color=2, lwd=2)
+  theme_minimal()
 
 ggplot(d.MH, aes(x=beta, y=..density..)) + 
   geom_histogram(color=3, fill=3, alpha=0.5, bins=50) + 
   geom_density(color=3, lwd=1) + 
   labs(title="Histogram of beta", x=expression(beta)) + 
-  theme_minimal()+
-  geom_vline(xintercept =-100, color=3, lwd=2)
+  theme_minimal() 
 ```
 
-**3.4**
-
 The following table illustrates the summary statistics of the marginal posteriors for $\alpha$ and $\beta$ for the middle choice of tuning parameters (=($\alpha=1$, $\beta=100$)).
-
 
 ```{r}
 d.summary <- t(
   rbind(
     colMeans(d.MH), 
-    sapply(d.MH, function(x) sd(x)), 
-    sapply(d.MH, function(x) quantile(x, probs=c(0.025, 0.5, 0.975)))
+    apply(d.MH, 2, function(x) sd(x)), 
+    apply(d.MH, 2, function(x) quantile(x, probs=c(0.025, 0.5, 0.975)))
   )
 )
 
@@ -561,10 +657,9 @@ knitr::kable(d.summary, align="c",
 ```
 
 
-
 **3.5**
 
-```{r logistic, fig.show='hold', out.width='75%', fig.align='center', fig.cap="Logistic Curve plotted together with mice Data from Collett [1]"}
+```{r logistic, fig.show='hold', out.width='75%', fig.align='center'}
 med.alpha <- d.summary$Median[1]
 med.beta <- d.summary$Median[2]
 
@@ -579,7 +674,7 @@ x.grid <- seq(min(x), max(x), length.out=100)
 y.pred <- mypi(alpha=med.alpha, beta=med.beta, x=x.grid)
 
 plot(x=x, y=y/n, col=2, xlab="Centered Dose", ylab="Response Probability", 
-     main="")
+     main="Logistic curve with true data")
 points(x=x, y=mypi(alpha=med.alpha, beta=med.beta, x=x), col=3, pch=2)
 lines(y.pred ~ x.grid, col=4)
 legend("topright", legend=c("data", "predictions", "logistic curve"), 
@@ -588,6 +683,6 @@ legend("topright", legend=c("data", "predictions", "logistic curve"),
 
 
 
-### References:
+<!-- ### References: -->
 
-[1] Collett, D. (2003). Modelling Binary Data. Second Edition. Chapman & Hall/CRC.
+<!-- [1] Collett, D. (2003). Modelling Binary Data. Second Edition. Chapman & Hall/CRC. -->
