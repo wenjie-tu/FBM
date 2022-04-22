@@ -517,15 +517,13 @@ ccf(alpha_high, beta_high, col=4, lag.max=10000,
     main="Crosscorrelation plot of alpha and beta (high)")
 ```
 
-When the tuning parameters of the proposals are set to middle $(1, 100)$, the optimal acceptance rate is attained.
-
-With high tuning parameters _s_alpha_ and _s_beta_ which are in form of the standard deviations of the proposal distribution $\alpha'\sim\mathcal{N}(\alpha,\sigma^2_{\alpha})$ and $\beta'\sim\mathcal{N}(\beta,\sigma^2_{\beta})$ the proposed value gets easier or harder accepted. 
+With high tuning parameters *s_alpha* and *s_beta* which are in form of the standard deviations of the proposal distribution $\alpha'\sim\mathcal{N}(\alpha,\sigma^2_{\alpha})$ and $\beta'\sim\mathcal{N}(\beta,\sigma^2_{\beta})$ the proposed value gets easier or harder accepted. 
 
 
 * If the standard deviations of $\alpha$ and $\beta$ are too low, the acceptance rate is high but each updating step only converges rather slowly which means the updated value is highly similar to the value before. 
   + The traceplots show that the chain explores pretty much locally rather than globally so it takes so much time and many iterations for the chain to explore the full target distribution.
   + The ACF and CCF plots show that autocorrelation is very high at larger lags and it dies even more slowly. This is because for high values of parameters the samples accepted are still somewhat different while for low values of parameters the samples accepted are highly correlated.
-* If the standard deviations of $\alpha$ and $\beta$ are somewhere in the middle, the acceptance rate is around 23%, which is acceptable according to the "rule of thumb".
+* If the standard deviations of $\alpha$ and $\beta$ are somewhere in the middle, the acceptance rates for $\alpha$ and $\beta$ are around 21% and 23% respectively, which is acceptable according to the "rule of thumb".
   + The traceplots show that the chain seems to explore the full target distribution as there is no apparent anomalies.
   + The ACF and CCF plots show that autocorrelation is large at short lags but it drops dramatically after several iterations.
 * If the standard deviations of $\alpha$ and $\beta$ are too  high, the proposed value is hardly accepted (low acceptance rate), which leads to inefficient sampling. 
@@ -612,7 +610,7 @@ legend("center", col = c("black","red","blue"),lty = 1,
 
 ```
 
-According to the "Rule of thumb" the optimal acceptance rate is between 0.2 and 0.4. SO the optimal tuning parameters of the proposal distributions in this case are obtained when the $\alpha$ proposal distribution has a standard deviation of 1 and the $\beta$ proposal distribution has a standard deviation of 100.
+When the tuning parameters of the proposals are set to middle values (*s_alpha* = 1, *s_beta* = 100), the optimal acceptance rate is attained. From the traceplots of acceptance rates for $\alpha$ and $\beta$, we can also see that only acceptance rate under middle choice condition stabilizes within the "optimal acceptance rate interval" suggested by the "rule of thumb".
 
 
 **3.4**
@@ -677,7 +675,7 @@ plot(x=x, y=y/n, col=2, xlab="Centered Dose", ylab="Response Probability",
      main="Logistic curve with true data")
 points(x=x, y=mypi(alpha=med.alpha, beta=med.beta, x=x), col=3, pch=2)
 lines(y.pred ~ x.grid, col=4)
-legend("topright", legend=c("data", "predictions", "logistic curve"), 
+legend("topright", legend=c("true data", "predictions", "logistic curve"), 
        col=2:4, lty=c(NA, NA, 1), pch=c(1, 2, NA))
 ```
 
