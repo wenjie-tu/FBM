@@ -341,7 +341,7 @@ P(\theta'\mid \theta) \cdot f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x})
 \end{aligned}
 $$
 
-* $P(\theta'\mid \theta)$: Transition probability from state $\theta$ to state $\theta'$
+* $P(\theta'\mid \theta)$: transition probability from state $\theta$ to state $\theta'$
 * $f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x})$: the target distribution
 
 For simplicity we focus here on one transition, namely $P(\theta'\mid \theta)$ but the same procedures also hold for the back-transition $P(\theta'\mid \theta)$. Now, the transition $P(\theta'\mid \theta)$ has to be split into two steps. The first one is to "propose" the next value ($\theta'$) and the second one is to accept this proposal or not. The proposal distribution $q(\theta'\mid \theta)$ is in our case a normal distribution, so $\theta'\sim\mathcal{N}(\theta,\sigma_{\theta}^2)$ and this means that the proposed value $\theta'$ is depending on the current value $\theta$ but the spread is defined by a tuning parameter $\sigma_{\theta}^2$ which kind of defines the updating step. The acceptance distribution $A(\theta',\theta)$ does not have to be defined here as we will see. We can now rewrite:
