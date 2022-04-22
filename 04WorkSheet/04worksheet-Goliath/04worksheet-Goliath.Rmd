@@ -221,6 +221,11 @@ inla.output <- inla(formula,data=data.frame(y=y),
                     control.fixed=list(mean.intercept=mu0, prec.intercept=1/sigma2_0))
 ```
 
+```{r}
+demo <- inla.output$marginals.fixed$"(Intercept)"
+```
+
+
 ```{r inla, fig.show='hold', out.width="33.3%"}
 par(mfrow=c(1,1))
 # plot for mean
@@ -247,7 +252,7 @@ legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
        lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 ```
 
-We overlay the histogram of samples obtained from Gibbs sampling with the density plot of samples obtained from INLA and we can see that both results converge to the same target distribution (with trivial disagreement).
+By overlaying the histogram of samples obtained from Gibbs sampling with the density plot of samples obtained from INLA, we see that both results converge to the same target distribution (with trivial disagreement).
 
 4. Explain step by step in your own words what the code in `04GibbsSampler.R` is doing.
 
