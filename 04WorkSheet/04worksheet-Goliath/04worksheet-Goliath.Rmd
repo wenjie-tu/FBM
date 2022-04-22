@@ -653,7 +653,7 @@ ggplot(d.alpha, aes(x=Iteration, y=AcceptRate)) +
   geom_ribbon(aes(ymin=0.2, ymax=0.4), fill="grey12", alpha=0.2) + 
   geom_text(aes(x=2500, y=0.3, label="optimal acceptance rate interval"), 
             color="grey12", check_overlap=TRUE) + 
-  labs(title="Traceplot of acceptance rate for alpha", ylab="Acceptance Rate") + 
+  labs(title="Traceplot of acceptance rate for alpha", y="Acceptance Rate") + 
   theme_minimal()
 
 ggplot(d.beta, aes(x=Iteration, y=AcceptRate)) + 
@@ -661,7 +661,7 @@ ggplot(d.beta, aes(x=Iteration, y=AcceptRate)) +
   geom_ribbon(aes(ymin=0.2, ymax=0.4), fill="grey12", alpha=0.2) + 
   geom_text(aes(x=2500, y=0.3, label="optimal acceptance rate interval"), 
             color="grey12", check_overlap=TRUE) + 
-  labs(title="Traceplot of acceptance rate for beta", ylab="Acceptance Rate") + 
+  labs(title="Traceplot of acceptance rate for beta", y="Acceptance Rate") + 
   theme_minimal()
 ```
 
