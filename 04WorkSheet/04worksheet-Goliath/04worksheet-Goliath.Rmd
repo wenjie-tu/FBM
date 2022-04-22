@@ -57,7 +57,7 @@ $$
 
 **2(b)**
 
-Generate data: a random normal sample by assuming `set.seed(44566)`, $n=30$, $\mu=4$ and $\sigma^2=16$.
+1. Generate data: a random normal sample by assuming `set.seed(44566)`, $n=30$, $\mu=4$ and $\sigma^2=16$.
 
 ```{r}
 # Generate data
@@ -68,6 +68,7 @@ n <- 30
 y <- rnorm(n=n, mean=mu, sd=sqrt(sigma2))
 ```
 
+2. Set the parameters of the prior distributions to $\mu_0=-3,\sigma_0^2=4,a_0=1.6$ (shape) and $b_0=0.4$ (rate), take a burn-in of 4000 simulations and run your code for a total of 10000 simulations when assuming your own initial values. Provide traceplots and summaries (mean, sd, 0.025, 0.5, 0.975 quantiles) of the marginal posteriors for $\mu,\sigma^2$ and $1/\sigma^2$.
 
 ```{r}
 # Define the parameters of the prior distributions 
@@ -80,7 +81,7 @@ b0 <- 0.4
 ## Gibbs sampler (1 chain)
 ####################
 
-# initialisation
+# Initialization
 set.seed(44566)
 
 n.iter <- 10000
@@ -91,7 +92,7 @@ n.chains <- 1
 parameters <- c("mu", "sigma2", "inv_sigma2")
 n.parameters <- length(parameters)
 
-n.tot <- n.burnin + n.iter*n.thin
+n.tot <- n.burnin + n.iter * n.thin
 
 gibbs_samples <- matrix(NA, nrow = n.iter, ncol = n.parameters)
 colnames(gibbs_samples) <- parameters
@@ -103,10 +104,10 @@ inv.sigma2.sim <- rep(NA, length = n.tot)
 # Set the initial value
 sigma2.sim[1] <- 1/runif(n.chains)
 
-# set the counter
+# Set the counter
 k <- 1
 
-#Run the for loop (only one chain)
+# Run the for loop (only one chain)
 for(i in 2:(n.burnin+n.iter*n.thin)){
   
   mu.sim[i] <- rnorm(1, 
@@ -126,7 +127,7 @@ for(i in 2:(n.burnin+n.iter*n.thin)){
   }
   
   if(i%%1000 == 0){
-    # report on the fly in which iteration the chain is
+  # report on the fly in which iteration the chain is
     cat(i, "\n")
   }
   
@@ -200,6 +201,7 @@ colnames(d.summary) <- c("Mean", "SD", "2.5%", "Median", "97.5%")
 knitr::kable(d.summary, align="c", caption="Summary statistics of the marginal posteriors")
 ```
 
+3. For this model, INLA (https://www.r-inla.org/) provides exact results. Compare results provided by the Gibbs sampler with those provided by INLA.
 
 ```{r, warning=FALSE, message=FALSE}
 # plots (compare with INLA)
@@ -244,6 +246,53 @@ lines(inla.output$marginals.hyperpar[[1]],lwd=2)
 legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
        lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 ```
+
+We overlay the histogram of samples obtained from Gibbs sampling with the density plot of samples obtained from INLA and we can see that both results converge to the same target distribution (with trivial disagreement).
+
+4. Explain step by step in your own words what the code in `04GibbsSampler.R` is doing.
+
+
+$$
+\begin{aligned}
+y_1,\cdots,y_n & \overset{i.i.d.}{\sim} \text{N}(\mu,\sigma^2) \\
+  \mu & \:\sim \text{N}(\mu_0,\sigma_0^2) \\
+  1/\sigma^2 & \:\sim \text{G}(a_0,b_0)
+\end{aligned}
+$$
+
+In the lecture script, we obtain posterior distribution:
+$$
+\begin{aligned}
+  f(\mu,\sigma^2\mid y_1,\cdots,y_n)\propto 
+  & \left(\frac{1}{2\pi\sigma^2} \right)^{\frac{n}{2}} \exp\left(-\frac{1}{2\sigma^2}\sum_{i=1}^{n}(y_i-\mu)^2 \right) \\
+  & \times\frac{1}{\sqrt{2\pi\sigma_0^2}}\exp\left(-\frac{1}{2\sigma_0^2}(\mu-\mu_0)^2 \right) \\
+  & \times\frac{b_0^{a_0}}{\Gamma(a_0)}y^{-(a_0+1)}\exp\left(-\frac{b_0}{y} \right)
+\end{aligned}
+$$
+
+* The Gibbs Sampler starts with selecting initial values for $\mu$ and $\sigma$.
+* Then we sample a new value (denoted by $\mu^{(t)}$) from the full conditional probability distribution of $\mu$ given $\sigma^{(t-1)}$.
+* Next we sample a new value (denoted by $\sigma^{(t)}$) conditional on $\mu^{(t)}$ obtained from the previous step.
+* We repeat the procedure for an additional $$T iterations, alternating between drawing a new sample from the full conditional probability distribution of $\mu$ and the full conditional probability distribution of $\sigma$, given the current value of the other random variable.
+
+Gibbs sampling algorithm proceeds as follows:
+
+\begin{table}[!htbp]
+    \centering
+    \begin{tabular}{l}
+        \hline
+        \texttt{initialize} $\mu^{(0)}$, $\sigma^{(0)}$                            \\ 
+        \hline
+        \texttt{for} $t=1, 2,\cdots, T$                                            \\
+        $\qquad\qquad\mu^{(t)}\sim\mathrm{N(mean, var\mid \sigma^{(t-1)})}$        \\
+        $\qquad\qquad\sigma^{(t)}\sim\mathrm{InvG(shape, scale\mid \mu^{(t)})}$    \\
+        \hline 
+        \texttt{end for} \\
+        \hline
+    \end{tabular}
+\end{table}
+
+
 
 ### Exercise 3 (Metropolis-Hastings sampler for a logistic regression)
 
@@ -320,7 +369,7 @@ $$
 
 $$
 \begin{aligned}
-A(\alpha)&=\text{min}\left(1,\frac{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid\beta')\cdot f(\beta') }
+A(\beta)&=\text{min}\left(1,\frac{f(\mathbf{y},\mathbf{n},\mathbf{x}\mid\beta')\cdot f(\beta') }
 {f(\mathbf{y},\mathbf{n},\mathbf{x}\mid \beta)\cdot f(\beta)} \right) \\
 &=\min\left(1,\frac{\text{Bin}(n, \frac{y}{n}\mid\beta')\cdot \text{N}(\beta'\mid 0,100^2 )}
 {\text{Bin}(n, \frac{y}{n}\mid\beta)\cdot \text{N}(\beta\mid 0,100^2 )} \right)
@@ -429,7 +478,7 @@ MH.sampler <- function(x,               # covariate values
                   i, alpha_yes/count, beta_yes/count))
     }
   }
-  #output:
+  # output:
   output <- list("alpha_samples"=alpha_samples, "beta_samples"=beta_samples,
                  "alpha_yes"=alpha_yes, "beta_yes"=beta_yes,
                  "alpha_yes_history"= alpha_yes_history,
@@ -487,6 +536,7 @@ beta_middle <- middle.sampler$beta_samples
 alpha_high <- high.sampler$alpha_samples
 beta_high <- high.sampler$beta_samples
 
+## Traceplots of alpha under different tuning parameters
 plot(x=1:length(alpha_low), y=alpha_low, type="l", col=2, 
      xlab="Iteration", ylab=expression(alpha), main="Traceplot of alpha (low)")
 plot(x=1:length(alpha_middle), y=alpha_middle, type="l", col=3, 
@@ -494,6 +544,7 @@ plot(x=1:length(alpha_middle), y=alpha_middle, type="l", col=3,
 plot(x=1:length(alpha_high), y=alpha_high, type="l", col=4, 
      xlab="Iteration", ylab=expression(alpha), main="Traceplot of alpha (high)")
 
+## Traceplots of beta under different tuning parameters
 plot(x=1:length(beta_low), y=beta_low, type="l", col=2, 
      xlab="Iteration", ylab=expression(beta), main="Traceplot of beta (low)")
 plot(x=1:length(beta_middle), y=beta_middle, type="l", col=3, 
@@ -501,14 +552,17 @@ plot(x=1:length(beta_middle), y=beta_middle, type="l", col=3,
 plot(x=1:length(beta_high), y=beta_high, type="l", col=4, 
      xlab="Iteration", ylab=expression(beta), main="Traceplot of beta (high)")
 
+## ACF plots of alpha under different tuning parameters
 acf(alpha_low, col=2, main="Autocorrelation plot of alpha (low)", lag.max=10000)
 acf(alpha_middle, col=3, main="Autocorrelation plot of alpha (middle)", lag.max=10000)
 acf(alpha_high, col=4, main="Autocorrelation plot of alpha (high)", lag.max=10000)
 
+## ACF plots of beta under different tuning parameters
 acf(beta_low, col=2, main="Autocorrelation plot of beta (low)", lag.max=10000)
 acf(beta_middle, col=3, main="Autocorrelation plot of beta (middle)", lag.max=10000)
 acf(beta_high, col=4, main="Autocorrelation plot of beta (high)", lag.max=10000)
 
+## CCF plots under different tuning parameters
 ccf(alpha_low, beta_low, col=2, lag.max=10000, 
     main="Crosscorrelation plot of alpha and beta (low)")
 ccf(alpha_middle, beta_middle, col=3, lag.max=10000, 
@@ -564,7 +618,7 @@ ggplot(d.alpha, aes(x=Iteration, y=AcceptRate)) +
   geom_ribbon(aes(ymin=0.2, ymax=0.4), fill="grey12", alpha=0.2) + 
   geom_text(aes(x=2500, y=0.3, label="optimal acceptance rate interval"), 
             color="grey12", check_overlap=TRUE) + 
-  labs(title=paste("Traceplot of acceptance rate for alpha")) + 
+  labs(title="Traceplot of acceptance rate for alpha", ylab="Acceptance Rate") + 
   theme_minimal()
 
 ggplot(d.beta, aes(x=Iteration, y=AcceptRate)) + 
@@ -572,7 +626,7 @@ ggplot(d.beta, aes(x=Iteration, y=AcceptRate)) +
   geom_ribbon(aes(ymin=0.2, ymax=0.4), fill="grey12", alpha=0.2) + 
   geom_text(aes(x=2500, y=0.3, label="optimal acceptance rate interval"), 
             color="grey12", check_overlap=TRUE) + 
-  labs(title=paste("Traceplot of acceptance rate for beta")) + 
+  labs(title="Traceplot of acceptance rate for beta", ylab="Acceptance Rate") + 
   theme_minimal()
 ```
 
@@ -623,12 +677,14 @@ d.MH <- data.frame(
   beta  = beta_middle
 )
 
+## Posterior distribution for alpha for the middle choice of tuning parameters
 ggplot(d.MH, aes(x=alpha, y=..density..)) + 
   geom_histogram(color=2, fill=2, alpha=0.5, bins=50) + 
   geom_density(color=2, lwd=1) + 
   labs(title="Histogram of alpha", x=expression(alpha)) + 
   theme_minimal()
 
+## Posterior distribution for beta for the middle choice of tuning parameters
 ggplot(d.MH, aes(x=beta, y=..density..)) + 
   geom_histogram(color=3, fill=3, alpha=0.5, bins=50) + 
   geom_density(color=3, lwd=1) + 
@@ -636,7 +692,7 @@ ggplot(d.MH, aes(x=beta, y=..density..)) +
   theme_minimal() 
 ```
 
-The following table illustrates the summary statistics of the marginal posteriors for $\alpha$ and $\beta$ for the middle choice of tuning parameters (=($\alpha=1$, $\beta=100$)).
+The following table illustrates the summary statistics of the marginal posteriors for $\alpha$ and $\beta$ for the middle choice of tuning parameters ($\alpha=1$, $\beta=100$).
 
 ```{r}
 d.summary <- t(
