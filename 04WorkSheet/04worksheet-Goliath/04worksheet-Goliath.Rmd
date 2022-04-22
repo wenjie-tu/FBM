@@ -270,10 +270,40 @@ $$
 \end{aligned}
 $$
 
+The full conditional posterior distribution for $\mu$:
+$$
+f(\mu\mid\sigma^2,y_1,\cdots,y_n)\propto
+\exp\left(-\frac{1}{2}\left[\mu^2\left(\frac{n}{\sigma^2}+\frac{1}{\sigma_0^2} \right)
+-2\mu\left(\frac{\sum_{i=1}^{n}y_i}{\sigma^2}+\frac{\mu_0}{\sigma_0^2} \right)
+\right] \right)
+$$
+
+$$
+\mu^{(t)}\mid(\sigma^2)^{(t-1)},y_1,\cdots,y_n \sim
+\text{N}\left(
+\frac{\frac{\sum_{i=1}^{n}y_i}{(\sigma^2)^{(t-1)}}+\frac{\mu_0}{\sigma_0^2}}
+{\frac{n}{(\sigma^2)^{(t-1)}}+\frac{1}{\sigma_0^2}}, 
+\frac{1}{\frac{n}{(\sigma^2)^{(t-1)}}+\frac{1}{\sigma_0^2}}
+\right)
+$$
+
+The full conditional posterior distribution for $\sigma^2$:
+
+$$
+f(\sigma^2\mid\mu,y_1,\cdots,y_n)\propto
+(\sigma^2)^{-\frac{n}{2}-(\alpha_0+1)}
+\exp\left(-\frac{1}{\sigma^2}\left[b_0+\frac{1}{2}\sum_{i=1}^{n}(y_i-\mu)^2 \right] \right)
+$$
+
+$$
+(\sigma^2)^{(t)}\mid\mu^{(t)},y_1,\cdots,y_n \sim
+\text{InvG}\left(\frac{n}{2}+a_0,b_0+\frac{1}{2}\sum_{i=1}^{n}(y_i-\mu^{(t)})^2 \right)
+$$
+
 * The Gibbs Sampler starts with selecting initial values for $\mu$ and $\sigma$.
 * Then we sample a new value (denoted by $\mu^{(t)}$) from the full conditional probability distribution of $\mu$ given $\sigma^{(t-1)}$.
 * Next we sample a new value (denoted by $\sigma^{(t)}$) conditional on $\mu^{(t)}$ obtained from the previous step.
-* We repeat the procedure for an additional $$T iterations, alternating between drawing a new sample from the full conditional probability distribution of $\mu$ and the full conditional probability distribution of $\sigma$, given the current value of the other random variable.
+* We repeat the procedure for an additional $T$ iterations, alternating between drawing a new sample from the full conditional probability distribution of $\mu$ and the full conditional probability distribution of $\sigma$, given the current value of the other random variable.
 
 Gibbs sampling algorithm proceeds as follows:
 
