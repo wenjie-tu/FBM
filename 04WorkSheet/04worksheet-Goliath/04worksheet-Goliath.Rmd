@@ -398,7 +398,7 @@ $$
 * From line 1 to line 2, using Bayes rule for $f(\theta'\mid \mathbf{y},\mathbf{n},\mathbf{x})$ and $f(\theta\mid \mathbf{y},\mathbf{n},\mathbf{x})$
 * From line 2 to line 3, using the fact that the proposal distribution (i.e. univariate normal distribution) is symmetric hence $q(\theta\mid\theta')=q(\theta'\mid \theta)$
 
-Now, if we get a proposed value $\theta'$ that is more probable then the current value $\theta$ this means that the acceptance ratio $A$ is higher than 1 and we should always accept this value. On the other hand, if we get a proposed value with an acceptance rate lower than 1 we have to add a stochastic component in the form of a random sample from the uniform distribution in order to determine if we accept the proposed value. If the acceptance ratio is higher than the random sample we still accept this point. If it is lower we reject and stick with the current value $\theta$.
+Now, if we get a proposed value $\theta'$ that is more probable then the current value $\theta$ this means that the acceptance ratio $A$ is higher than 1 and we should always accept this value. On the other hand, if we get a proposed value with an acceptance ratio lower than 1 we have to add a stochastic component in the form of a random sample from the uniform distribution in order to determine if we accept the proposed value. If the acceptance ratio is higher than the random sample we still accept this point. If it is lower we reject and stick with the current value $\theta$.
 
 The parameters of interest in this task are the intercept ($\alpha$) and the slope ($\beta$) of the logistical regression:
 
