@@ -252,7 +252,18 @@ legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
        lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 ```
 
-By overlaying the histogram of samples obtained from Gibbs sampling with the density plot of samples obtained from INLA, we see that both results converge to the same target distribution (with trivial disagreement).
+```{r kl.divergence}
+suppressPackageStartupMessages(library(edfun))
+
+FNN::KL.divergence(edfun(inla.output[["marginals.fixed"]][["(Intercept)"]][, 1])$rfun(100), 
+                   edfun(mu_gibbs_samples)$rfun(100), k = 10)
+FNN::KL.divergence(edfun(m_var[, 1])$rfun(1000), edfun(sigma2_gibbs_samples)$rfun(1000))
+```
+
+ - Firstly, by overlaying the histogram of samples obtained from Gibbs sampling with the density plot of samples obtained from INLA, we see that both results converge to the same target distribution (with trivial disagreement).
+
+ - Secondly, when using Kullback-Leibler divergence to compare two distributions, the resulting values are close to 0, indicating that these two distributions are quite similar.
+Due to the limited number of samples from INLA, we first fitted an empirical CDF to mu's Gibbs samples and INLA, respectively. Then we sample 100 samples from those two ecdf respectively. Finally we apply the function of kl.divergence to compare two distributions.
 
 4. Explain step by step in your own words what the code in `04GibbsSampler.R` is doing.
 
