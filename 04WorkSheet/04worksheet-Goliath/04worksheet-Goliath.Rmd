@@ -221,31 +221,29 @@ summary(inla.output)
 ```{r inla, fig.show='hold', out.width="33.3%"}
 # Plot for mean
 rg <- range(inla.output$marginals.fixed$"(Intercept)"[,2])
-truehist(mu_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(mu), main = "Mean")
-lines(density(mu_gibbs_samples),lty=3,lwd=3, col=2)
+truehist(mu_gibbs_samples, prob=TRUE, col="yellow", 
+         xlab=expression(mu), main="Mean")
+lines(density(mu_gibbs_samples), lty=3, lwd=3, col=2)
 lines(inla.output$marginals.fixed$"(Intercept)",lwd=2)
-legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
-       lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
+legend("topright", c("MCMC, Gibbs","INLA"), lty=c(3,1), 
+       lwd=c(2,2), col=c(2,1), cex=1.0, bty="n")
 
 # Plot for variance
 m_var <-inla.tmarginal(function(x) 1/x, inla.output$marginals.hyperpar[[1]])
-truehist(sigma2_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(sigma^2), main = "Variance")
-lines(density(sigma2_gibbs_samples),lty=3,lwd=3, col=2)
-lines(m_var,lwd=2)
-legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
-       lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
+truehist(sigma2_gibbs_samples, prob=TRUE, col="yellow", 
+         xlab=expression(sigma^2), main="Variance")
+lines(density(sigma2_gibbs_samples), lty=3, lwd=3, col=2)
+lines(m_var, lwd=2)
+legend("topright",c("MCMC, Gibbs","INLA"), lty=c(3,1), 
+       lwd=c(2,2), col=c(2,1), cex=1.0, bty="n")
 
-<<<<<<< HEAD
-# plot for precision
-truehist(inv_sigma2_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(1/sigma^2), main = "Precision")
-=======
 # Plot for precision
-truehist(inv_sigma2_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(1/sigma^2))
->>>>>>> 87f7e3e (dropped KL divergence check as it is not clearly explained)
-lines(density(inv_sigma2_gibbs_samples),lty=3,lwd=3, col=2)
-lines(inla.output$marginals.hyperpar[[1]],lwd=2)
-legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
-       lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
+truehist(inv_sigma2_gibbs_samples, prob=TRUE, col="yellow", 
+         xlab=expression(1/sigma^2), main="Precision")
+lines(density(inv_sigma2_gibbs_samples), lty=3, lwd=3, col=2)
+lines(inla.output$marginals.hyperpar[[1]], lwd=2)
+legend("topright", c("MCMC, Gibbs","INLA"), lty=c(3,1), 
+       lwd=c(2,2), col=c(2,1), cex=1.0, bty="n")
 ```
 
 ```{r kl.divergence, include=FALSE, eval=FALSE}
