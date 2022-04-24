@@ -751,7 +751,15 @@ knitr::kable(d.summary, align="c",
 
 **3.5**
 
-```{r logistic, fig.show='hold', out.width='75%', fig.align='center'}
+```{r}
+## Disaggregate the data
+d.mice1 <- data.frame(Response=rep(c(1, 0), c(sum(y), sum(n)-sum(y))), 
+                      CenteredDose=c(rep(round(x, 5), y), rep(round(x, 5), n-y)))
+
+knitr::kable(table(d.mice1))
+```
+
+```{r logistic, fig.show='hold', out.width='50%'}
 med.alpha <- d.summary$Median[1]
 med.beta <- d.summary$Median[2]
 
@@ -762,18 +770,22 @@ mypi <- function(alpha, beta, x){
   return(pi)
 }
 
-x.grid <- seq(min(x), max(x), length.out=100)
+x.grid <- seq(min(x)-0.02, max(x)+0.02, length.out=100)
 y.pred <- mypi(alpha=med.alpha, beta=med.beta, x=x.grid)
+plot(y.pred ~ x.grid, col=2, type="l", ylim=c(-0.2, 1.2), xlab="Centered Dose", 
+     ylab="Response", main="Logistic curve with disaggregate data")
+points(x=jitter(d.mice1$CenteredDose), y=jitter(d.mice1$Response), col=3)
+legend("topright", legend=c("logistic curve", "disaggregate data"), 
+       col=2:3, lty=c(1, NA), pch=c(NA, 1))
 
-plot(x=x, y=y/n, col=2, xlab="Centered Dose", ylab="Response Probability", 
-     main="Logistic curve with true data")
-points(x=x, y=mypi(alpha=med.alpha, beta=med.beta, x=x), col=3, pch=2)
-lines(y.pred ~ x.grid, col=4)
-legend("topright", legend=c("true data", "predictions", "logistic curve"), 
-       col=2:4, lty=c(NA, NA, 1), pch=c(1, 2, NA))
+plot(y.pred ~ x.grid, col=2, type="l", ylim=c(0, 1), xlab="Centered Dose", 
+     ylab="Response Probability", main="Logistic curve with aggregate data")
+points(x=x, y=y/n, col=3)
+legend("topright", legend=c("logistic curve", "aggregate data"), 
+       col=2:3, lty=c(1, NA), pch=c(NA, 1))
 ```
 
-
+In disaggregate data, the model fits the data OK. In order to see it more clearly, we aggregate the data and see that the estimated parameters by the Metropolis-Hastings algorithm nicely fit the data. 
 
 <!-- ### References: -->
 
