@@ -77,10 +77,6 @@ sigma2_0 <- 4
 a0 <- 1.6
 b0 <- 0.4
 
-####################
-## Gibbs sampler (1 chain)
-####################
-
 # Initialization
 set.seed(44566)
 
@@ -203,14 +199,10 @@ knitr::kable(d.summary, align="c", caption="Summary statistics of the marginal p
 
 3. For this model, INLA (https://www.r-inla.org/) provides exact results. Compare results provided by the Gibbs sampler with those provided by INLA.
 
+Fully Bayesian inference can be performed with MCMC, but the integrated nested Laplace approximations (INLA) method has been proposed as a suitable alternative. MCMC is an **asymptotically exact** method while INLA is an approximation. INLA is a fast alternative to MCMC for Bayesian inference. In this task, we use INLA and compare the results with those obtained from Gibbs sampler.
+
 ```{r, warning=FALSE, message=FALSE}
-# plots (compare with INLA)
-# INLA is exact
-
-# Question: How long should we run the MCMC Gibbs chain 
-#             to get close to the exact INLA approximation?
-# Run for 10 min, for 30 min, for 1h...
-
+# Integrated Nested Laplace Approximation (INLA)
 library(INLA)
 library(MASS)
 
@@ -221,14 +213,13 @@ inla.output <- inla(formula,data=data.frame(y=y),
                     control.fixed=list(mean.intercept=mu0, prec.intercept=1/sigma2_0))
 ```
 
-```{r}
-demo <- inla.output$marginals.fixed$"(Intercept)"
+```{r INLA-results}
+# Print the summary results for INLA
+summary(inla.output)
 ```
 
-
 ```{r inla, fig.show='hold', out.width="33.3%"}
-par(mfrow=c(1,1))
-# plot for mean
+# Plot for mean
 rg <- range(inla.output$marginals.fixed$"(Intercept)"[,2])
 truehist(mu_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(mu), main = "Mean")
 lines(density(mu_gibbs_samples),lty=3,lwd=3, col=2)
@@ -236,7 +227,7 @@ lines(inla.output$marginals.fixed$"(Intercept)",lwd=2)
 legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
        lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 
-# plot for variance
+# Plot for variance
 m_var <-inla.tmarginal(function(x) 1/x, inla.output$marginals.hyperpar[[1]])
 truehist(sigma2_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(sigma^2), main = "Variance")
 lines(density(sigma2_gibbs_samples),lty=3,lwd=3, col=2)
@@ -244,15 +235,20 @@ lines(m_var,lwd=2)
 legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
        lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 
+<<<<<<< HEAD
 # plot for precision
 truehist(inv_sigma2_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(1/sigma^2), main = "Precision")
+=======
+# Plot for precision
+truehist(inv_sigma2_gibbs_samples, prob=TRUE, col="yellow", xlab=expression(1/sigma^2))
+>>>>>>> 87f7e3e (dropped KL divergence check as it is not clearly explained)
 lines(density(inv_sigma2_gibbs_samples),lty=3,lwd=3, col=2)
 lines(inla.output$marginals.hyperpar[[1]],lwd=2)
 legend("topright",c("MCMC, Gibbs","INLA"),lty=c(3,1),
        lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
 ```
 
-```{r kl.divergence}
+```{r kl.divergence, include=FALSE, eval=FALSE}
 suppressPackageStartupMessages(library(edfun))
 
 # Compute Kullback-Leibler divergence for mu's Gibbs samples and INLA 
@@ -266,10 +262,10 @@ FNN::KL.divergence(edfun(m_var[, 1])$rfun(1000),
                    edfun(sigma2_gibbs_samples)$rfun(1000))
 ```
 
- - Firstly, by overlaying the histogram of samples obtained from Gibbs sampling with the density plot of samples obtained from INLA, we see that both results converge to the same target distribution (with trivial disagreement).
+By overlaying the histogram of samples obtained from Gibbs sampling with the density plot of samples obtained from INLA, we see that both results converge to the same target distribution (with trivial disagreement).
 
- - Secondly, when using Kullback-Leibler divergence to compare two distributions, the resulting values are close to 0, indicating that these two distributions are quite similar.
-Due to the limited number of samples from INLA, we first fitted an empirical CDF to mu's Gibbs samples and INLA (same for the variance and precision), respectively. Then we sample 100 samples from those two ecdf respectively. Finally we apply the function of kl.divergence to compare two distributions.
+<!--  - Secondly, when using Kullback-Leibler divergence to compare two distributions, the resulting values are close to 0, indicating that these two distributions are quite similar. -->
+<!-- Due to the limited number of samples from INLA, we first fitted an empirical CDF to mu's Gibbs samples and INLA (same for the variance and precision), respectively. Then we sample 100 samples from those two ecdf respectively. Finally we apply the function of kl.divergence to compare two distributions. -->
 
 4. Explain step by step in your own words what the code in `04GibbsSampler.R` is doing.
 
@@ -450,14 +446,6 @@ MH.sampler <- function(x,               # covariate values
                        s_alpha = 1,     # SD for normal proposal
                        s_beta = 60      # SD for normal proposal
                        ) {
-  
-  ####################
-  ## Bayesian analysis
-  ####################
-  
-  #####################################
-  ## Step 1: R: (univariate proposal) Metropolis MCMC settings 
-  #####################################
   
   alpha_samples <- c()
   beta_samples <- c()
