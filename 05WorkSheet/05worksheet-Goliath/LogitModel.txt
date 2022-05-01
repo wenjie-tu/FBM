@@ -1,0 +1,9 @@
+model{
+  for (i in 1:length(y)) {
+    y[i] ~ dbern(p[i])
+    p[i] <- ilogit(alpha + beta * x[i])
+  }
+  
+  alpha ~ dnorm(0, 1.0E-04)
+  beta ~ dnorm(0, 1.0E-04)
+}

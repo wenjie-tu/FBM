@@ -1,0 +1,290 @@
+---
+title: "Worksheet 5"
+author: 
+  - Wenje Tu
+  - Lea Bührer
+  - Jerome Sepin
+  - Zhixuan Li
+  - Elia-Leonid Mastropietro
+  - Jonas Raphael Füglistaler
+date: "Spring Semester 2022"
+output: pdf_document
+# bibliography: biblio.bib
+# nocite: '@*'
+subtitle: Foundations of Bayesian Methodology
+papersize: a4
+fontsize: 10pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(lang="us_en")
+rm(list=ls())
+```
+
+### Exercise 5 (CODA for logistic regression in JAGS)
+
+```{r}
+x <- c(0.0028, 0.0028, 0.0056, 0.0112, 0.0225, 0.0450)
+# the centered covariate values (centered dose) from the Mice data from Collett
+x_centered <- x - mean(x)
+# number of mice deaths
+# y <- c(35, 21, 9, 6, 1)
+y <- c(26, 9, 21, 9, 6, 1)
+# total number of mice
+# n <- c(40, 40, 40, 40, 40)
+n <- c(28, 12, 40, 40, 40, 40)
+```
+
+```{r mice-table, results='asis'}
+d.mice <- data.frame(
+  x, y, n, x_centered, y/n
+)
+colnames(d.mice) <- c("$x$", "$y$", "$n$", "centered $x$", "$p$")
+knitr::kable(d.mice, align="c", caption="Mice data from Collett (2003)")
+```
+
+Logistic model:
+
+$$
+\text{logit}(p_i)=\ln\left(\frac{p_i}{1-p_i} \right)=\alpha+\beta x_i
+$$
+
+$$
+p_i=\frac{\exp(\alpha+\beta x_i)}{1+\exp(\alpha+\beta x_i)}
+$$
+
+```{r}
+## Disaggregate the data
+d.mice1 <- data.frame(Response=rep(c(1, 0), c(sum(y), sum(n)-sum(y))), 
+                      CenteredDose=c(rep(round(x_centered, 5), y), 
+                                     rep(round(x_centered, 5), n-y)))
+
+knitr::kable(table(d.mice1))
+```
+
+```{r, fig.align='center', out.width="75%"}
+mosaicplot(CenteredDose ~ Response, data=d.mice1, color=2:3, 
+           main="Mosaic Plot", xlab="Centered Dosage")
+```
+
+
+```{r}
+modelString <- "model{
+  for (i in 1:length(y)) {
+    y[i] ~ dbern(p[i])
+    p[i] <- ilogit(alpha + beta * x[i])
+  }
+  
+  alpha ~ dnorm(0, 1.0E-04)
+  beta ~ dnorm(0, 1.0E-04)
+}"
+
+writeLines(modelString, con="LogitModel.txt")
+```
+
+```{r}
+library(rjags)
+library(coda)
+```
+
+
+```{r}
+## Generate data list for JAGS
+dat.jags <- with(d.mice1, list(y=Response, x=CenteredDose))
+
+## Initialize starting points (let JAGS initialize) and set seed 
+inits.jags <- list(list(.RNG.name="base::Wichmann-Hill", .RNG.seed=314159),
+                   list(.RNG.name="base::Marsaglia-Multicarry", .RNG.seed=159314),
+                   list(.RNG.name="base::Super-Duper", .RNG.seed=413159),
+                   list(.RNG.name="base::Mersenne-Twister", .RNG.seed=143915))
+
+## Compile JAGS model
+model1.jags <- jags.model(
+  file = "LogitModel.txt", 
+  data = dat.jags,
+  inits = inits.jags, 
+  n.chains = 4,
+  n.adapt = 4000
+)
+```
+
+```{r}
+## Burn-in
+update(model1.jags, n.iter = 4000)
+
+## Sampling
+fit1.jags.coda <- coda.samples(
+  model = model1.jags, 
+  variable.names = c("alpha", "beta"), 
+  n.iter = 10000,
+  thin = 1
+)
+```
+
+```{r}
+summary(fit1.jags.coda)
+```
+
+
+```{r}
+plot(fit1.jags.coda)
+```
+
+```{r}
+m.fit1.jags.coda <-as.matrix(fit1.jags.coda)
+d.summary <- t(rbind(
+  colMeans(m.fit1.jags.coda), 
+  apply(m.fit1.jags.coda, 2, function(x) sd(x)), 
+  apply(m.fit1.jags.coda, 2, function(x) quantile(x, probs=c(0.025, 0.5, 0.975)))
+))
+
+colnames(d.summary) <- c("Mean", "SD", "2.5%", "Median", "97.5%")
+knitr::kable(d.summary, align="c", caption="Summary statistics")
+```
+
+**5.1 Rank plots**
+
+```{r, warning=FALSE, message=FALSE}
+library(bayesplot)
+library(stableGR)
+```
+
+```{r}
+mcmc_rank_hist(fit1.jags.coda)
+```
+
+**5.2 Convergence diagnostics**
+
+(a) Heidelberger \& Welch (Convergence to stationarity)
+
+```{r}
+heidel.diag(fit1.jags.coda)
+```
+
+The output from `heidel.diag` shows the summary results for the four generated chains. The stationarity test uses the Cramer-von-Mises statistic to test the null hypothesis that the sampled values come from a stationary distribution. The half-width test calculates a 95% confidence interval for the mean, using the portion of the chain which passed the stationarity test. We see that both tests are passed for the four chains and all $p$-values are larger than 0.05. We conclude that the sampled values come from a stationary distribution and the length of the sample is considered long enough to estimate the mean with sufficient accuracy.
+
+(b) Raftery \& Lewis (Convergence to ergodic average)
+
+```{r}
+raftery.diag(fit1.jags.coda)
+```
+
+The output from `raftery.diag` shows the summary results for the four generated chains. `raftery.diag` is a run length control diagnostic based on a criterion of accuracy of estimation of the quantile $q$. The dependence factor $I$ ($I=\frac{M+N}{N_\text{min}}$), indicates to which extent autocorrelation inflates the required sample size. $I>5$ indicates strong autocorrelation. We see that the dependence factors for the four chains are all smaller than 5 and hence no strong autocorrelation exists.
+
+(c) Geweke (Convergence to stationarity)
+
+```{r}
+geweke.diag(fit1.jags.coda)
+```
+
+The output from `geweke.diag` shows the summary results for the four generated chains. `geweke.diag` is a convergence diagnostic for Markov chains based on a test for equality of the means of the first and last part of a Markov chain (by default the first 10% and the last 50%). If the samples are drawn from the stationary distribution of the chain, the two means are equal and Geweke's statistic has an asymptotically standard normal distribution. The test statistic is a standard Z-score. We see that for the four chains the absolute values of Z-scores for variables alpha and beta are smaller than 2, which indicates that the equilibrium may have been reached.
+
+```{r}
+geweke.plot(fit1.jags.coda)
+```
+
+If `geweke.diag` indicates that the first and last part of a sample from a Markov chain are not drawn from the same distribution, it may be useful to discard the first few iterations to see if the rest of the chain has "converged". `geweke.plot` shows what happens to Geweke's Z-score when successively larger numbers of iterations are discarded from the beginning of the chain. To preserve the asymptotic conditions required for Geweke's diagnostic, the plot never discards more than half the chain. For beta (chain1), alpha (chain2), and alpha (chain3), there exist several segments out of the 95% confidence bands ($\lvert Z \rvert > 2$). 
+
+
+(d) Gelman and Rubin's convergence diagnostic
+
+```{r}
+gelman.diag(fit1.jags.coda, autoburnin=TRUE)
+```
+
+The idea of Gelman and Rubin's convergence diagnostic is to run multiple chains from widely dispersed starting values and perform an Analysis of Variance to see if the between-chain variability ($B$) is large in relation to the average variability within ($W+B$) the pooled chain. 
+
+$$
+\sqrt{\hat{R}}\approx
+\sqrt{\frac{W+B}{W}}
+$$
+
+$\hat{R}$ is so-called "potential scale reduction factor" and it is calculated for each variable. We see that *psrf*s for both alpha and beta are close to 1, which indicates that the between-chain variability ($B$) is close to 0. In other words, the separate four chains have mixed quite well.
+
+```{r}
+gelman.plot(fit1.jags.coda, autoburnin=TRUE)
+```
+
+The `gelman.plot` shows that the evolution of Gelman and Rubin's shrink factor as the number of iterations increases. We see that the shrink factors for both variables quickly decrease to 1 after 10000 iterations and the variability of shrink factors becomes more stable as the number of iterations keeps increasing.
+
+(e) Gelman-Rubin diagnostic using stable variance estimators
+
+```{r}
+stable.GR(fit1.jags.coda)
+```
+
+`stable.GR` extends Gelman-Rubin diagnostic using stable variance estimators. We see that the univariate potential scale reduction factors for both alpha and beta are calculated and they are close to 1. Mutlivariate psrf is also calculated by taking into account the interdependence of the chain's components. Means of variables (alpha and beta) and the effective sample size are also reported in the output.
+
+**5.3 Re-run the MCMC simulation**
+
+```{r}
+## Compile JAGS model
+model2.jags <- jags.model(
+  file = "LogitModel.txt", 
+  data = dat.jags,
+  inits = inits.jags, 
+  n.chains = 4,
+  n.adapt = 4000
+)
+```
+
+```{r}
+## Burn-in (increase burn-in iterations)
+update(model2.jags, n.iter = 4000)
+
+## Initialize starting points (let JAGS initialize) and set seed 
+inits.jags <- list(list(.RNG.name="base::Wichmann-Hill", .RNG.seed=314159),
+                   list(.RNG.name="base::Marsaglia-Multicarry", .RNG.seed=159314),
+                   list(.RNG.name="base::Super-Duper", .RNG.seed=413159),
+                   list(.RNG.name="base::Mersenne-Twister", .RNG.seed=143915))
+
+## Sampling
+fit2.jags.coda <- coda.samples(
+  model = model2.jags, 
+  variable.names = c("alpha", "beta"), 
+  n.iter = 30000,
+  thin = 3
+)
+```
+
+```{r}
+summary(fit2.jags.coda)
+plot(fit2.jags.coda)
+```
+
+```{r}
+mcmc_rank_hist(fit2.jags.coda)
+```
+
+```{r}
+## Heidelberger & Welch (Convergence to stationarity)
+heidel.diag(fit2.jags.coda)
+```
+
+```{r}
+## Raftery & Lewis (Convergence to ergodic average)
+raftery.diag(fit2.jags.coda)
+```
+
+```{r}
+## Geweke (Convergence to stationarity)
+geweke.diag(fit2.jags.coda)
+```
+
+```{r, fig.show="hold", out.width="50%"}
+geweke.plot(fit2.jags.coda)
+```
+
+```{r}
+## Gelman and Rubin's convergence diagnostic
+gelman.diag(fit2.jags.coda, autoburnin=TRUE)
+```
+
+```{r}
+gelman.plot(fit2.jags.coda, autoburnin=TRUE)
+```
+
+```{r}
+stable.GR(fit2.jags.coda)
+```
