@@ -27,7 +27,13 @@
 
 ## [Worksheet 4](./04WorkSheet/04worksheet.pdf)
 
-Crosschecking
 
-- [ ] Proofreading
-- [ ] Proofreading
+- [x] Crosschecking
+- [x] Proofreading
+
+
+## [Worksheet 5](./05WorkSheet/05worksheet.pdf)
+
+
+- [] Crosschecking
+- [] Proofreading
