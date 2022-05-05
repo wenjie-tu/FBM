@@ -358,3 +358,186 @@ stable.GR(fit2.jags.coda)
 
 The univariate potential scale reduction factors for both alpha and beta are both close to 1. Compared to the original model the effective sample size has been increased from 16766.74 to 29704.35.
 
+\pagebreak
+##  Exercise 6 (ESS)
+Run the code from the previous exercise with mice data with only one chain monitoring *beta* under the following two conditions:
+
+\begin{itemize}
+\item[1.] \textbf{After an adaptation phase of 1000 and a burn-in of 4000 draw a sample of 1000 observations in one chain with thinning set to 1.}
+\end{itemize}
+
+
+```{r}
+## Initialize starting points (let JAGS initialize) and set seed 
+inits3.jags <- list(list(.RNG.name="base::Wichmann-Hill", .RNG.seed=314159))
+
+## Compile JAGS model
+model3.jags <- jags.model(
+  file = "LogitModel.txt", 
+  data = dat.jags,
+  n.chains = 1,
+  inits = inits3.jags, 
+  n.adapt = 1000
+)
+
+## Burn-in (increase burn-in iterations)
+update(model3.jags, n.iter = 4000)
+
+## Posterior Sampling
+fit3.jags.coda <- coda.samples(
+  model = model3.jags, 
+  variable.names = c("beta"), #monitoring only beta
+  n.iter = 1000,
+  thin = 1
+)
+```
+
+\begin{itemize}
+\item[2.] \textbf{After an adaptation phase of 1000 and a burn-in of 4000 draw a sample of 10000 observations in one chain with thinning set to 10.}
+\end{itemize}
+
+```{r}
+## Initialize starting points (let JAGS initialize) and set seed 
+inits4.jags <- list(list(.RNG.name="base::Wichmann-Hill", .RNG.seed=314159))
+
+## Compile JAGS model
+model4.jags <- jags.model(
+  file = "LogitModel.txt", 
+  data = dat.jags,
+  n.chains = 1,
+  inits = inits4.jags, 
+  n.adapt = 1000
+)
+
+## Burn-in (increase burn-in iterations)
+update(model4.jags, n.iter = 4000)
+
+## Posterior Sampling
+fit4.jags.coda <- coda.samples(
+  model = model4.jags, 
+  variable.names = c("beta"), #monitoring only beta
+  n.iter = 10000,
+  thin = 10
+)
+```
+
+\begin{itemize}
+\item[(a)] \textbf{For which of the above conditions the ESS estimates will be larger and why?}
+\end{itemize}
+
+```{r}
+# Function to test if a vector is monoton decreasing,
+# a boolean value is returned
+monotone <- function(vec){
+  a <- TRUE
+  if(length(vec) == 1){
+    return(a)
+  }
+  for(i in 2:length(vec)){
+    if(vec[i] > vec[i-1]){
+      a <- FALSE
+      break;
+    }
+  }
+  return(a)
+}
+
+# Function to find the lag to stop the ESS
+# calculation compare: 
+#
+#      Geyer (1992),
+#     "Practical Markov Chain Monte Carlo".
+#      Statistical Science, 7: 473- 511
+#
+# Gamma_i = gamma(2*i) + gamma(2*i + 1)
+#
+# m is the greatest integer at which Gamma_i > 0
+# and Gamma_i is monotone for i = 1, ..., m.
+# Thereby gamma(i) is the sample autocorrelation 
+# at lag i. 
+#
+# Parameter:
+# vec - sample vector (mcmc object)
+#
+# Output
+# m <- greatest integer where both criteria are
+#     fulfilled
+geyer <- function(vec){
+  g <- c()
+  res <- 1
+   for(i in 1:(length(vec)/2 - 1)){
+    g <- c(g,
+           autocorr(vec, lags = i) + autocorr(vec, lags = i + 1)
+           )
+    if(monotone(g) == FALSE || g[i] < 0){
+      break
+    }
+  }
+  if(i==1){
+    res <- 1
+  }
+  else{
+    res <- i-1
+  }
+  return(res)
+}
+# Function to calculate the effective sample
+# size for one MCMC chain.
+#
+# Parameter:
+# mcmc - mcmc object 
+# M - number of sampled values
+#
+# Output:
+# effective sample size
+ess <- function(mcmc, M){
+  m <- geyer(mcmc)
+  y <- M / (1 + 2 * sum(autocorr(mcmc, lag = 1:(2*m +1)) ) )
+  return(y)
+}
+```
+
+
+$$
+\begin{aligned}
+ESS=N_{eff}&=\frac{M}{1+2\sum_{k\geq 1}^{\infty}ACF(k)}\\
+\text{where }& ACF(k)=\frac{Cov(\boldsymbol{x_{t},x_{t+k}})}{Var(\boldsymbol{x_{t}})}=\frac{\frac{1}{N}\sum_{t=1}^{N-k}(x_t-\bar{x})(x_{t+k}-\bar{x})}{\frac{1}{N}\sum_{t=1}^{N}(x_{t}-\bar{x})^2}
+\end{aligned}
+$$
+
+For practical computation, the infinite sum in the definition of ESS may be stopped earlier. Here the stopping is defined by the criteria of Geyer 1992.
+
+We have in the second model a thinning parameter of 10 and thus expect the autocorrelation in the MCMC-sample to have less correlation as we pick only the 10th entry each time and put it into our MCMC-sample. Thus the sum will be smaller for the less correlated sample (`fit4.jags.coda`). $M$ is in both models the same with 1000. Therefore we expect the $ESS$ to be larger in the second model!
+
+
+\begin{itemize}
+\item[(b)] \textbf{To check your answer: Apply both the 05ess.R code and the function effectiveSize from the coda package. Compare the ESS estimates with those obtained with the n.eff function from package stableGR (Vats and Knudson, 2021). Please report your findings.}
+\end{itemize}
+
+```{r}
+library(stableGR)
+#ESS from the script
+ess_script1 <- ess(mcmc = as.mcmc(fit3.jags.coda), M= 1000)
+ess_script2 <- ess(mcmc = as.mcmc(fit4.jags.coda), M= 1000)
+
+#ESS from the stableGR package
+ess_function1 <- stableGR::n.eff(as.mcmc(fit3.jags.coda))
+ess_function2 <- stableGR::n.eff(as.mcmc(fit4.jags.coda))
+
+results <- data.frame(
+              "n_eff" = c(ess_script1,ess_script2,ess_function1$n.eff,ess_function2$n.eff),
+              "thining" = c(1,10,1,10),
+              "method"  = c("ESS-Script", "ESS-Script", "stableGR", "stableGR")
+              )
+```
+
+
+```{r,echo=F}
+knitr::kable(results,align = "c", caption = "Effective sample size with different thinning and functions.")
+```
+
+As expected, the effective sample size is with both methods higher in the model with thinning = 10 in comparison with thinning = 1.
+
+
+
+
