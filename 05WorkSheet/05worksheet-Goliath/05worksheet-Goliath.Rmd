@@ -61,7 +61,7 @@ $$
 p_i=\frac{\exp(\alpha+\beta x_i)}{1+\exp(\alpha+\beta x_i)}
 $$
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
 ## Disaggregate the data
 d.mice1 <- data.frame(Response=rep(c(1, 0), c(sum(y), sum(n)-sum(y))), 
                       CenteredDose=c(rep(round(x_centered, 5), y), 
@@ -70,11 +70,10 @@ d.mice1 <- data.frame(Response=rep(c(1, 0), c(sum(y), sum(n)-sum(y))),
 knitr::kable(table(d.mice1))
 ```
 
-```{r, fig.align='center', out.width="75%"}
+```{r, fig.align='center', out.width="75%", eval=FALSE, include=FALSE}
 mosaicplot(CenteredDose ~ Response, data=d.mice1, color=2:3, 
            main="Mosaic Plot", xlab="Centered Dosage")
 ```
-
 
 ```{r}
 modelString <- "model{
@@ -93,12 +92,12 @@ writeLines(modelString, con="LogitModel.txt")
 ```{r, message=F, warning=F}
 library(rjags)
 library(coda)
+library(ggplot2)
 ```
-
 
 ```{r}
 ## Generate data list for JAGS
-dat.jags <- list("y"=y, "x"=x_centered, "n"=n)
+dat.jags <- list(y=y, x=x_centered, n=n)
 
 ## Initialize starting points (let JAGS initialize) and set seed 
 inits.jags <- list(list(.RNG.name="base::Wichmann-Hill", .RNG.seed=314159),
@@ -134,12 +133,38 @@ summary(fit1.jags.coda)
 ```
 
 
-```{r, fig.show="hold", out.width="80%", fig.cap="Trace and density plot.", fig.align='center'}
+```{r, eval=FALSE, include=FALSE}
 plot(fit1.jags.coda)
 ```
 
-```{r}
+
+```{r, fig.show='hold', out.width="50%"}
 m.fit1.jags.coda <-as.matrix(fit1.jags.coda)
+d.chains <- data.frame(
+  iterations = rep(8001:18000, times=4), 
+  alpha = m.fit1.jags.coda[, "alpha"], 
+  beta = m.fit1.jags.coda[, "beta"], 
+  chains = rep(c("chain1", "chain2", "chain3", "chain4"), each=10000), 
+  alphaRanks = rank(m.fit1.jags.coda[, "alpha"]), 
+  betaRanks = rank(m.fit1.jags.coda[, "beta"])
+)
+
+ggplot(d.chains, aes(x=iterations, y=alpha, color=chains)) + geom_line(alpha=0.5) + 
+  labs(title="Trace of alpha", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=alpha, y=..density..)) + 
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) + 
+  labs(title="Density of alpha", y="Density") + theme_minimal()
+
+ggplot(d.chains, aes(x=iterations, y=beta, color=chains)) + geom_line(alpha=0.5) + 
+  labs(title="Trace of beta", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=beta, y=..density..)) + 
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) + 
+  labs(title="Density of beta", y="Density") + theme_minimal()
+```
+
+```{r}
 d.summary <- t(rbind(
   colMeans(m.fit1.jags.coda), 
   apply(m.fit1.jags.coda, 2, function(x) sd(x)), 
@@ -152,8 +177,6 @@ knitr::kable(d.summary, align="c", caption="Summary statistics")
 
 ### 5.1 Rank plots
 
-
-
 ```{r, warning=FALSE, message=FALSE}
 library(bayesplot)
 library(stableGR)
@@ -162,12 +185,47 @@ library(stableGR)
 ```{r rankplot, fig.show="hold", out.width="80%", fig.cap="Rank Plot.", fig.align='center'}
 mcmc_rank_hist(fit1.jags.coda)
 ```
+
+```{r, fig.show='hold', out.width="25%"}
+## Rank plot of alpha
+ggplot(d.chains[1:10000, ], aes(x=alphaRanks)) + 
+  geom_histogram(bins=30, color=2, fill=2, alpha=0.5) + 
+  labs(title="Rank plot of alpha (chain1)") + theme_minimal()
+
+ggplot(d.chains[10001:20000, ], aes(x=alphaRanks)) + 
+  geom_histogram(bins=30, color=3, fill=3, alpha=0.5) + 
+  labs(title="Rank plot of alpha (chain2)") + theme_minimal()
+
+ggplot(d.chains[20001:30000, ], aes(x=alphaRanks)) + 
+  geom_histogram(bins=30, color=4, fill=4, alpha=0.5) + 
+  labs(title="Rank plot of alpha (chain3)") + theme_minimal()
+
+ggplot(d.chains[30001:40000, ], aes(x=alphaRanks)) + 
+  geom_histogram(bins=30, color=5, fill=5, alpha=0.5) + 
+  labs(title="Rank plot of alpha (chain4)") + theme_minimal()
+
+## Rank plot of beta
+ggplot(d.chains[1:10000, ], aes(x=betaRanks)) + 
+  geom_histogram(bins=30, color=2, fill=2, alpha=0.5) + 
+  labs(title="Rank plot of beta (chain1)") + theme_minimal()
+
+ggplot(d.chains[10001:20000, ], aes(x=betaRanks)) + 
+  geom_histogram(bins=30, color=3, fill=3, alpha=0.5) + 
+  labs(title="Rank plot of beta (chain2)") + theme_minimal()
+
+ggplot(d.chains[20001:30000, ], aes(x=betaRanks)) + 
+  geom_histogram(bins=30, color=4, fill=4, alpha=0.5) + 
+  labs(title="Rank plot of beta (chain3)") + theme_minimal()
+
+ggplot(d.chains[30001:40000, ], aes(x=betaRanks)) + 
+  geom_histogram(bins=30, color=5, fill=5, alpha=0.5) + 
+  labs(title="Rank plot of beta (chain4)") + theme_minimal()
+```
+
 The figure illustrates the histograms of the ranked posterior drawn, ranked over all chains for $\alpha$ and $\beta$. Whereas traditional trace plots visualize how the chains mix over the course of sampling, rank histograms visualize how the values from the chains mix together in terms of ranking. An ideal plot would show the rankings mixing or overlapping in a uniform distribution.
 See Vehtari et al. (2019) for details.
 
 It can be seen in the figure that the rank histograms nearly follow a normal distribution.
-
-
 
 ### 5.2 Convergence diagnostics
 
@@ -178,7 +236,7 @@ heidel.diag(fit1.jags.coda)
 ```
 
 The output from `heidel.diag` shows the summary results for the four generated chains.
-The daignostic on one hand checks if the length of the sample it long enough and on the other hand checks if the means are estimated from a converged chain. 
+The daignostic on one hand checks if the length of the sample is long enough and on the other hand checks if the means are estimated from a converged chain. 
 
 The stationarity test uses the Cramer-von-Mises statistic to test the null hypothesis that the sampled values come from a stationary distribution. The half-width test calculates a 95% confidence interval for the mean, using the portion of the chain which passed the stationarity test. 
 
@@ -296,12 +354,75 @@ fit2.jags.coda <- coda.samples(
 )
 ```
 
-```{r, fig.show="hold", out.width="80%", fig.cap="Trace and density plot.", fig.align='center'}
+```{r}
 summary(fit2.jags.coda)
+```
+
+```{r, fig.show="hold", out.width="80%", fig.cap="Trace and density plot.", fig.align='center', eval=FALSE, include=FALSE}
 plot(fit2.jags.coda)
 ```
 
+```{r, fig.show='hold', out.width="50%"}
+m.fit2.jags.coda <-as.matrix(fit2.jags.coda)
+d.chains <- data.frame(
+  iterations = rep(8001:18000, times=4), 
+  alpha = m.fit2.jags.coda[, "alpha"], 
+  beta = m.fit2.jags.coda[, "beta"], 
+  chains = rep(c("chain1", "chain2", "chain3", "chain4"), each=10000), 
+  alphaRanks = rank(m.fit2.jags.coda[, "alpha"]), 
+  betaRanks = rank(m.fit2.jags.coda[, "beta"])
+)
 
+ggplot(d.chains, aes(x=iterations, y=alpha, color=chains)) + geom_line(alpha=0.5) + 
+  labs(title="Trace of alpha", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=alpha, y=..density..)) + 
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) + 
+  labs(title="Density of alpha", y="Density") + theme_minimal()
+
+ggplot(d.chains, aes(x=iterations, y=beta, color=chains)) + geom_line(alpha=0.5) + 
+  labs(title="Trace of beta", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=beta, y=..density..)) + 
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) + 
+  labs(title="Density of beta", y="Density") + theme_minimal()
+```
+
+```{r, fig.show='hold', out.width="25%"}
+## Rank plot of alpha
+ggplot(d.chains[1:10000, ], aes(x=alphaRanks)) + 
+  geom_histogram(bins=30, color=2, fill=2, alpha=0.5) + 
+  labs(title="Rank plot of alpha (chain1)") + theme_minimal()
+
+ggplot(d.chains[10001:20000, ], aes(x=alphaRanks)) + 
+  geom_histogram(bins=30, color=3, fill=3, alpha=0.5) + 
+  labs(title="Rank plot of alpha (chain2)") + theme_minimal()
+
+ggplot(d.chains[20001:30000, ], aes(x=alphaRanks)) + 
+  geom_histogram(bins=30, color=4, fill=4, alpha=0.5) + 
+  labs(title="Rank plot of alpha (chain3)") + theme_minimal()
+
+ggplot(d.chains[30001:40000, ], aes(x=alphaRanks)) + 
+  geom_histogram(bins=30, color=5, fill=5, alpha=0.5) + 
+  labs(title="Rank plot of alpha (chain4)") + theme_minimal()
+
+## Rank plot of beta
+ggplot(d.chains[1:10000, ], aes(x=betaRanks)) + 
+  geom_histogram(bins=30, color=2, fill=2, alpha=0.5) + 
+  labs(title="Rank plot of beta (chain1)") + theme_minimal()
+
+ggplot(d.chains[10001:20000, ], aes(x=betaRanks)) + 
+  geom_histogram(bins=30, color=3, fill=3, alpha=0.5) + 
+  labs(title="Rank plot of beta (chain2)") + theme_minimal()
+
+ggplot(d.chains[20001:30000, ], aes(x=betaRanks)) + 
+  geom_histogram(bins=30, color=4, fill=4, alpha=0.5) + 
+  labs(title="Rank plot of beta (chain3)") + theme_minimal()
+
+ggplot(d.chains[30001:40000, ], aes(x=betaRanks)) + 
+  geom_histogram(bins=30, color=5, fill=5, alpha=0.5) + 
+  labs(title="Rank plot of beta (chain4)") + theme_minimal()
+```
 
 ```{r, fig.show="hold", out.width="80%", fig.cap="Rank Plot.", fig.align='center'}
 mcmc_rank_hist(fit2.jags.coda)
@@ -498,12 +619,18 @@ ess <- function(mcmc, M){
 ```
 
 
+<!-- $$ -->
+<!-- \begin{aligned} -->
+<!-- \text{ESS}=N_{eff}&=\frac{M}{1+2\sum_{k\geq 1}^{\infty}\text{ACF}(k)}\\ -->
+<!-- \text{where }& ACF(k)=\frac{Cov(\boldsymbol{x_{t},x_{t+k}})}{Var(\boldsymbol{x_{t}})}=\frac{\frac{1}{N}\sum_{t=1}^{N-k}(x_t-\bar{x})(x_{t+k}-\bar{x})}{\frac{1}{N}\sum_{t=1}^{N}(x_{t}-\bar{x})^2} -->
+<!-- \end{aligned} -->
+<!-- $$ -->
+
 $$
-\begin{aligned}
-ESS=N_{eff}&=\frac{M}{1+2\sum_{k\geq 1}^{\infty}ACF(k)}\\
-\text{where }& ACF(k)=\frac{Cov(\boldsymbol{x_{t},x_{t+k}})}{Var(\boldsymbol{x_{t}})}=\frac{\frac{1}{N}\sum_{t=1}^{N-k}(x_t-\bar{x})(x_{t+k}-\bar{x})}{\frac{1}{N}\sum_{t=1}^{N}(x_{t}-\bar{x})^2}
-\end{aligned}
+\text{ESS}=N_\text{eff}=\frac{M}{1+2\sum_{k\geq 1}^{\infty}\text{ACF}(k)}
 $$
+where $\text{ACF}(k)=\text{corr}(\theta_t^*,\theta_{t+k}^*)$
+
 
 For practical computation, the infinite sum in the definition of ESS may be stopped earlier. Here the stopping is defined by the criteria of Geyer 1992.
 
@@ -518,23 +645,23 @@ We have in the second model a thinning parameter of 10 and thus expect the autoc
 library(stableGR)
 #ESS from the script
 
-ess_script1 <- ess(mcmc = as.mcmc(fit3.jags.coda), M= length(as.mcmc(fit3.jags.coda)) )
-ess_script2 <- ess(mcmc = as.mcmc(fit4.jags.coda), M= length(as.mcmc(fit4.jags.coda)) )
+ess_script1 <- ess(mcmc=as.mcmc(fit3.jags.coda), M=length(as.mcmc(fit3.jags.coda)) )
+ess_script2 <- ess(mcmc=as.mcmc(fit4.jags.coda), M=length(as.mcmc(fit4.jags.coda)) )
 
 #ESS from the stableGR package
 ess_function1 <- stableGR::n.eff(as.mcmc(fit3.jags.coda))
 ess_function2 <- stableGR::n.eff(as.mcmc(fit4.jags.coda))
 
 results <- data.frame(
-              "n_eff" = c(ess_script1,ess_script2,ess_function1$n.eff,ess_function2$n.eff),
+              "method" = c("ESS-Script", "ESS-Script", "stableGR", "stableGR"),
               "thining" = c(1,10,1,10),
-              "method"  = c("ESS-Script", "ESS-Script", "stableGR", "stableGR")
+              "n_eff" = c(ess_script1,ess_script2,ess_function1$n.eff,ess_function2$n.eff)
               )
 ```
 
 
-```{r,echo=F}
-knitr::kable(results,align = "c", caption = "Effective sample size with different thinning and functions.")
+```{r, echo=F}
+knitr::kable(results, align="c", caption="Effective sample size with different thinning and functions.")
 ```
 
 As expected, the effective sample size is with both methods higher in the model with thinning = 10 in comparison with thinning = 1.
