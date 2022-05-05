@@ -1,6 +1,6 @@
 model{
   for (i in 1:length(y)) {
-    y[i] ~ dbern(p[i])
+    y[i] ~ dbin(p[i],n[i])
     p[i] <- ilogit(alpha + beta * x[i])
   }
   

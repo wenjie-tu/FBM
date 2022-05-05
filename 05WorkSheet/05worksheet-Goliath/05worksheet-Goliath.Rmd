@@ -79,7 +79,7 @@ mosaicplot(CenteredDose ~ Response, data=d.mice1, color=2:3,
 ```{r}
 modelString <- "model{
   for (i in 1:length(y)) {
-    y[i] ~ dbern(p[i])
+    y[i] ~ dbin(p[i],n[i])
     p[i] <- ilogit(alpha + beta * x[i])
   }
   
@@ -98,7 +98,7 @@ library(coda)
 
 ```{r}
 ## Generate data list for JAGS
-dat.jags <- with(d.mice1, list(y=Response, x=CenteredDose))
+dat.jags <- list("y"=y, "x"=x_centered, "n"=n)
 
 ## Initialize starting points (let JAGS initialize) and set seed 
 inits.jags <- list(list(.RNG.name="base::Wichmann-Hill", .RNG.seed=314159),
@@ -517,8 +517,9 @@ We have in the second model a thinning parameter of 10 and thus expect the autoc
 ```{r}
 library(stableGR)
 #ESS from the script
-ess_script1 <- ess(mcmc = as.mcmc(fit3.jags.coda), M= 1000)
-ess_script2 <- ess(mcmc = as.mcmc(fit4.jags.coda), M= 1000)
+
+ess_script1 <- ess(mcmc = as.mcmc(fit3.jags.coda), M= length(as.mcmc(fit3.jags.coda)) )
+ess_script2 <- ess(mcmc = as.mcmc(fit4.jags.coda), M= length(as.mcmc(fit4.jags.coda)) )
 
 #ESS from the stableGR package
 ess_function1 <- stableGR::n.eff(as.mcmc(fit3.jags.coda))
