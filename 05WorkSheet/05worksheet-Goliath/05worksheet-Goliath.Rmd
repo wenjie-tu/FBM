@@ -8,7 +8,12 @@ author:
   - Elia-Leonid Mastropietro
   - Jonas Raphael Füglistaler
 date: "Spring Semester 2022"
-output: pdf_document
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 2
+    number_sections: true
 # bibliography: biblio.bib
 # nocite: '@*'
 subtitle: Foundations of Bayesian Methodology
@@ -23,12 +28,355 @@ rm(list=ls())
 ```
 
 
-## Exercise 3 - Normal example in JAGS
+# Exercise 3 - Normal example in JAGS
+## rjags interface to JAGS
+The steps of `list.factories` and `set.factories` show and control over the status of factories in JAGS modules. The steps of `jags.modules` shows the names of the currently loaded modules and also loads or unloads JAGS modules. 
+```{r rjags, warning=FALSE, out.width="70%"}
+remove(list=ls())
+set.seed(44566)
+# set the path to the 05normal_exmple_JAGS.txt file
+path <- ""
+
+suppressPackageStartupMessages(library(rjags))
+list.factories(type = "rng")
+list.factories(type = "monitor")
+list.factories(type = "sampler")
+set.factory(name = "base::Slice", type = "sampler", state = FALSE)
+list.factories(type = "sampler")
+set.factory(name = "base::Slice", type = "sampler", state = TRUE)
+list.factories(type = "sampler")
+list.modules()
+load.module("glm")
+list.modules()
+unload.module("glm")
+list.modules()
+```
+
+### Introduction
+The basic setup of normal example is as following codes
+```{r introduction, fig.align='center', warning=FALSE, out.width="70%"}
+y <- c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
+       9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
+       -5.182,3.828,-4.038,2.169,5.087,-0.201,4.880,3.302,3.859,
+       11.144,5.564)
+par(mfrow = c(1, 1))
+boxplot(y)
+summary(y)
+sd(y)
+# Define the parameters of the prior distributions 
+mu0 <- -3
+sigma2_0 <- 4
+a0 <- 1.6
+b0 <- 0.4
+```
+
+Boxplot shows that the median of observed data is around 3, the 25% quantile and 75% quantile are around 0 and 5, respectively. In addition, the minimum and maximum are around -5 and 11, respectively.
+
+###  INLA exact result (motivation)
+```{r INLA, warning=FALSE, out.width="70%"}
+suppressPackageStartupMessages(library(INLA))
+formula <- y ~ 1
+inla.output <- inla(formula,data=data.frame(y=y),
+                    control.family = list(hyper =
+                                            list(prec = list(prior="loggamma",
+                                                             param=c(a0,b0)))),
+                    control.fixed = list(mean.intercept=mu0, 
+                                         prec.intercept=1/sigma2_0))
+```
+
+## Step 2: JAGS model file as a string in rjags with coda
+This step gives observed values, sets up initial values and specifies model.
+```{r, warning=FALSE, out.width="70%"}
+set.seed(44566)
+suppressPackageStartupMessages(library(rjags))
+suppressPackageStartupMessages(library(coda))
+wb_data <- list( N=30, 
+                 y=c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
+                     9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
+                     -5.182,3.828,-4.038,2.169,5.087,-0.201,4.880,3.302,3.859,
+                     11.144,5.564) 
+)
+wb_inits <- list( mu=-0.2381084, inv_sigma2=0.3993192 )
+modelString = " # open quote for modelString
+model{
+# likelihood
+for (i in 1:N){ 
+y[i] ~ dnorm( mu, inv_sigma2 )    
+}
+# Priors
+mu ~ dnorm( -3, 0.25 ) # prior for mu N(mu0, prec=1/sigma2_0)
+inv_sigma2 ~ dgamma( 1.6, 0.4 ) # prior for precision G(a0, b0)
+
+# transformations
+# deterministic definition of variance
+sigma2 <- 1/inv_sigma2
+
+# deterministic definition of standard deviation
+sigma <- sqrt(sigma2)
+}
+" # close quote for modelString
+writeLines(modelString, con="TempModelexe3.txt") # write to a file
+```
+
+## JAGS only one chain
+```{r one chain, fig.align='center', warning=FALSE, out.width="70%"}
+suppressPackageStartupMessages(library(MASS))
+suppressPackageStartupMessages(library(FNN))
+# model initiation
+model.jags <- jags.model(
+  file = "TempModelexe3.txt", 
+  data = wb_data,
+  inits = wb_inits,
+  n.chains = 1,
+  n.adapt = 4000
+)
+str(model.jags)
+class(model.jags)
+attributes(model.jags)
+list.samplers(model.jags)
+update(model.jags, n.iter = 4000) # burn-in
+# sampling
+fit.jags.coda <- coda.samples(
+  model = model.jags, 
+  variable.names = c("mu", "sigma2", "inv_sigma2"), 
+  n.iter = 10000,
+  thin = 1
+)
+str(fit.jags.coda)
+class(fit.jags.coda)
+attributes(fit.jags.coda)
+summary(fit.jags.coda)
+plot(fit.jags.coda)
+# store samples for each parameter from the chain into separate objects
+m.fit.jags.coda <- as.matrix(fit.jags.coda)
+mu.sim <- m.fit.jags.coda[,"mu"] 
+sigma2.sim <- m.fit.jags.coda[,"sigma2"]
+inv_sigma2.sim <- m.fit.jags.coda[,"inv_sigma2"] 
+
+par(mfrow=c(2,2))
+# plot for mean
+rg <- range(inla.output$marginals.fixed$"(Intercept)"[,2])
+truehist(mu.sim, prob=TRUE, col="yellow", xlab=expression(mu),ylim=rg)
+lines(density(mu.sim),lty=3,lwd=3, col=2)
+lines(inla.output$marginals.fixed$"(Intercept)",lwd=2)
+legend("topright",c("MCMC: JAGS","INLA"),lty=c(3,1),
+       lwd=c(2,2),col=c(2,1),cex=1.0,bty="n")
+KL.divergence(inla.rmarginal(length(mu.sim), inla.output$marginals.fixed[[1]]), 
+              mu.sim, k = 1)
+# plot for variance
+m_var <-inla.tmarginal(function(x) 1/x, inla.output$marginals.hyperpar[[1]])
+rg <- range(m_var[,2])
+truehist(sigma2.sim, prob=TRUE, col="yellow", xlab=expression(sigma^2),ylim=rg)
+lines(density(sigma2.sim),lty=3,lwd=3, col=2)
+lines(m_var,lwd=2)
+legend("topright",c("MCMC: JAGS","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),
+       cex=1.0,bty="n")
+# plot for precision
+truehist(inv_sigma2.sim, prob=TRUE, col="yellow", xlab=expression(1/sigma^2))
+lines(density(inv_sigma2.sim),lty=3,lwd=3, col=2)
+lines(inla.output$marginals.hyperpar[[1]],lwd=2)
+legend("topright",c("MCMC: JAGS","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),
+       cex=1.0,bty="n")
+KL.divergence(inla.rmarginal(length(mu.sim), 
+                             inla.output$marginals.hyperpar[[1]]), 
+              inv_sigma2.sim, k = 1)
+```
+
+The empirical mean and standard deviation for each variable and corresponding quantiles are shown in the output.
+The traceplot as well as the plot of density indicate good mixing for three different parameters: precision, mean and variance. When compared to the result of INLA, whether plots or the results of Kullback-Leibler divergence proves the similarity between the output of INLA and JAGS.
+
+## JAGS several chains
+```{r chains, fig.align='center', warning=FALSE, out.width="70%"}
+wb_inits <- function() {
+  list(mu = rnorm(1),
+       inv_sigma2 = runif(1)
+  )  
+}
+# model initialisation
+model.jags <- jags.model(
+  file = "TempModelexe3.txt", 
+  data = wb_data,
+  inits = wb_inits,
+  n.chains = 4,
+  n.adapt = 4000
+)
+update(model.jags, n.iter = 4000) # burn-in
+# sampling/monitoring
+fit.jags.coda <- coda.samples(
+  model = model.jags, 
+  variable.names = c("mu", "sigma2", "inv_sigma2"), 
+  n.iter = 10000,
+  thin = 10
+)
+summary(fit.jags.coda)
+plot(fit.jags.coda)
+# store samples for each parameter from the chains into separate vectors
+m.fit.jags.coda <-as.matrix(fit.jags.coda)
+mu.sim <- m.fit.jags.coda[,"mu"] 
+sigma2.sim <- m.fit.jags.coda[,"sigma2"]
+inv_sigma2.sim <- m.fit.jags.coda[,"inv_sigma2"] 
+par(mfrow=c(2,2))
+# plot for mean
+rg <- range(inla.output$marginals.fixed$"(Intercept)"[,2])
+truehist(mu.sim, prob=TRUE, col="yellow", xlab=expression(mu),ylim=rg)
+lines(density(mu.sim),lty=3,lwd=3, col=2)
+lines(inla.output$marginals.fixed$"(Intercept)",lwd=2)
+legend("topright",c("MCMC: JAGS","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),
+       cex=1.0,bty="n")
+KL.divergence(inla.rmarginal(length(mu.sim), inla.output$marginals.fixed[[1]]), 
+              mu.sim, k = 1)
+# plot for variance
+m_var <-inla.tmarginal(function(x) 1/x, inla.output$marginals.hyperpar[[1]])
+rg <- range(m_var[,2])
+truehist(sigma2.sim, prob=TRUE, col="yellow", xlab=expression(sigma^2),ylim=rg)
+lines(density(sigma2.sim),lty=3,lwd=3, col=2)
+lines(m_var,lwd=2)
+legend("topright",c("MCMC: JAGS","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),
+       cex=1.0,bty="n")
+# plot for precision
+truehist(inv_sigma2.sim, prob=TRUE, col="yellow", xlab=expression(1/sigma^2))
+lines(density(inv_sigma2.sim),lty=3,lwd=3, col=2)
+lines(inla.output$marginals.hyperpar[[1]],lwd=2)
+legend("topright",c("MCMC: JAGS","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),
+       cex=1.0,bty="n")
+KL.divergence(inla.rmarginal(length(mu.sim), 
+                             inla.output$marginals.hyperpar[[1]]), 
+              inv_sigma2.sim, k = 1)
+```
+
+The empirical mean and standard deviation for each variable and corresponding quantiles are shown in the output.
+The result of four chains is similar as the result of one chain: From traceplot and the plot of density, we can find good mixing for three parameters; INLA and JAGS have similar results.
+
+### CODA
+```{r coda, fig.align='center', warning=FALSE, out.width="70%"}
+effectiveSize(fit.jags.coda)
+lapply(fit.jags.coda, effectiveSize)
+gelman.diag(fit.jags.coda,autoburnin=TRUE)
+gelman.plot(fit.jags.coda,autoburnin=TRUE)
+geweke.diag(fit.jags.coda)
+geweke.plot(fit.jags.coda)
+heidel.diag(fit.jags.coda)
+raftery.diag(fit.jags.coda)
+
+par(mfrow=c(2,2))
+coda:::traceplot(fit.jags.coda)
+
+# "DIC" penalised expected deviance computation
+dic1<-dic.samples(model=model.jags, n.iter=1000, type="popt")
+```
+
+**ESS**: The Effective Sample Size of three parameters are shown in the table. The ESS must be large enough to get stable inferences for quantities of interest. In the case of out of 10000 iterations, the global ESS around 4000 are large enough. 
 
 
-## Exercise 4 - Logistic regression in JAGS
+\begin{table}[h]
+\centering
+\begin{tabular}{clllll}
+\hline
+          & Global   & 1st Chain & 2nd Chain & 3rd Chain & 4th Chain \\ \hline
+Precision & 3863.425 & 981.847   & 1000.000  & 881.578   & 1000      \\
+Mean      & 4099.911 & 1199.804  & 900.106   & 1000.000  & 1000      \\
+Variance  & 3931.376 & 931.376   & 1000.000  & 1000.000  & 1000      \\ \hline
+\end{tabular}
+\caption{Effective Sample Size}
+\label{tab:ESS}
+\end{table}
 
-### Bayesian inference
+**Gelman-Rubin-Brooks**: The estimated shrink factors and corresponding upper CI of three parameters of Gelman and Rubin's convergence diagnostic are within the acceptable range. In addition, Gelman-Rubin-Brooks plot shows the evolution of shrink factor as the number of iterations increases. The trends of the median of shrink factors are mostly stable among three parameters in the range of 6000 to 14000 iterations. 
+
+**Geweke**: The results of Geweke's convergence diagnostic for 4 chaines are all in the range of -2 to 2. However, the Geweke-Brooks plot indicates that the 4th chain has more samples who holds a Z-score that out of the range from -2 to 2, which proves that the 4th chain has not reached equilibrium.
+
+**Heidelberger & Welch**: Heidelberger and Welch's convergence diagnostic shows a similar result as Geweke-Brooks plot. The parameter of variance in the 4th chain fails stationary test indicating non convergence therefore a longer MCMC run is needed. Except of this parameter, all parameters also pass the halfwidth test that means the length of the sample is long enough to estimate the mean with sufficient accuracy
+
+**Raftery & Lewis** Raftery and Lewis's diagnostic gives the he minimum sample size based on zero autocorrelation. All the four chains need a minimum sample size of 3746.
+
+**Trace plot** The traceplots show agian that all the four chains of three parameters hold good mixing.
+
+## Additional sampling in several chains, preparation for BGR/Gelman with runjags
+### runjags interface with a link to a file
+
+```{r additional1, fig.align='center', warning=FALSE, out.width="70%"}
+suppressPackageStartupMessages(library(runjags))
+wb_data <- list( N=30, 
+                 y=c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
+                     9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
+                     -5.182,3.828,-4.038,2.169,5.087,-0.201,4.880,3.302,3.859,
+                     11.144,5.564) 
+)
+wb_inits <- function() {
+  list(mu = rnorm(1),
+       inv_sigma2 = runif(1)
+  )  
+}
+fit.runjags<-run.jags(model=paste(path,"05normal_exmple_JAGS.txt",sep=""),
+                      monitor=c("mu", "sigma2", "inv_sigma2"),
+                      data=wb_data,
+                      inits=wb_inits,
+                      n.chains=4,
+                      burnin=4000,
+                      sample=5000,
+                      adapt=1000,
+                      thin=2)
+plot(fit.runjags)
+print(fit.runjags)
+# CODA
+fit.runjags.coda<-as.mcmc.list(fit.runjags)
+summary(fit.runjags.coda)
+# conduct CODA
+```
+
+Using `plot` function except ordinary plots that appeared before, autocorrelation plots and a cross-correlation plot are produced.
+
+**Autocorrelation plots** give an overview of autocorrelation in different thinning interval. For all three parameters, when the lag is larger than 1, the autocorrelation is close to 0.
+
+**Cross-correlation plot** shows the correlation between parameters. The correlation between variance and mean is close to 0, while variance and precision hold an inverse correlation.
+
+### R2jags wrapper to rjags interface to JAGS several chains
+```{r additional2, fig.align='center', warning=FALSE, out.width="40%"}
+suppressPackageStartupMessages(library(R2jags))
+wb_data <- list( N=30, 
+                 y=c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
+                     9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
+                     -5.182,3.828,-4.038,2.169,5.087,-0.201,4.880,3.302,3.859,
+                     11.144,5.564) 
+)
+#define parameters
+params<-c("mu", "sigma2", "inv_sigma2")
+# define inits
+inits1 <- list(mu=rnorm(1), inv_sigma2=runif(1),
+               .RNG.name="base::Super-Duper", .RNG.seed=1)
+inits2 <- list(mu=rnorm(1), inv_sigma2=runif(1),
+               .RNG.name="base::Wichmann-Hill", .RNG.seed=2)
+wb_inits <- list(inits1,inits2)
+fit.R2jags<-jags(data=wb_data,
+                 inits=wb_inits,
+                 parameters.to.save=params,
+                 model.file="05normal_exmple_JAGS.txt",
+                 n.chains=2,
+                 n.iter=50000,
+                 n.burnin=4000,
+                 n.thin=5,
+                 DIC = TRUE,
+                 jags.seed = 321,
+                 refresh =100,
+                 digits = 4,
+                 jags.module = c("glm","dic"))
+# Standard plots of the monitored variables
+plot(fit.R2jags)
+# Display summary statistics
+print(fit.R2jags)
+# traceplot
+traceplot(fit.R2jags)
+# CODA
+fit.R2jags.coda<-as.mcmc(fit.R2jags)
+summary(fit.R2jags.coda)
+# conduct CODA
+```
+
+The function `R2jags::jags` compute deviance when `DIC` is `true`, where DIC is an estimate of expected predictive error and lower deviance is better. Besides, using `plot` function, the quantiles for each variable are visualized. 
+
+# Exercise 4 - Logistic regression in JAGS
+
+## Bayesian inference
 
 ```{r}
 x <- c(0.0028, 0.0028, 0.0056, 0.0112, 0.0225, 0.0450)
@@ -174,7 +522,7 @@ colnames(d.summary) <- c("Mean", "SD", "2.5%", "Median", "97.5%")
 knitr::kable(d.summary, align="c", caption="Summary statistics Bayesian approach")
 ```
 
-### Classic Logistic regression
+## Classic Logistic regression
 
 ```{r}
 fit_glm_classic <- glm(cbind(y, (n-y)) ~ x_centered, data = d.mice, family = binomial)
@@ -182,7 +530,7 @@ summary(fit_glm_classic)
 ```
 
 
-## Exercise 5 - CODA for logistic regression in JAGS
+# Exercise 5 - CODA for logistic regression in JAGS
 
 ```{r, warning=FALSE, message=FALSE}
 library(bayesplot)
@@ -234,9 +582,9 @@ See Vehtari et al. (2019) for details.
 
 It can be seen in the figure that the rank histograms nearly follow a normal distribution.
 
-### 5.2 Convergence diagnostics
+## Convergence diagnostics
 
-#### (a) Heidelberger \& Welch (Convergence to stationarity)
+### Heidelberger \& Welch (Convergence to stationarity)
 
 ```{r}
 heidel.diag(fit1.jags.coda)
@@ -250,7 +598,7 @@ The stationarity test uses the Cramer-von-Mises statistic to test the null hypot
 We see that both tests are passed for the four chains and all $p$-values are larger than 0.05 = $\alpha$. We conclude that the sampled values come from a stationary distribution and the length of the sample is considered long enough to estimate the mean with sufficient accuracy.
 
 
-####  (b) Raftery \& Lewis (Convergence to ergodic average)
+###  Raftery \& Lewis (Convergence to ergodic average)
 
 ```{r}
 raftery.diag(fit1.jags.coda)
@@ -259,7 +607,7 @@ raftery.diag(fit1.jags.coda)
 The output from `raftery.diag` shows the summary results for the four generated chains. `raftery.diag` is a run length control diagnostic based on a criterion of accuracy of estimation of the quantile $q$. The dependence factor $I$ ($I=\frac{M+N}{N_\text{min}}$), indicates to which extent autocorrelation inflates the required sample size. $I>5$ indicates strong autocorrelation which may be due to a poor choice of starting value, high posterior correlations or "stickiness" of the MCMC algorithm.  We see that the dependence factors for the four chains are all smaller than 5 and hence no strong autocorrelation exists. 
 
 
-#### (c) Geweke (Convergence to stationarity)
+### Geweke (Convergence to stationarity)
 
 ```{r}
 geweke.diag(fit1.jags.coda)
@@ -279,7 +627,7 @@ If `geweke.diag` indicates that the first and last part of a sample from a Marko
 The plot shows that we mainly obtain z-score values below an absolute value of 2. So we can assume that the chain has converged. 
 
 
-#### (d) Gelman and Rubin's convergence diagnostic
+### Gelman and Rubin's convergence diagnostic
 
 ```{r}
 gelman.diag(fit1.jags.coda, autoburnin=TRUE)
@@ -300,7 +648,7 @@ gelman.plot(fit1.jags.coda, autoburnin=TRUE)
 
 The `gelman.plot` shows that the evolution of Gelman and Rubin's shrink factor as the number of iterations increases. We see that the shrink factors for both variables quickly decrease to 1 after 10000 iterations and the variability of shrink factors becomes more stable as the number of iterations keeps increasing.
 
-####  (e) Gelman-Rubin diagnostic using stable variance estimators
+###  Gelman-Rubin diagnostic using stable variance estimators
 
 ```{r}
 stable.GR(fit1.jags.coda)
@@ -308,7 +656,7 @@ stable.GR(fit1.jags.coda)
 
 `stable.GR` extends Gelman-Rubin diagnostic using stable variance estimators. We see that the univariate potential scale reduction factors for both alpha and beta are calculated and they are close to 1. Multivariate `psrf` is also calculated by taking into account the interdependence of the chain's components. The PSRFs decrease to 1 as the chain length increases. When the PSRF becomes sufficiently close to 1, the sample collected by the Markov chain has converged to the target distribution. Means of variables (alpha and beta) and the effective sample size are also reported in the output. 
 
-#### Conclusions:
+### Conclusions:
 
 - Heidel: We conclude that the sampled values come from a stationary distribution and the length of the sample is considered long enough to estimate the mean with  sufficient accuracy.
 
@@ -325,7 +673,7 @@ All in all, it can be concluded that no issues arose during the diagnostics.
 
 
 
-### 5.3 Re-run the MCMC simulation
+## Re-run the MCMC simulation
 
 In the following steps the MCMC simulation is adapted to the findings from subtask 5.2.
 We keep the same model as before but we change n.iter from 10'000 to 30'000 and n.thin from 1 to 3. The number of burn-in iterations (4000) is kept. **WHY do we change to this values???? the diagnostics do not really get better... (excluding the rank_hist)**
@@ -487,7 +835,7 @@ stable.GR(fit2.jags.coda)
 The univariate potential scale reduction factors for both alpha and beta are both close to 1. Compared to the original model the effective sample size has been increased from 16766.74 to 29704.35.
 
 \pagebreak
-##  Exercise 6 (ESS)
+#  Exercise 6 (ESS)
 Run the code from the previous exercise with mice data with only one chain monitoring *beta* under the following two conditions:
 
 \begin{itemize}
