@@ -661,7 +661,7 @@ ess_function2 <- stableGR::n.eff(as.mcmc(fit4.jags.coda))
 
 results <- data.frame(
               "method" = c("ESS-Script", "ESS-Script", "stableGR", "stableGR"),
-              "thining" = c(1,10,1,10),
+              "thinning" = c(1,10,1,10),
               "n_eff" = c(ess_script1,ess_script2,ess_function1$n.eff,ess_function2$n.eff)
               )
 ```
