@@ -30,7 +30,7 @@ rm(list=ls())
 
 # Exercise 3 - Normal example in JAGS
 
-**Confused finding/declaration**: although the set.seed(44566) is implemented in every chunk that will generate random number, the results still change every time. That is the reason why the results and interpretation are NOT consistent with compiled version.
+**Confused finding/declaration**: although `set.seed(44566)` is implemented in every chunk that will generate random number, the results still change every time. That is the reason why the results and interpretation are NOT consistent with compiled version.
 
 ## rjags interface to JAGS
 The steps of `list.factories` and `set.factories` show and control over the status of factories in JAGS modules. The steps of `jags.modules` shows the names of the currently loaded modules and also loads or unloads JAGS modules. 
@@ -181,7 +181,7 @@ lines(density(inv_sigma2.sim),lty=3,lwd=3, col=2)
 lines(inla.output$marginals.hyperpar[[1]],lwd=2)
 legend("topright",c("MCMC: JAGS","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),
        cex=1.0,bty="n")
-KL.divergence(inla.rmarginal(length(mu.sim), 
+KL.divergence(inla.rmarginal(length(inv_sigma2.sim), 
                              inla.output$marginals.hyperpar[[1]]), 
               inv_sigma2.sim, k = 1)
 ```
@@ -244,7 +244,7 @@ lines(density(inv_sigma2.sim),lty=3,lwd=3, col=2)
 lines(inla.output$marginals.hyperpar[[1]],lwd=2)
 legend("topright",c("MCMC: JAGS","INLA"),lty=c(3,1),lwd=c(2,2),col=c(2,1),
        cex=1.0,bty="n")
-KL.divergence(inla.rmarginal(length(mu.sim), 
+KL.divergence(inla.rmarginal(length(inv_sigma2.sim), 
                              inla.output$marginals.hyperpar[[1]]), 
               inv_sigma2.sim, k = 1)
 ```
