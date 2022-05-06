@@ -28,8 +28,7 @@ rm(list=ls())
 
 ## Exercise 4 - Logistic regression in JAGS
 
-
-## Exercise 5 - CODA for logistic regression in JAGS
+### Bayesian inference
 
 ```{r}
 x <- c(0.0028, 0.0028, 0.0056, 0.0112, 0.0225, 0.0450)
@@ -45,9 +44,9 @@ n <- c(28, 12, 40, 40, 40, 40)
 
 ```{r mice-table, results='asis'}
 d.mice <- data.frame(
-  x, y, n, x_centered, y/n
+  x, y, n, x_centered, y/n, n-y
 )
-colnames(d.mice) <- c("$x$", "$y$", "$n$", "centered $x$", "$p$")
+colnames(d.mice) <- c("$x$", "$y$", "$n$", "centered $x$", "$p$", "$alive$")
 knitr::kable(d.mice, align="c", caption="Mice data from Collett (2003)")
 ```
 
@@ -172,10 +171,18 @@ d.summary <- t(rbind(
 ))
 
 colnames(d.summary) <- c("Mean", "SD", "2.5%", "Median", "97.5%")
-knitr::kable(d.summary, align="c", caption="Summary statistics")
+knitr::kable(d.summary, align="c", caption="Summary statistics Bayesian approach")
 ```
 
-### 5.1 Rank plots
+### Classic Logistic regression
+
+```{r}
+fit_glm_classic <- glm(cbind(y, (n-y)) ~ x_centered, data = d.mice, family = binomial)
+summary(fit_glm_classic)
+```
+
+
+## Exercise 5 - CODA for logistic regression in JAGS
 
 ```{r, warning=FALSE, message=FALSE}
 library(bayesplot)
