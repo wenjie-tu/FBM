@@ -29,6 +29,9 @@ rm(list=ls())
 
 
 # Exercise 3 - Normal example in JAGS
+
+**Confused finding/declaration**: although the set.seed(44566) is implemented in every chunk that will generate random number, the results still change every time. That is the reason why the results and interpretation are NOT consistent with compiled version.
+
 ## rjags interface to JAGS
 The steps of `list.factories` and `set.factories` show and control over the status of factories in JAGS modules. The steps of `jags.modules` shows the names of the currently loaded modules and also loads or unloads JAGS modules. 
 ```{r rjags, warning=FALSE, out.width="70%"}
@@ -54,7 +57,7 @@ list.modules()
 
 ### Introduction
 The basic setup of normal example is as following codes
-```{r introduction, fig.align='center', warning=FALSE, out.width="70%"}
+```{r introduction, fig.align='center', warning=FALSE, out.width="40%"}
 y <- c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
        9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
        -5.182,3.828,-4.038,2.169,5.087,-0.201,4.880,3.302,3.859,
@@ -123,6 +126,7 @@ writeLines(modelString, con="TempModelexe3.txt") # write to a file
 suppressPackageStartupMessages(library(MASS))
 suppressPackageStartupMessages(library(FNN))
 # model initiation
+set.seed(44566)
 model.jags <- jags.model(
   file = "TempModelexe3.txt", 
   data = wb_data,
@@ -187,6 +191,7 @@ The traceplot as well as the plot of density indicate good mixing for three diff
 
 ## JAGS several chains
 ```{r chains, fig.align='center', warning=FALSE, out.width="70%"}
+set.seed(44566)
 wb_inits <- function() {
   list(mu = rnorm(1),
        inv_sigma2 = runif(1)
@@ -296,6 +301,7 @@ Variance  & 3931.376 & 931.376   & 1000.000  & 1000.000  & 1000      \\ \hline
 
 ```{r additional1, fig.align='center', warning=FALSE, out.width="70%"}
 suppressPackageStartupMessages(library(runjags))
+set.seed(44566)
 wb_data <- list( N=30, 
                  y=c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
                      9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
@@ -333,6 +339,7 @@ Using `plot` function except ordinary plots that appeared before, autocorrelatio
 ### R2jags wrapper to rjags interface to JAGS several chains
 ```{r additional2, fig.align='center', warning=FALSE, out.width="40%"}
 suppressPackageStartupMessages(library(R2jags))
+set.seed(44566)
 wb_data <- list( N=30, 
                  y=c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
                      9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
