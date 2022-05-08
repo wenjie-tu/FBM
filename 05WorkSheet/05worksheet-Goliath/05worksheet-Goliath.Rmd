@@ -608,7 +608,7 @@ We see that both tests are passed for the four chains and all $p$-values are lar
 raftery.diag(fit1.jags.coda)
 ```
 
-The output from `raftery.diag` shows the summary results for the four generated chains. `raftery.diag` is a run length control diagnostic based on a criterion of accuracy of estimation of the quantile $q$. The dependence factor $I$ ($I=\frac{M+N}{N_\text{min}}$) indicates to which extent autocorrelation inflates the required sample size. $I>5$ indicates strong autocorrelation which may be due to a poor choice of starting value, high posterior correlations or "stickiness" of the MCMC algorithm.  We see that the dependence factors for the four chains are all smaller than 5 and hence no strong autocorrelation exists. 
+The output from `raftery.diag` shows the summary results for the four generated chains. `raftery.diag` is a run length control diagnostic based on a criterion of accuracy of estimation of the quantile $q$. The dependence factor $I$ ($I=\frac{M+N}{N_\text{min}}$) indicates to which extent autocorrelation inflates the required sample size. $I>5$ indicates strong autocorrelation which may be due to a poor choice of starting value, high posterior correlations or "stickiness" of the MCMC algorithm.  We see that the dependence factors for the four chains are all larger than 5 (depending on the random sample) and hence strong autocorrelation exists. 
 
 
 ### Geweke (Convergence to stationarity)
@@ -664,7 +664,7 @@ stable.GR(fit1.jags.coda)
 
 - Heidel: We conclude that the sampled values come from a stationary distribution and the length of the sample is considered long enough to estimate the mean with  sufficient accuracy.
 
-- Raftery \& Lewis: The dependence factors for the four chains are all smaller than 5 and hence no strong autocorrelation exists. 
+- Raftery \& Lewis: The dependence factors for the four chains are larger than 5 and hence autocorrelation exists. 
 
 - Geweke: We assume that the equilibrium has been reached. We achieve convergence towards the target distribution.
 
@@ -679,8 +679,8 @@ All in all, it can be concluded that no issues arose during the diagnostics.
 
 ## Re-run the MCMC simulation
 
-In the following steps the MCMC simulation is adapted to the findings from subtask 5.2.
-We keep the same model as before but we change n.iter from 10'000 to 30'000 and n.thin from 1 to 3. The number of burn-in iterations (4000) is kept. **WHY do we change to this values???? the diagnostics do not really get better... (excluding the rank_hist)**
+In the following steps the MCMC simulation is adapted to the findings from sub task 5.2.
+We keep the same model as before but we change `n.iter` from 10'000 to 30'000 and `n.thin` from 1 to 3, to reduce the autocorrelation. The number of burn-in iterations (`n.burin`= 4000) is kept. 
 
 
 ```{r}
@@ -796,8 +796,7 @@ Compared to the rank plots obtained with the original model, the rank plots for 
 heidel.diag(fit2.jags.coda)
 ```
 
-The p-values of the Heidelberg diagnostics have slightly changed. One test has now even failed (alpha 3).
-
+The p-values of the Heidelberg diagnostics have slightly changed. But the interpretation stays the same above. 
 
 
 
@@ -806,14 +805,13 @@ The p-values of the Heidelberg diagnostics have slightly changed. One test has n
 raftery.diag(fit2.jags.coda)
 ```
 
-The values for the dependence factor $I$ have decreased. They are all still below 5. So we do not obtain any strong autocorrelation.
-
+The values for the dependence factor $I$ have increased, so we obtain an even stronger autocorrelation than before. 
 
 ```{r}
 ## Geweke (Convergence to stationarity)
 geweke.diag(fit2.jags.coda)
 ```
-The obtained absolute values for $\alpha$ and $\beta$ are all below 2, which indicates convergence to the target distribution. The plot shows that for the third and fourth chain some z-scores lie above and one below 2.0. 
+The obtained absolute values for $\alpha$ and $\beta$ are all below 2, which indicates convergence to the target distribution. The plot shows that for the some z-score points of the different chains lie above or below 2.0, but only a fe which is acceptable. 
 
 
 ```{r, fig.show="hold", out.width="50%", fig.cap="Geweke Plot."}
@@ -836,8 +834,7 @@ gelman.plot(fit2.jags.coda, autoburnin=TRUE)
 stable.GR(fit2.jags.coda)
 ```
 
-The univariate potential scale reduction factors for both alpha and beta are close to 1. Compared to the original model the effective sample size has been increased from 16766.74 to 29704.35.
-
+The univariate potential scale reduction factors for both alpha and beta are close to 1. Compared to the original model the effective sample size has been increased. 
 
 #  Exercise 6 - EES
 Run the code from the previous exercise with mice data with only one chain monitoring *beta* under the following two conditions:
