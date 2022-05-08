@@ -289,13 +289,13 @@ Variance  & 3931.376 & 931.376   & 1000.000  & 1000.000  & 1000      \\ \hline
 
 **Gelman-Rubin-Brooks**: The estimated shrink factors and corresponding upper CI of three parameters of Gelman and Rubin's convergence diagnostic are within the acceptable range. In addition, Gelman-Rubin-Brooks plot shows the evolution of shrink factor as the number of iterations increases. The trends of the median of shrink factors are mostly stable among three parameters in the range of 6000 to 14000 iterations. 
 
-**Geweke**: The results of Geweke's convergence diagnostic for 4 chaines are all in the range of -2 to 2. However, the Geweke-Brooks plot indicates that the 4th chain has more samples who hold a Z-score that is not in the range of -2 to 2, which proves that the 4th chain has not reached equilibrium.
+**Geweke**: The results of Geweke's convergence diagnostic for 4 chaines are all in the range of -2 to 2. (However, the Geweke-Brooks plot indicates that the 4th chain has more samples who hold a Z-score that is not in the range of -2 to 2, which proves that the 4th chain has not reached equilibrium.)**Newest pdf version doesnt support observations in brackets**
 
-**Heidelberger & Welch**: Heidelberger and Welch's convergence diagnostic shows a similar result as Geweke-Brooks plot. (The variance in the 4th chain fails the stationary test indicating non convergence therefore a longer MCMC run is needed) -> Null hypothesis that the chain is from a stationary distribution is accepted across all four. All parameters (except the beforementioned one) pass the halfwidth test which means that the length of the sample is long enough to estimate the mean with sufficient accuracy.
+**Heidelberger & Welch**: Heidelberger and Welch's convergence diagnostic shows a similar result as Geweke-Brooks plot. (The variance in the 4th chain fails the stationary test indicating non convergence therefore a longer MCMC run is needed). All parameters (except the beforementioned one) pass the halfwidth test which means that the length of the sample is long enough to estimate the mean with sufficient accuracy. **Newest pdf version doesnt support observations in brackets**
 
 **Raftery & Lewis** Raftery and Lewis's diagnostic gives the minimum sample size based on zero autocorrelation. All the four chains need a minimum sample size of 3746.
 
-**Trace plot** The traceplots show agian that all the four chains of three parameters hold good mixing (-> Maybe that they explore the distribution well?).
+**Trace plot** Again the traceplots show that each of the four chains explores the distribution pretty good.
 
 ## runjags interface with a link to a file
 
@@ -680,7 +680,7 @@ All in all, it can be concluded that no issues arose during the diagnostics.
 ## Re-run the MCMC simulation
 
 In the following steps the MCMC simulation is adapted to the findings from sub task 5.2.
-We keep the same model as before but we change `n.iter` from 10'000 to 30'000 and `n.thin` from 1 to 3, to reduce the autocorrelation. The number of burn-in iterations (`n.burin`= 4000) is kept. 
+We keep the same model as before but we change `n.iter` from 10'000 to 30'000 and `n.thin` from 1 to 3, to reduce the autocorrelation. The number of burn-in iterations (`n.burnin`= 4000) is kept. 
 
 
 ```{r}
@@ -811,7 +811,7 @@ The values for the dependence factor $I$ have increased, so we obtain an even st
 ## Geweke (Convergence to stationarity)
 geweke.diag(fit2.jags.coda)
 ```
-The obtained absolute values for $\alpha$ and $\beta$ are all below 2, which indicates convergence to the target distribution. The plot shows that for the some z-score points of the different chains lie above or below 2.0, but only a fe which is acceptable. 
+The obtained absolute values for $\alpha$ and $\beta$ are all below 2, which indicates convergence to the target distribution. The plot shows that some z-score points of the different chains lie above or below 2.0, but only a few which is acceptable. 
 
 
 ```{r, fig.show="hold", out.width="50%", fig.cap="Geweke Plot."}
