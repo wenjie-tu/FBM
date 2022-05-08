@@ -8,14 +8,7 @@ author:
   - Elia-Leonid Mastropietro
   - Jonas Raphael Füglistaler
 date: "Spring Semester 2022"
-output: 
-  pdf_document:
-    latex_engine: xelatex
-    toc: true
-    toc_depth: 2
-    number_sections: true
-# bibliography: biblio.bib
-# nocite: '@*'
+output: pdf_document
 subtitle: Foundations of Bayesian Methodology
 papersize: a4
 fontsize: 10pt
@@ -30,17 +23,24 @@ rm(list=ls())
 
 # Exercise 3 - Normal example in JAGS
 
-**Confused finding/declaration**: although `set.seed(44566)` is implemented in every chunk that will generate random number, the results still change every time (due to update()/the burn-in). That is the reason why the results and interpretation are NOT consistent with compiled version.
+<!-- **Confused finding/declaration**: although `set.seed(44566)` is implemented in every chunk that will generate random number, the results still change every time (due to update()/the burn-in). That is the reason why the results and interpretation are NOT consistent with compiled version. -->
 
 ## rjags interface to JAGS
-The steps of `list.factories` and `set.factories` show and control over the status of factories in JAGS modules. The steps of `jags.modules` shows the names of the currently loaded modules and also loads or unloads JAGS modules. 
-```{r rjags, warning=FALSE, out.width="70%"}
-remove(list=ls())
-set.seed(44566)
-# set the path to the 05normal_exmple_JAGS.txt file
-path <- ""
 
-suppressPackageStartupMessages(library(rjags))
+The steps of `list.factories` and `set.factories` show and control over the status of factories in JAGS modules. The steps of `jags.modules` shows the names of the currently loaded modules and also loads or unloads JAGS modules. 
+
+```{r libraries, message=FALSE, warning=FALSE}
+# Load required libraries
+library(rjags)
+library(coda)
+library(MASS)
+library(FNN)
+library(INLA)
+library(runjags)
+library(R2jags)
+```
+
+```{r rjags, warning=FALSE, message=FALSE, out.width="70%", eval=FALSE}
 list.factories(type = "rng")
 list.factories(type = "monitor")
 list.factories(type = "sampler")
@@ -55,9 +55,12 @@ unload.module("glm")
 list.modules()
 ```
 
-### Introduction
 The following lines of code provide us with a basic setup 
-```{r introduction, fig.align='center', warning=FALSE, out.width="40%"}
+```{r introduction, fig.align='center', out.width="75%"}
+set.seed(44566)
+# set the path to the 05normal_exmple_JAGS.txt file
+path <- ""
+
 y <- c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
        9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
        -5.182,3.828,-4.038,2.169,5.087,-0.201,4.880,3.302,3.859,
@@ -75,9 +78,8 @@ b0 <- 0.4
 
 Boxplot shows that the median of observed data is around 3, the 25% quantile and 75% quantile are around 0 and 5, respectively. In addition, the minimum and maximum are around -5 and 11, respectively.
 
-###  INLA exact result (motivation)
-```{r INLA, warning=FALSE, out.width="70%"}
-suppressPackageStartupMessages(library(INLA))
+```{r INLA}
+# INLA exact result
 formula <- y ~ 1
 inla.output <- inla(formula,data=data.frame(y=y),
                     control.family = list(hyper =
@@ -87,19 +89,16 @@ inla.output <- inla(formula,data=data.frame(y=y),
                                          prec.intercept=1/sigma2_0))
 ```
 
-## Step 2: JAGS model file as a string in rjags with coda
 This step gives observed values, sets up initial values and specifies model.
-```{r, warning=FALSE, out.width="70%"}
-set.seed(44566)
-suppressPackageStartupMessages(library(rjags))
-suppressPackageStartupMessages(library(coda))
+```{r}
 wb_data <- list( N=30, 
                  y=c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
                      9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
                      -5.182,3.828,-4.038,2.169,5.087,-0.201,4.880,3.302,3.859,
                      11.144,5.564) 
 )
-wb_inits <- list( mu=-0.2381084, inv_sigma2=0.3993192 )
+wb_inits <- list( mu=-0.2381084, inv_sigma2=0.3993192, 
+                  .RNG.name="base::Wichmann-Hill", .RNG.seed=314159 )
 modelString = " # open quote for modelString
 model{
 # likelihood
@@ -121,12 +120,8 @@ sigma <- sqrt(sigma2)
 writeLines(modelString, con="TempModelexe3.txt") # write to a file
 ```
 
-## JAGS only one chain
-```{r one chain, fig.align='center', warning=FALSE, out.width="70%"}
-suppressPackageStartupMessages(library(MASS))
-suppressPackageStartupMessages(library(FNN))
+```{r one-chain}
 # model initiation
-set.seed(44566)
 model.jags <- jags.model(
   file = "TempModelexe3.txt", 
   data = wb_data,
@@ -151,13 +146,16 @@ class(fit.jags.coda)
 attributes(fit.jags.coda)
 summary(fit.jags.coda)
 plot(fit.jags.coda)
+```
+
+
+```{r, fig.show='hold', out.width='50%'}
 # store samples for each parameter from the chain into separate objects
 m.fit.jags.coda <- as.matrix(fit.jags.coda)
 mu.sim <- m.fit.jags.coda[,"mu"] 
 sigma2.sim <- m.fit.jags.coda[,"sigma2"]
 inv_sigma2.sim <- m.fit.jags.coda[,"inv_sigma2"] 
 
-par(mfrow=c(2,2))
 # plot for mean
 rg <- range(inla.output$marginals.fixed$"(Intercept)"[,2])
 truehist(mu.sim, prob=TRUE, col="yellow", xlab=expression(mu),ylim=rg)
@@ -186,12 +184,11 @@ KL.divergence(inla.rmarginal(length(inv_sigma2.sim),
               inv_sigma2.sim, k = 1)
 ```
 
+
 The empirical mean and standard deviation for each variable and corresponding quantiles are shown in the output.
 The traceplot as well as the plot of density indicate good mixing for three different parameters: precision, mean and variance. When compared to the result of INLA, whether plots or the results of Kullback-Leibler divergence proves the similarity between the output of INLA and JAGS.
 
-## JAGS several chains
-```{r chains, fig.align='center', warning=FALSE, out.width="70%"}
-set.seed(44566)
+```{r}
 wb_inits <- function() {
   list(mu = rnorm(1),
        inv_sigma2 = runif(1)
@@ -215,12 +212,14 @@ fit.jags.coda <- coda.samples(
 )
 summary(fit.jags.coda)
 plot(fit.jags.coda)
+```
+
+```{r, fig.show='hold', out.width='50%'}
 # store samples for each parameter from the chains into separate vectors
 m.fit.jags.coda <-as.matrix(fit.jags.coda)
 mu.sim <- m.fit.jags.coda[,"mu"] 
 sigma2.sim <- m.fit.jags.coda[,"sigma2"]
 inv_sigma2.sim <- m.fit.jags.coda[,"inv_sigma2"] 
-par(mfrow=c(2,2))
 # plot for mean
 rg <- range(inla.output$marginals.fixed$"(Intercept)"[,2])
 truehist(mu.sim, prob=TRUE, col="yellow", xlab=expression(mu),ylim=rg)
@@ -249,11 +248,11 @@ KL.divergence(inla.rmarginal(length(inv_sigma2.sim),
               inv_sigma2.sim, k = 1)
 ```
 
+
 The empirical mean and standard deviation for each variable and corresponding quantiles are shown in the output.
 Traceplots and density plots of the four chain model show similar results when compared to the single chain model. Moreover we can find good mixing for the three parameters (mean, variance and precision); INLA and JAGS have similar results.
 
-### CODA
-```{r coda, fig.align='center', warning=FALSE, out.width="70%"}
+```{r coda, fig.show='hold'}
 effectiveSize(fit.jags.coda)
 lapply(fit.jags.coda, effectiveSize)
 gelman.diag(fit.jags.coda,autoburnin=TRUE)
@@ -262,13 +261,15 @@ geweke.diag(fit.jags.coda)
 geweke.plot(fit.jags.coda)
 heidel.diag(fit.jags.coda)
 raftery.diag(fit.jags.coda)
+```
 
-par(mfrow=c(2,2))
+```{r, fig.show='hold', out.width='33%'}
 coda:::traceplot(fit.jags.coda)
 
 # "DIC" penalised expected deviance computation
 dic1<-dic.samples(model=model.jags, n.iter=1000, type="popt")
 ```
+
 
 **ESS**: The Effective Sample Size of the three parameters are shown in the table. The ESS must be large enough to get stable inferences for quantities of interest. In the case of 10000 iterations, the global ESS of around 4000 is large enough. 
 
@@ -296,12 +297,9 @@ Variance  & 3931.376 & 931.376   & 1000.000  & 1000.000  & 1000      \\ \hline
 
 **Trace plot** The traceplots show agian that all the four chains of three parameters hold good mixing (-> Maybe that they explore the distribution well?).
 
-## Additional sampling in several chains, preparation for BGR/Gelman with runjags
-### runjags interface with a link to a file
+## runjags interface with a link to a file
 
-```{r additional1, fig.align='center', warning=FALSE, out.width="70%"}
-suppressPackageStartupMessages(library(runjags))
-set.seed(44566)
+```{r additional1, fig.show='hold'}
 wb_data <- list( N=30, 
                  y=c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
                      9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
@@ -327,7 +325,6 @@ print(fit.runjags)
 # CODA
 fit.runjags.coda<-as.mcmc.list(fit.runjags)
 summary(fit.runjags.coda)
-# conduct CODA
 ```
 
 Using `plot` function except ordinary plots that appeared before, autocorrelation plots and a cross-correlation plot are produced.
@@ -336,10 +333,8 @@ Using `plot` function except ordinary plots that appeared before, autocorrelatio
 
 **Cross-correlation plot** shows the correlation between parameters. The correlation between variance and mean is close to 0, while variance and precision have a strong negative correlation which is not surprising given that the precision is the inverse of the variance.
 
-### R2jags wrapper to rjags interface to JAGS several chains
-```{r additional2, fig.align='center', warning=FALSE, out.width="40%"}
-suppressPackageStartupMessages(library(R2jags))
-set.seed(44566)
+## R2jags wrapper to rjags interface to JAGS several chains
+```{r additional2}
 wb_data <- list( N=30, 
                  y=c(3.048,2.980,2.029,7.249,-0.259,3.061,4.059,6.370,7.902,1.926,
                      9.094,10.489,-0.384,-3.096,2.315,5.830,-1.542,-1.544,5.714,
@@ -371,12 +366,14 @@ fit.R2jags<-jags(data=wb_data,
 plot(fit.R2jags)
 # Display summary statistics
 print(fit.R2jags)
+```
+
+```{r, fig.show='hold', out.width='50%'}
 # traceplot
 traceplot(fit.R2jags)
 # CODA
 fit.R2jags.coda<-as.mcmc(fit.R2jags)
 summary(fit.R2jags.coda)
-# conduct CODA
 ```
 
 The function `R2jags::jags` computes deviance when `DIC` is `true`, where DIC is an estimate of expected predictive error and lower deviance is better. Besides, using `plot` function, the quantiles for each variable are visualized. 
@@ -841,8 +838,8 @@ stable.GR(fit2.jags.coda)
 
 The univariate potential scale reduction factors for both alpha and beta are close to 1. Compared to the original model the effective sample size has been increased from 16766.74 to 29704.35.
 
-\pagebreak
-#  Exercise 6 (ESS)
+
+#  Exercise 6 - EES
 Run the code from the previous exercise with mice data with only one chain monitoring *beta* under the following two conditions:
 
 \begin{itemize}
