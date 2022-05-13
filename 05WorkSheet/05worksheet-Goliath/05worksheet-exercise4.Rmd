@@ -1,0 +1,229 @@
+---
+title: "Worksheet 5 - Exercise 4"
+subtitle: "Foundations of Bayesian Methodology"
+author: "Wenjie Tu"
+date: "Spring Semester 2022"
+output: pdf_document
+papersize: a4
+fontsize: 10pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(lang="us_en")
+rm(list=ls())
+```
+
+# Setup
+
+```{r}
+# original covariate values
+x <- c(0.0028, 0.0028, 0.0056, 0.0112, 0.0225, 0.0450)
+
+# the centered covariate values (centered dose) from the Mice data from Collett
+x_centered <- x - mean(x)
+
+# number of mice deaths
+y <- c(26, 9, 21, 9, 6, 1)
+
+# total number of mice
+n <- c(28, 12, 40, 40, 40, 40)
+```
+
+```{r mice-table, results='asis'}
+d.mice <- data.frame(
+  x, y, n, x_centered, y/n, n-y
+)
+colnames(d.mice) <- c("$x$", "$y$", "$n$", "centered $x$", "$p$", "$alive$")
+knitr::kable(d.mice, align="c", caption="Mice data from Collett (2003)")
+```
+
+Logistic model:
+
+$$
+\text{logit}(p_i)=\ln\left(\frac{p_i}{1-p_i} \right)=\alpha+\beta x_i
+$$
+
+$$
+p_i=\frac{\exp(\alpha+\beta x_i)}{1+\exp(\alpha+\beta x_i)}
+$$
+
+# Classic Approach
+
+```{r}
+fit.classic <- glm(cbind(y, (n-y)) ~ x_centered, data = d.mice, family = binomial)
+summary(fit.classic)
+```
+
+```{r}
+knitr::kable(coef(summary(fit.classic)), align="c", caption="Summary results for classic approach")
+```
+
+```{r}
+## Disaggregate the data
+d.mice1 <- data.frame(y_binary=rep(c(1, 0), c(sum(y), sum(n)-sum(y))), 
+                      x_centered=c(rep(round(x_centered, 5), y), 
+                                   rep(round(x_centered, 5), n-y)))
+
+knitr::kable(table(d.mice1))
+```
+
+```{r}
+fit.glm <- glm(y_binary ~ x_centered, data = d.mice1, family = binomial)
+summary(fit.glm)
+```
+
+# Bayesian Approach
+
+```{r, message=F, warning=F}
+library(rjags)
+library(coda)
+library(ggplot2)
+```
+
+```{r}
+modelString <- "model{
+  for (i in 1:length(y)) {
+    y[i] ~ dbin(p[i],n[i])
+    p[i] <- ilogit(alpha + beta * x[i])
+  }
+  
+  alpha ~ dnorm(0, 1.0E-04)
+  beta ~ dnorm(0, 1.0E-04)
+}"
+
+writeLines(modelString, con="LogitModel.txt")
+```
+
+```{r, eval=FALSE}
+## Alternatively
+modelString <- modelString <- "model{
+  for (i in 1:length(y)) {
+    y[i] ~ dbern(p[i])
+    p[i] <- ilogit(alpha + beta * x[i])
+  }
+  
+  alpha ~ dnorm(0, 1.0E-04)
+  beta ~ dnorm(0, 1.0E-04)
+}"
+
+writeLines(modelString, con="LogitModel.txt")
+```
+
+```{r DAG, echo=FALSE, out.width="75%", fig.align='center'}
+knitr::include_graphics("./images/DAG.png")
+```
+
+
+```{r}
+## Set seed for reproducible results
+set.seed(44566)
+
+## Generate initial values based on estimates in classical logistic regression
+inits.alpha <- coef(summary(fit.classic))[1, 1] + 
+  coef(summary(fit.classic))[1, 2] * rnorm(4)
+
+inits.beta <- coef(summary(fit.classic))[2, 1] + 
+  coef(summary(fit.classic))[2, 2] * rnorm(4)
+```
+
+
+```{r}
+## Generate data list for JAGS
+dat.jags <- list(y=y, x=x_centered, n=n)
+
+## Set initial values and random seed for reproducible results
+inits.jags <- list(list(alpha=inits.alpha[1], beta=inits.beta[1], 
+                        .RNG.name="base::Wichmann-Hill", .RNG.seed=314159),
+                   list(alpha=inits.alpha[2], beta=inits.beta[2], 
+                        .RNG.name="base::Marsaglia-Multicarry", .RNG.seed=159314),
+                   list(alpha=inits.alpha[3], beta=inits.beta[3], 
+                        .RNG.name="base::Super-Duper", .RNG.seed=413159),
+                   list(alpha=inits.alpha[4], beta=inits.beta[4], 
+                        .RNG.name="base::Mersenne-Twister", .RNG.seed=143915))
+
+## Compile JAGS model
+model.jags <- jags.model(
+  file = "LogitModel.txt", 
+  data = dat.jags,
+  inits = inits.jags, 
+  n.chains = 4,
+  n.adapt = 4000
+)
+```
+
+
+```{r}
+## Burn-in
+update(model.jags, n.iter = 4000)
+
+## Sampling
+fit.bayesian <- coda.samples(
+  model = model.jags, 
+  variable.names = c("alpha", "beta"), 
+  n.iter = 30000,
+  thin = 3
+)
+```
+
+```{r, fig.show='hold', out.width="50%"}
+m.fit.bayesian <-as.matrix(fit.bayesian)
+d.chains <- data.frame(
+  iterations = rep(seq(8003, 38000, by=3), times=4), 
+  alpha = m.fit.bayesian[, "alpha"], 
+  beta = m.fit.bayesian[, "beta"], 
+  chains = rep(c("chain1", "chain2", "chain3", "chain4"), each=10000)
+)
+
+ggplot(d.chains, aes(x=iterations, y=alpha, color=chains)) + geom_line(alpha=0.5) + 
+  labs(title="Trace of alpha", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=alpha, y=..density..)) + 
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) + 
+  labs(title="Density of alpha", y="Density") + theme_minimal()
+
+ggplot(d.chains, aes(x=iterations, y=beta, color=chains)) + geom_line(alpha=0.5) + 
+  labs(title="Trace of beta", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=beta, y=..density..)) + 
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) + 
+  labs(title="Density of beta", y="Density") + theme_minimal()
+```
+
+```{r}
+d.summary <- t(rbind(
+  colMeans(m.fit.bayesian), 
+  apply(m.fit.bayesian, 2, function(x) sd(x)), 
+  apply(m.fit.bayesian, 2, function(x) quantile(x, probs=c(0.025, 0.5, 0.975)))
+))
+
+colnames(d.summary) <- c("Mean", "SD", "2.5%", "Median", "97.5%")
+knitr::kable(d.summary, align="c", caption="Summary results for Bayesian approach")
+```
+
+```{r, out.width="75%", fig.align='center'}
+## Inverse logit function
+ilogit <- function(alpha, beta, x) {
+  tmp <- exp(alpha + beta * x)
+  pi <- tmp / (1 + tmp)
+  return(pi)
+}
+
+## Extract estimates from classic and Bayesian models
+alpha.classic <- coef(summary(fit.classic))[1, 1]
+beta.classic <- coef(summary(fit.classic))[2, 1]
+alpha.bayesian <- d.summary[1, 1]
+beta.bayesian <- d.summary[2, 1]
+
+x.grid <- seq(min(x_centered)-0.02, max(x_centered)+0.02, length.out=100)
+y.pred.classic <- ilogit(alpha=alpha.classic, beta=beta.classic, x=x.grid)
+y.pred.bayesian <- ilogit(alpha=alpha.bayesian, beta=beta.bayesian, x=x.grid)
+
+plot(y.pred.classic ~ x.grid, col=3, type="l", ylim=c(0, 1), xlab="Centered Dose",
+     ylab="Response Probability", main="Logistic curves with aggregate data")
+lines(y.pred.bayesian ~ x.grid, col=4, lty=2)
+points(x=x_centered, y=y/n, col=2)
+legend("topright", legend=c("Data", "Classic", "Bayesian"), 
+       col=2:4, lty=c(NA, 1, 2), pch=c(1, NA, NA))
+```
+
