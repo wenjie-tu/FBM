@@ -1,0 +1,354 @@
+---
+title: "Worksheet 6"
+author: 
+  - Wenje Tu
+  - Lea Bührer
+  - Jerome Sepin
+  - Zhixuan Li
+  - Elia-Leonid Mastropietro
+  - Jonas Raphael Füglistaler
+date: "Spring Semester 2022"
+output: pdf_document
+# bibliography: biblio.bib
+# nocite: '@*'
+subtitle: Foundations of Bayesian Methodology
+papersize: a4
+fontsize: 10pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(lang="us_en")
+rm(list=ls())
+```
+
+```{r libraries, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(bayesmeta)
+library(rjags)
+library(coda)
+```
+
+# Exercise 3 (Bayesian meta-analysis with `bayesmeta`)
+
+$$
+y=\log(\text{OR})=\log\frac{x_\text{P}}{n_\text{P}-x_\text{P}}-
+\log\frac{x_\text{T}}{n_\text{T}-x_\text{T}}
+$$
+
+$$
+\sigma=\text{SE}\left(\log(\text{OR})\right)=
+\sqrt{\frac{1}{x_\text{P}} +\frac{1}{n_\text{P}-x_\text{P}} + 
+\frac{1}{x_\text{T}} +\frac{1}{n_\text{T}-x_\text{T}}
+}
+$$
+
+```{r}
+pl_total <- c(107, 44, 51, 39, 139, 20, 78, 35)
+pl_case <- c(23, 12, 19, 9, 39, 6, 9, 10)
+tr_total <- c(208, 38, 150, 45, 138, 20, 201, 34)
+tr_case <- c(120, 18, 107, 26, 82, 16, 126, 23)
+log_or <- log(pl_case/(pl_total-pl_case)) - log(tr_case/(tr_total-tr_case))
+log_or_se <- sqrt(1/pl_case + 1/(pl_total-pl_case) + 1/tr_case + 1/(tr_total-tr_case))
+labels <- 1:length(pl_total)
+```
+
+```{r}
+dat <- data.frame(labels, tr_case, tr_total, pl_case, pl_total, log_or, log_or_se)
+knitr::kable(dat, align="c", digits=3, caption="Historical data for meta-analysis")
+```
+
+Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy:
+
+Likelihood:
+$$
+y_i\sim\text{N}(\theta_i,\sigma_i^2)
+$$
+for $i=1, \cdots, k$
+
+Random effects:
+$$
+\theta_i\sim\text{N}(\mu,\tau^2)
+$$
+Priors:
+$$
+\begin{aligned}
+\mu & \sim \text{N}(\nu,\gamma^2) \\
+\tau & \sim \lvert \text{N}(0, A^2) \rvert=\text{HN}(A)
+\end{aligned}
+$$
+where $\nu=0, \gamma=4, A=0.5$
+
+```{r}
+MA.bayesmeta <- bayesmeta(y = dat[, "log_or"], 
+                          sigma = dat[, "log_or_se"],  
+                          labels = dat[, "labels"], 
+                          mu.prior.mean = 0, mu.prior.sd = 4,
+                          tau.prior = function(t){dhalfnormal(t, scale = 0.5)}, 
+                          interval.type = "central" )
+```
+
+```{r}
+summary(MA.bayesmeta)
+```
+
+```{r}
+knitr::kable(t(MA.bayesmeta$summary), align="c", digits=4, 
+             caption="Summary statistics for parameters (bayesmeta)")
+```
+
+
+```{r forest-plot, fig.show='hold', out.width='75%', fig.align='center'}
+forestplot(MA.bayesmeta)
+```
+
+```{r plots, fig.show='hold', out.width='50%'}
+plot(MA.bayesmeta)
+```
+
+# Exercise 4 (Bayesian meta-analysis with JAGS)
+
+Likelihood:
+$$
+\begin{aligned}
+y_j & \sim \text{Bin}(n_j, p_j) \\
+\eta_j & \sim \text{N}(0, 1/\tau_\text{prec}) \\
+\end{aligned}
+$$
+for $i=1, \cdots, k$, where $\tau_\text{prec}=1/\tau^2$
+
+Priors:
+$$
+\begin{aligned}
+\mu & \sim \text{U}(-10, 10) \\
+\beta & \sim \text{U}(-10, 10) \\
+\tau & \sim \text{U}(0, 10) \\
+\end{aligned}
+$$
+
+```{r}
+pl1.data <- list(
+  N = 16, 
+  y = c(23., 12., 19., 9., 39., 6., 9., 10., 120., 18., 107., 26., 82., 16., 126., 23.),
+  n = c(107., 44., 51., 39., 139., 20., 78., 35., 208., 38., 150., 45., 138., 20., 201., 34.),
+  C1 = c(0., 0., 0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 1., 1., 1.)
+)
+
+pl1.params <- c("mu", "beta", "tau", "p1.star", "p2.star")
+```
+
+```{r}
+pl1_modelString <- "model {
+  #	sampling model (likelihood)
+  for (j in 1:N)	{
+    y[j] ~ dbin(p[j], n[j])
+    logit(p[j]) <- mu + beta * C1[j] + eta[j]
+    eta[j] ~ dnorm(0, tau.prec)
+  
+  #	prediction for posterior predictive checks
+  y.pred[j] ~ dbin(p[j], n[j])
+  PPC[j] <- step(y[j] - y.pred[j]) - 0.5 * equals(y[j], y.pred[j])
+  }
+  
+  #	priors
+  mu ~ dunif(-10, 10)
+  beta ~ dunif(-10, 10)
+  tau ~ dunif(0, 10)
+  tau.prec <- 1/tau/tau
+  
+  #	population effect
+  p1 <- 1/(1+exp(-mu)) 
+  p2 <- 1/(1+exp(-mu-beta))
+  
+  #	predictive distribution for new study effect
+  eta.star ~ dnorm(0, tau.prec)
+  p1.star <- 1/(1+exp(-mu-eta.star))
+  p2.star <- 1/(1+exp(-mu-beta-eta.star))
+}"
+
+writeLines(pl1_modelString, con="./models/MetaAnalysis.txt")
+```
+
+```{r}
+# model initiation
+rjags.pl1 <- jags.model(
+  file = "./models/MetaAnalysis.txt", 
+  data = pl1.data,
+  n.chains = 4,
+  n.adapt = 4000
+)
+
+# burn-in
+update(rjags.pl1, n.iter = 4000)
+
+# sampling/monitoring
+fit.rjags.pl1.coda <- coda.samples(
+  model = rjags.pl1, 
+  variable.names = pl1.params, 
+  n.iter = 10000,
+  thin = 1
+)
+
+summary(fit.rjags.pl1.coda)
+```
+
+```{r, fig.show='hold', out.width='50%'}
+m.fit.rjags.pl1.coda <- as.matrix(fit.rjags.pl1.coda)
+d.chains <- data.frame(
+  iterations = rep(8001:18000, times=4), 
+  chains = rep(c("chain1", "chain2", "chain3", "chain4"), each=10000), 
+  beta = m.fit.rjags.pl1.coda[, "beta"], 
+  mu = m.fit.rjags.pl1.coda[, "mu"], 
+  p1.star = m.fit.rjags.pl1.coda[, "p1.star"], 
+  p2.star = m.fit.rjags.pl1.coda[, "p2.star"], 
+  tau = m.fit.rjags.pl1.coda[, "tau"]
+)
+
+ggplot(d.chains, aes(x=iterations, y=beta, color=chains)) + geom_line(alpha=0.5) +
+  labs(title="Trace of beta", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=beta, y=..density..)) +
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
+  labs(title="Density of beta", y="Density") + theme_minimal()
+
+ggplot(d.chains, aes(x=iterations, y=mu, color=chains)) + geom_line(alpha=0.5) +
+  labs(title="Trace of mu", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=mu, y=..density..)) +
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
+  labs(title="Density of mu", y="Density") + theme_minimal()
+
+ggplot(d.chains, aes(x=iterations, y=p1.star, color=chains)) + geom_line(alpha=0.5) +
+  labs(title="Trace of p1.star", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=p1.star, y=..density..)) +
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
+  labs(title="Density of p1.star", y="Density") + theme_minimal()
+
+ggplot(d.chains, aes(x=iterations, y=p2.star, color=chains)) + geom_line(alpha=0.5) +
+  labs(title="Trace of p2.star", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=p2.star, y=..density..)) +
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
+  labs(title="Density of p2.star", y="Density") + theme_minimal()
+
+ggplot(d.chains, aes(x=iterations, y=tau, color=chains)) + geom_line(alpha=0.5) +
+  labs(title="Trace of tau", x="Iterations") + theme_minimal()
+
+ggplot(d.chains, aes(x=tau, y=..density..)) +
+  geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
+  labs(title="Density of tau", y="Density") + theme_minimal()
+```
+
+```{r}
+d.summary <- t(rbind(
+  colMeans(m.fit.rjags.pl1.coda), 
+  apply(m.fit.rjags.pl1.coda, 2, function(x) sd(x)), 
+  apply(m.fit.rjags.pl1.coda, 2, function(x) quantile(x, probs=c(0.025, 0.5, 0.975)))
+))
+
+colnames(d.summary) <- c("Mean", "SD", "2.5%", "Median", "97.5%")
+knitr::kable(d.summary, align="c", digits=4, caption="Summary statistics for parameters (JAGS)")
+```
+
+
+**Model (Exercise 1 of Worksheet 5)**
+
+In this model, we first apply the logit-transformation to $p_i=x_i/n_i$ to get an approximately normal distribution of logit-transformed rates. We then use the delta method to compute the standard of logit-transformed rates.
+
+$$
+y_i=\text{logit}(p_i)=\log\frac{p_i}{1-p_i}=\log\frac{x_i}{n_i-x_i}
+$$
+
+$$
+\sqrt{\frac{1}{\tau_i^s}}=\text{SE}(y_i)=\sqrt{\frac{1}{x_i}+\frac{1}{n_i-x_i}}
+$$
+The full Bayesian meta-analysis is conducted using the Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy:
+
+Likelihood:
+$$
+y_i \sim \text{N}(\theta_i, 1/ \tau^{s}_i)
+$$
+for $i=1, \cdots, N$
+
+Random effects:
+$$
+\theta_i \sim \text{N}(\mu, 1/\tau) 
+$$
+
+Priors:
+$$
+\begin{aligned}
+  \mu&\sim\text{N}(0,100^2) \\
+  \tau&\sim\text{G}(0.001, 0.001)
+\end{aligned}
+$$
+
+**Model (Exercise 3 of Worksheet 6)**
+
+This model uses the same idea as for the model in Exercise 1 of Worksheet 5. The only difference is that in this model we consider the historical data for both placebo and treatment groups. We first compute the so-called log odds ratio, which is simply the difference between logit-transformed rates in the placebo group and logit-transformed rates in the treatment group. We then use the formula from [Held and Sabanes Bove, 2020, p. 137–138] to compute the standard error of the log odds ratio.
+
+$$
+y=\log(\text{OR})=\log\frac{x_\text{P}}{n_\text{P}-x_\text{P}}-
+\log\frac{x_\text{T}}{n_\text{T}-x_\text{T}}
+$$
+
+$$
+\sigma=\text{SE}\left(\log(\text{OR})\right)=
+\sqrt{\frac{1}{x_\text{P}} +\frac{1}{n_\text{P}-x_\text{P}} + 
+\frac{1}{x_\text{T}} +\frac{1}{n_\text{T}-x_\text{T}}
+}
+$$
+
+The full Bayesian meta-analysis is conducted using the Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy:
+
+Likelihood:
+$$
+y_i\sim\text{N}(\theta_i,\sigma_i^2)
+$$
+for $i=1, \cdots, k$
+
+Random effects:
+$$
+\theta_i\sim\text{N}(\mu,\tau^2)
+$$
+Priors:
+$$
+\begin{aligned}
+\mu & \sim \text{N}(\nu,\gamma^2) \\
+\tau & \sim \lvert \text{N}(0, A^2) \rvert=\text{HN}(A)
+\end{aligned}
+$$
+where $\nu=0, \gamma=4, A=0.5$
+
+**Model (Exercise 4 of Worksheet 6)**
+
+Unlike models stated before, this model uses a linear regression with a normal error ($\eta_j$) to directly model the number of responders with only one predictor indicating whether in the treatment or not.
+
+$$
+y_j=\mu+\beta\cdot\text{C1}_j+\eta_j
+$$
+where $\text{C1}_i$ is a binary variable which is equal to 0 if placebo and 1 otherwise.
+
+
+Likelihood:
+$$
+\begin{aligned}
+y_j & \sim \text{Bin}(n_j, p_j) \\
+\eta_j & \sim \text{N}(0, 1/\tau_\text{prec})
+\end{aligned}
+$$
+for $i=1, \cdots, k$, where $\tau_\text{prec}=1/\tau^2$
+
+Priors:
+$$
+\begin{aligned}
+\mu & \sim \text{U}(-10, 10) \\
+\beta & \sim \text{U}(-10, 10) \\
+\tau & \sim \text{U}(0, 10) \\
+\end{aligned}
+$$
+
+# Exercise 5 (Moments of the Poisson-gamma distribution)
+
+# Exercise 6 (Empirical Bayes)

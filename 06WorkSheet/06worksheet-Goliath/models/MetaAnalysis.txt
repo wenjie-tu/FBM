@@ -1,0 +1,27 @@
+model {
+  #	sampling model (likelihood)
+  for (j in 1:N)	{
+    y[j] ~ dbin(p[j], n[j])
+    logit(p[j]) <- mu + beta * C1[j] + eta[j]
+    eta[j] ~ dnorm(0, tau.prec)
+  
+  #	prediction for posterior predictive checks
+  y.pred[j] ~ dbin(p[j], n[j])
+  PPC[j] <- step(y[j] - y.pred[j]) - 0.5 * equals(y[j], y.pred[j])
+  }
+  
+  #	priors
+  mu ~ dunif(-10, 10)
+  beta ~ dunif(-10, 10)
+  tau ~ dunif(0, 10)
+  tau.prec <- 1/tau/tau
+  
+  #	population effect
+  p1 <- 1/(1+exp(-mu)) 
+  p2 <- 1/(1+exp(-mu-beta))
+  
+  #	predictive distribution for new study effect
+  eta.star ~ dnorm(0, tau.prec)
+  p1.star <- 1/(1+exp(-mu-eta.star))
+  p2.star <- 1/(1+exp(-mu-beta-eta.star))
+}
