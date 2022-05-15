@@ -628,14 +628,14 @@ colnames(results.eb) <- column.names
 colnames(results.mm) <- column.names
 
 for (i in 1:length(y)) {
-  lambda.eb <- rgamma(n=100000, shape=opt$par[1]+y[i], rate=opt$par[2]+1)
+  lambda.eb <- rgamma(n=M, shape=opt$par[1]+y[i], rate=opt$par[2]+1)
   results.eb[i, 1] <- i
   results.eb[i, 2] <- mean(lambda.eb)
   results.eb[i, 3:5] <- quantile(lambda.eb, probs=c(0.025, 0.5, 0.975))
   results.eb[i, 6] <- results.eb[i, 5] - results.eb[i, 3]
   results.eb[i, 7] <- "Empirical Bayes"
   
-  lambda.mm <- rgamma(n=100000, shape=alpha+y[i], rate=beta+1)
+  lambda.mm <- rgamma(n=M, shape=alpha+y[i], rate=beta+1)
   results.mm[i, 1] <- i
   results.mm[i, 2] <- mean(lambda.mm)
   results.mm[i, 3:5] <- quantile(lambda.mm, probs=c(0.025, 0.5, 0.975))
