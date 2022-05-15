@@ -354,44 +354,50 @@ $$
 Let $Y|\lambda\sim P(\lambda)$ with $\lambda\sim G(\alpha,\beta)$. Use the expressions for iterated expectation
 
 $$
-E(Y)=E_{\lambda}(E_Y(Y|\lambda))
+\mathbb{E}(Y)=\mathbb{E}_{\lambda}[\mathbb{E}_{Y}(Y\mid\lambda)] 
 $$
 and variance (Held and Sabanes Bove, 2020, Section A.3.4)
 
 $$
-Var(Y)=Var_{\lambda}(E_Y(Y|\lambda))+E_{\lambda}(Var_Y(Y|\lambda))
+\text{Var}(Y)=\text{Var}_\lambda[\mathbb{E}_Y(Y\mid\lambda)] + \mathbb{E}_\lambda[\text{Var}_Y(Y\mid\lambda)]
 $$
 To derive both, the expectation and the variance of the random variable $Y$.
 
 Hints:
-Poisson distribution: $X\sim Po(\lambda): E(X)=\lambda,Var(X)=\lambda$
+Poisson distribution: $X\sim \text{Po}(\lambda): \mathbb{E}(X)=\lambda,\text{Var}(X)=\lambda$
 
-Gamma distribution: $X\sim G(\alpha,\beta): E(X)=\alpha/\beta,Var(X)=\alpha/\beta^2$
+Gamma distribution: $X\sim \text{G}(\alpha,\beta): \mathbb{E}(X)=\alpha/\beta,\text{Var}(X)=\alpha/\beta^2$
 
 
 Solution:
 
 $$
 \begin{aligned}
-\text{Expectation:}\\
-E(Y)&=E_{\lambda}(E_Y(Y|\lambda)) & \text{Because }Y|\lambda\sim P(\lambda)\\
-&=E_{\lambda}(\lambda) & \text{Because }\lambda\sim G(\alpha,\beta)\\
-&=\frac{\alpha}{\beta}
+\mathbb{E}(Y) 
+&= \mathbb{E}_{\lambda}[\mathbb{E}_{Y}(Y\mid\lambda)] 
+& \because Y\mid\lambda \sim \text{Po}(\lambda) \\
+&= \mathbb{E}_{\lambda}(\lambda) 
+& \because \lambda \sim \text{G}(\alpha,\beta) \\
+&= \frac{\alpha}{\beta}
 \end{aligned}
 $$
+
 $$
 \begin{aligned}
-\text{Variance:}\\
-Var(Y)&=Var_{\lambda}(E_Y(Y|\lambda))+E_{\lambda}(Var_Y(Y|\lambda))
- & \text{Because }Y|\lambda\sim P(\lambda)\\
-&=Var_{\lambda}(\lambda)+E_{\lambda}(\lambda)
- & \text{Because }\lambda\sim G(\alpha,\beta)\\
-&=\frac{\alpha}{\beta^2}+\frac{\alpha}{\beta}=\frac{\alpha(1+\beta)}{\beta^2}
+\text{Var}(Y)
+&= \text{Var}_\lambda[\mathbb{E}_Y(Y\mid\lambda)] + 
+\mathbb{E}_\lambda[\text{Var}_Y(Y\mid\lambda)]
+& \because Y\mid\lambda \sim \text{Po}(\lambda) \\
+&= \text{Var}_\lambda(\lambda) + \mathbb{E}_\lambda(\lambda) 
+& \because \lambda \sim \text{G}(\alpha,\beta) \\
+&= \frac{\alpha}{\beta^2} + \frac{\alpha}{\beta} \\
+&= \frac{\alpha(1+\beta)}{\beta^2}
 \end{aligned}
 $$
 
 
 # Exercise 6 (Empirical Bayes)
+
 Consider observed numbers of lip cancer cases per district for each of 56 districts in Scotland:
 
 ```{r}
@@ -400,57 +406,132 @@ y <- c(11, 5, 15, 9, 6, 9, 2, 3, 26, 39, 20, 31, 9, 16, 6, 16, 19, 17, 15, 11, 1
 11, 5, 8, 3, 7, 0, 8, 7, 13)
 ```
 
-Assume that these observations are $i.i.d.$ realisations of the model $Y|\lambda\sim P(\lambda)$  with $\lambda\sim G(\alpha,\beta)$. Apply and compare two different approaches to compute empirical Bayes estimates for each district:
+Assume that these observations are $i.i.d.$ realizations of the model $Y\mid\lambda\sim \text{Po}(\lambda)$  with $\lambda\sim \text{G}(\alpha,\beta)$. Apply and compare two different approaches to compute empirical Bayes estimates for each district:
 
-\begin{itemize}
-\item[(a)] Numerical maximisation of the log-likelihood corresponding to the Poisson-gamma distribution as described by (Held and Sabanes Bove, 2020, p. 210) to obtain the marginal maximum likelihood estimator.
-\end{itemize}
+(a) Numerical maximization of the log-likelihood corresponding to the Poisson-gamma distribution as described by (Held and Sabanes Bove, 2020, p. 210) to obtain the marginal maximum likelihood estimator.
 
 $$
+\underbrace{f(\lambda\mid y_{1:n})}_\text{Posterior} \propto 
+\underbrace{f(y_{1:n}\mid\lambda)}_\text{Likelihood} \cdot 
+\underbrace{f(\lambda)}_\text{Prior}
+$$
+
+Likelihood:
+$$
+f(y_{1:n}\mid\lambda)=\prod_{i=1}^{n}\frac{\lambda^{y_i}\exp(-\lambda)}{y_i!}
+\propto\lambda^{\sum_{i=1}^{n} y_i}\exp(-n\lambda)
+$$
+
+Prior:
+$$
+f(\lambda)=\frac{\beta^{\alpha}}{\Gamma(\alpha)}\lambda^{\alpha-1}\exp(-\beta\lambda)
+\propto \lambda^{\alpha-1}\exp(-\beta\lambda)
+$$
+
+Posterior:
+$$
 \begin{aligned}
-\text{we want}\\
-f(\lambda|y_{1:n})&\propto f(y_{1:n}|\lambda)f(\lambda)\\
-\text{Likelihood:}\\
-f(y_{1:n}|\lambda)&=\prod_{i=1}^{n}\frac{\lambda^{x_i}exp(-\lambda)}{x_i!}\\
-&\propto \lambda^{\sum_{i=1}^{n}x_i}exp(-n\lambda) \\
-\text{Prior:}\\
-f(\lambda)&=\frac{\beta^\alpha}{\Gamma(\alpha)}\lambda^{\alpha-1}exp(-\beta\lambda)\\
-&\propto \lambda^{\alpha-1}exp(-\beta\lambda)\\
-\text{Posterior:}\\
-f(\lambda|y_{1:n})&\propto \lambda^{\sum_{i=1}^{n}x_i}exp(-n\lambda)\lambda^{\alpha-1}exp(-\beta\lambda)\\
-&\propto \lambda^{(\sum_{i=1}^{n}x_i+\alpha)-1}exp(-(\beta+n)\lambda)\\
-f(\lambda|y_{1:n})&\sim G(\sum_{i=1}^{n}x_i+\alpha, \beta+n)
+f(\lambda\mid y_{1:n}) &\propto f(y_{1:n}\mid\lambda)\cdot f(\lambda) \\
+&\propto \lambda^{\sum_{i=1}^{n} y_i}\exp(-n\lambda)\cdot 
+\lambda^{\alpha-1}\exp(-\beta\lambda) \\
+&= \lambda^{\sum_{i=1}^{n} y_i+\alpha-1}\exp(-(n+\beta)\lambda)
 \end{aligned}
 $$
 
-In the empirical Bayes setting, we define the estimates of the prior based on the maximum likelihood estimates of the prior predictive distribution. This is also called the marginal likelihood and in our context has the Poisson-gamma form $y_i\sim PoG(\alpha,\beta)$ with the log-likelihood
-
 $$
-l(\alpha,\beta)=\sum_{i=1}^{n}\left[\alpha log(\beta)+log\left(\frac{\Gamma(\alpha+x_i)}{\Gamma(\alpha)}\right)-(\alpha+x_i)log(\beta+\nu)\right]
+f(\lambda\mid y_{1:n}) \propto
+\lambda^{(\alpha+\sum_{i=1}^{n} y_i)-1}\exp(-(\beta+n)\lambda)
+$$
+Hence
+$$
+\lambda\mid y_{1:n}\sim\text{G}\left(\alpha+\sum_{i=1}^{n} y_i, \beta+n \right)
 $$
 
-$\nu$ is in our case 1.
+In the empirical Bayes setting, we define the estimates of the prior based on the maximum likelihood estimates of the prior predictive distribution. This is also called the marginal likelihood and in our context has the Poisson-gamma form $y_i\sim \text{PoG}(\alpha,\beta, 1)$ with the log-likelihood
 
-```{r,warning=F}
-#implement log-likelihood
-ll <- function(par, x){
-  ll<-sum(dnbinom(x, size = par[1], prob =par[2]/(par[2]+1),log = T) )
+Likelihood:
+$$
+y_i\mid\lambda\sim\text{Po}(\lambda)
+$$
+
+Prior:
+$$
+\lambda\sim\text{G}(\alpha, \beta)
+$$
+
+Prior predictive distribution:
+$$
+\begin{aligned}
+f(y_{i})&=\int_{0}^{\infty}f(y_i\mid\lambda)\cdot f(\lambda)\text{d}\lambda \\
+&=\int_{0}^{\infty} \frac{\lambda^{y_i}\exp(-\lambda)}{y_i!}\cdot
+\frac{\beta^{\alpha}}{\Gamma(\alpha)}\lambda^{\alpha-1}\exp(-\beta\lambda) \text{d}\lambda \\
+&=\frac{\beta^{\alpha}}{\Gamma(\alpha)}\cdot\frac{1}{y_i!}
+\int_{0}^{\infty} \lambda^{y_i+\alpha-1}\exp(-(1+\beta)\lambda)\text{d}\lambda \\
+&=\frac{\beta^{\alpha}}{(\beta+1)^{\alpha+y_i}}\cdot
+\frac{\Gamma(\alpha+y_i)}{\Gamma(\alpha)}\cdot\frac{1}{y_i!}
+\underbrace{
+\int_{0}^{\infty}\frac{(\beta+1)^{\alpha+y_i}}{\Gamma(\alpha+y_i)}
+\lambda^{(\alpha+y_i)-1}\exp(-(\beta+1)\lambda)\text{d}\lambda
+}_\text{integrates to 1} \\
+&=\frac{\beta^{\alpha}}{(\beta+1)^{\alpha+y_i}}\cdot
+\frac{\Gamma(\alpha+y_i)}{\Gamma(\alpha)}\cdot\frac{1}{y_i!}
+\end{aligned}
+$$
+
+Log-likelihood:
+$$
+\begin{aligned}
+l(\alpha,\beta) &= \log \prod_{i=1}^{n}f(y_i) \\
+&= \sum_{i=1}^{n}\log f(y_i) \\
+&= \sum_{i=1}^{n}\log \left(
+\frac{\beta^{\alpha}}{(\beta+1)^{\alpha+y_i}}\cdot
+\frac{\Gamma(\alpha+y_i)}{\Gamma(\alpha)}\cdot\frac{1}{y_i!}
+\right) \\
+&= \sum_{i=1}^{n}\left[
+\alpha\log(\beta)-(\alpha+y_i)\log(\beta+1)+
+\log\left(\frac{\Gamma(\alpha+y_i)}{\Gamma(\alpha)}\right)-\log(y_i!)
+\right] \\
+&\propto \sum_{i=1}^{n}\left[\alpha \log(\beta)+\log\left(\frac{\Gamma(\alpha+y_i)}{\Gamma(\alpha)}\right)-(\alpha+y_i)\log(\beta+1)\right]
+\end{aligned}
+$$
+
+```{r, warning=FALSE}
+## Log-likelihood function
+ll <- function(x) {
+  alpha <- x[1]
+  beta <- x[2]
+  ll <- sum(alpha * log(beta) + log( (gamma(alpha + y))/(gamma(alpha)) ) - 
+              (alpha + y) * log(beta + 1))
   return(ll)
 }
-#optimizing
-opt <- optim(par=c(0.1,0.1), ll, x = y, method = "BFGS",
+
+## Maximize log-likelihood function
+opt <- optim(par=c(0.1, 0.1), fn=ll, control = list(fnscale = -1))
+
+## Print the maximum likelihood estimates
+opt$par
+```
+
+```{r, warning=FALSE, include=FALSE, eval=FALSE}
+## Implement log-likelihood
+ll <- function(par, x){
+  ll <- sum(dnbinom(x, size = par[1], prob = par[2]/(par[2]+1), log = T))
+  return(ll)
+}
+## Optimizing
+opt <- optim(par = c(0.1, 0.1), fn = ll, x = y, method = "BFGS", 
              control = list(fnscale = -1),
              hessian = T)
 opt$par
 ```
-Thus, we have $\hat\alpha$ and $\hat\beta$ and can put them into the posterior formula calculated above.
+Thus, we have $\hat{\alpha}_\text{ML}$ and $\hat{\beta}_\text{ML}$ and can put them into the posterior formula calculated above.
 
-```{r}
-#posterior distribution of lambda
+```{r, include=FALSE, eval=FALSE}
+# Posterior distribution of lambda
 set.seed(34324)
 result <- c()
 for(i in 1:length(y)){
-  lambda_post <- rgamma(n=100000, shape =opt$par[1]+y[i], rate = opt$par[2] )
+  lambda_post <- rgamma(n=100000, shape=opt$par[1]+y[i], rate=opt$par[2]+1)
   current_result <- c("Mean"=mean(lambda_post),
                      "CrI:2.5%"=quantile(lambda_post,c(0.025)),
                      "Median"=quantile(lambda_post,c(0.5)),
@@ -466,39 +547,60 @@ result$district <- 1:nrow(result)
 result$width <-  result$Upper-result$Lower
 ```
 
-\begin{itemize}
-\item[(b)] Matching of moments based on the Exercise 5 above, which provides the marginal moment estimator.
-\end{itemize}
+(b) Matching of moments based on the Exercise 5 above, which provides the marginal moment estimator.
 
+In the Exercise 5, we have derived:
 $$
 \begin{aligned}
-\text{Matching moments:}\\
-Var(Y)&=\frac{\alpha(1+\beta)}{\beta^2}\rightarrow\alpha=\beta^2 Var(Y)/(1+\beta)\\
-E(Y)&=\frac{\alpha}{\beta}\rightarrow\alpha=\beta E(Y)\\
-\beta^2 Var(Y)/(1+\beta)&=\beta E(Y)\\
-\frac{\beta}{1+\beta}&=\frac{E(Y)}{Var(Y)}\\
-\beta&=\frac{E(Y)}{Var(Y)}+\frac{E(Y)}{Var(Y)}\beta\\
-\beta\left(1-\frac{E(Y)}{Var(Y)}\right)&=\frac{E(Y)}{Var(Y)}\\
-\beta&=\frac{\frac{E(Y)}{Var(Y)}}{1-\frac{E(Y)}{Var(Y)}}\\
+\mathbb{E}(Y)&=\frac{\alpha}{\beta} \\
+\text{Var}(Y)&=\frac{\alpha(1+\beta)}{\beta^2}
 \end{aligned}
 $$
 
+Let us start with $\text{Var}(Y)$:
+$$
+\begin{aligned}
+\text{Var}(Y)&=\frac{\alpha(1+\beta)}{\beta^2} \\
+\text{Var}(Y)&=\mathbb{E}(Y)\cdot \frac{1+\beta}{\beta} \\
+\frac{\text{Var}(Y)}{\mathbb{E}(Y)}&= \frac{1}{\beta}+1 \\
+\beta&=\frac{1}{\frac{\text{Var}(Y)}{\mathbb{E}(Y)}-1}
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+\mathbb{E}(Y)&=\frac{\alpha}{\beta} \\
+\alpha&=\beta\mathbb{E}(Y) \\
+&=\frac{\mathbb{E}(Y)}{\frac{\text{Var}(Y)}{\mathbb{E}(Y)}-1}
+\end{aligned}
+$$
+
+$$
+\begin{cases}
+\alpha&=\frac{\mathbb{E}(Y)}{\frac{\text{Var}(Y)}{\mathbb{E}(Y)}-1} \\
+\beta&=\frac{1}{\frac{\text{Var}(Y)}{\mathbb{E}(Y)}-1}
+\end{cases}
+$$
 
 ```{r}
-#apply formulas
-var_y <- var(y)
-ex_y <- mean(y)
-beta <- (ex_y/var_y) /(1-(ex_y/var_y))
-alpha <- beta*ex_y
-print(c(alpha,beta))
+## Moments-matching function
+match.moments <- function(mean, var) {
+  alpha <- mean / (var/mean - 1)
+  beta <- 1 / (var/mean - 1)
+  return(params = c(alpha=alpha, beta=beta))
+}
+
+params <- match.moments(mean = mean(y), var = var(y)); params
+alpha <- params[1]
+beta <- params[2]
 ```
 
-```{r}
-#posterior distribution of lambda
+```{r, include=FALSE, eval=FALSE}
+## Posterior distribution of lambda
 set.seed(34324)
 result_MaMo <- c()
 for(i in 1:length(y)){
-  lambda_post <- rgamma(n=100000, shape =alpha+y[i], rate = beta )
+  lambda_post <- rgamma(n=100000, shape=alpha+y[i], rate=beta+1)
   current_result <- c("Mean"=mean(lambda_post),
                      "CrI:2.5%"=quantile(lambda_post,c(0.025)),
                      "Median"=quantile(lambda_post,c(0.5)),
@@ -516,31 +618,63 @@ result_MaMo$width <-  result_MaMo$Upper-result_MaMo$Lower
 
 Compare means and the lengths of equi-tailed 95\%CrI obtained by both approaches. Report your results
 
+```{r}
+set.seed(34324)
+M <- 100000
+column.names <- c("District", "Mean", "Lower", "Median", "Upper", "Length", "Method")
+results.eb <- data.frame(matrix(nrow=length(y), ncol=7))
+results.mm <- data.frame(matrix(nrow=length(y), ncol=7))
+colnames(results.eb) <- column.names
+colnames(results.mm) <- column.names
+
+for (i in 1:length(y)) {
+  lambda.eb <- rgamma(n=100000, shape=opt$par[1]+y[i], rate=opt$par[2]+1)
+  results.eb[i, 1] <- i
+  results.eb[i, 2] <- mean(lambda.eb)
+  results.eb[i, 3:5] <- quantile(lambda.eb, probs=c(0.025, 0.5, 0.975))
+  results.eb[i, 6] <- results.eb[i, 5] - results.eb[i, 3]
+  results.eb[i, 7] <- "Empirical Bayes"
+  
+  lambda.mm <- rgamma(n=100000, shape=alpha+y[i], rate=beta+1)
+  results.mm[i, 1] <- i
+  results.mm[i, 2] <- mean(lambda.mm)
+  results.mm[i, 3:5] <- quantile(lambda.mm, probs=c(0.025, 0.5, 0.975))
+  results.mm[i, 6] <- results.mm[i, 5] - results.mm[i, 3]
+  results.mm[i, 7] <- "Moments Matching"
+}
+```
 
 ```{r}
-results_comp <- rbind(result,result_MaMo )
-ggplot(data = results_comp,aes(x=district, y=Mean, col=Method))+
-  geom_point(position=position_dodge(.9))+
-  geom_errorbar(aes(ymin=Lower, ymax=Upper), width=.9,
-                 position=position_dodge(.9))+
-  labs(title = "Posterior distribution of Lambda",y = expression(lambda[i]),
-     x = "Districts")
+d.plot <- rbind(results.eb, results.mm)
+ggplot(data=d.plot, aes(x=District, y=Mean, col=Method)) + 
+  geom_point(position=position_dodge(.9)) + 
+  geom_errorbar(aes(ymin=Lower, ymax=Upper), position=position_dodge()) + 
+  labs(title = "Posterior distribution of Lambda", 
+       y=expression(lambda[i]), x="District") + theme_minimal()
+```
+
+
+```{r, include=FALSE, eval=FALSE}
+results_comp <- rbind(result, result_MaMo)
+ggplot(data=results_comp, aes(x=district, y=Mean, col=Method)) + 
+  geom_point(position=position_dodge(.9)) + 
+  geom_errorbar(aes(ymin=Lower, ymax=Upper), position=position_dodge()) + 
+  labs(title = "Posterior distribution of Lambda", 
+       y=expression(lambda[i]), x="Districts") + theme_minimal()
 ```
 
 
 ```{r}
-# comparison of mean and width of the two methods
-mean_diff <- result$Mean-result_MaMo$Mean
-width_diff <- result$width-result_MaMo$width
+mean.diff <- results.eb$Mean - results.mm$Mean
+length.diff <- results.eb$Length - results.mm$Length
 
-mean_and_width <- rbind(
-"Mean"=c("Mean "=mean(mean_diff),quantile(mean_diff,c(0.025,0.5,0.975))),
-"Width"=c("Mean "=mean(width_diff),quantile(width_diff,c(0.025,0.5,0.975)))
+d.comparison <- rbind(
+  c("Mean"=mean(mean.diff), quantile(mean.diff, probs=c(0.025,0.5,0.975))), 
+  c("Mean"=mean(length.diff), quantile(length.diff, probs=c(0.025,0.5,0.975)))
 )
-```
 
-```{r,echo=F}
-knitr::kable(mean_and_width,align = "c", caption = "Comparison of the two methods.")
+rownames(d.comparison) <- c("Mean difference", "Length difference")
+knitr::kable(d.comparison, align="c", digits=4, caption="Comparison of the two methods")
 ```
 
 The Moment Matching method yields in general higher values and the width of the confidence intervals tends to be larger.
