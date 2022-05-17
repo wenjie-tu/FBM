@@ -22,7 +22,7 @@ Sys.setenv(lang="us_en")
 rm(list=ls())
 ```
 
-```{r libraries, warning=FALSE, message=FALSE}
+```{r libraries, warning=FALSE, message=FALSE, echo=F}
 library(ggplot2)
 library(bayesmeta)
 library(rjags)
@@ -31,19 +31,9 @@ library(coda)
 
 # Exercise 3 (Bayesian meta-analysis with `bayesmeta`)
 
-$$
-y=\log(\text{OR})=\log\frac{x_\text{P}}{n_\text{P}-x_\text{P}}-
-\log\frac{x_\text{T}}{n_\text{T}-x_\text{T}}
-$$
+The aim of the exercise is to compute a Bayesian meta-analysis of log(OR) of treatment and placebo based on eight historical studies. The historical data of the responders in placebo and treatment can be found in Table 1. The data comes from the Baeten et al. study [1] and has been used for the prior elicitation.  
 
-$$
-\sigma=\text{SE}\left(\log(\text{OR})\right)=
-\sqrt{\frac{1}{x_\text{P}} +\frac{1}{n_\text{P}-x_\text{P}} + 
-\frac{1}{x_\text{T}} +\frac{1}{n_\text{T}-x_\text{T}}
-}
-$$
-
-```{r}
+```{r data, echo = F}
 pl_total <- c(107, 44, 51, 39, 139, 20, 78, 35)
 pl_case <- c(23, 12, 19, 9, 39, 6, 9, 10)
 tr_total <- c(208, 38, 150, 45, 138, 20, 201, 34)
@@ -53,12 +43,55 @@ log_or_se <- sqrt(1/pl_case + 1/(pl_total-pl_case) + 1/tr_case + 1/(tr_total-tr_
 labels <- 1:length(pl_total)
 ```
 
-```{r}
+```{r data table, echo=F}
 dat <- data.frame(labels, tr_case, tr_total, pl_case, pl_total, log_or, log_or_se)
 knitr::kable(dat, align="c", digits=3, caption="Historical data for meta-analysis")
 ```
 
-Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy:
+From the chapter *Comparison of proportions* on pages 137 and 138 in the book "Likelihood and Bayesian Inference" [2] we know that the log odds ratio y equals:
+
+$$
+y=\log(\text{OR})=\log\frac{x_\text{P}}{n_\text{P}-x_\text{P}}-
+\log\frac{x_\text{T}}{n_\text{T}-x_\text{T}}
+$$
+And that the standard error equals
+$$
+\sigma=\text{SE}\left(\log(\text{OR})\right)=
+\sqrt{\frac{1}{x_\text{P}} +\frac{1}{n_\text{P}-x_\text{P}} + 
+\frac{1}{x_\text{T}} +\frac{1}{n_\text{T}-x_\text{T}}
+}
+$$
+
+From Table 1 the overall estimate for the OR and log(OR) can easily be calculated, when the studies are all independent and are identical realizations of the same underlying process (i.i.d). In total 834 patients have been treated, of which 518 have responded to the treatment. In the placebo group 127 from 513 patients have responded. See table below.
+
+```{r OR, echo=F}
+b = sum(tr_case)
+d = sum(tr_total)-sum(tr_case)
+a= sum(pl_case)
+c= sum(pl_total)-sum(pl_case)
+tabledat = matrix(c(a,b,c,d), nrow = 2)
+
+colnames(tabledat) <-  c("Non-responder", "Responder ")
+rownames(tabledat) <- c("Treatment", "Placebo")
+knitr::kable(tabledat)
+```
+
+```{r}
+OR = (a*d)/(b*c)
+round(OR,4)
+
+
+log_OR = log(OR)
+round(log_OR,4)
+```
+
+
+
+The OR is equal to 0.2007 and the log(OR) equals -1.6059 for the disaggregeated data. But the strong assumptions of i.i.d and homogeneity between all studies can't be justified in this case. 
+
+So a full Bayesian meta-analysis expressed by the Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy is considered in the next step. The three levels of hierarchies are the likelihood, the random effects model and the priors. 
+
+
 
 Likelihood:
 $$
@@ -79,32 +112,124 @@ $$
 $$
 where $\nu=0, \gamma=4, A=0.5$
 
+
+$\sigma_i$ represents the within-study standard deviation of the $i$-th study. This value is assumed to be fixed (known). The heterogeneity of random effects is denoted by $\tau$ which represents the between-study standard deviation.
+
+The Bayes Theorem for the Bayesian NNHM reads:
+
+$$f(\mu,\tau,\boldsymbol\theta| (y_1,\sigma_1),...,(y_k, \sigma_k)) = f((y_1,\sigma_1),...,(y_k, \sigma_k)|\boldsymbol\theta)\times f(\boldsymbol\theta|\mu, \tau) \times f(\mu) \times f(\tau)C^{-1}$$
+
+where $\boldsymbol\theta = \{\theta_1, ...\theta_k\}$ and $C = f((y_1, \sigma_1),...,(y_k,\sigma_k))$ is a normalizing constant obtained by integrating out parameters $\mu, \tau, \boldsymbol\theta$ in the numerator of the above printed equation. 
+
+
+The approximation of the log-posterior is then:
+
+log(Posterior) $\approx$ log(Likelihood)+log(Random-effects model)+log(Prior)
+
+Further details can be found in the script [3].
+
+
+
+In the following a NNHM is applied to the data obtained in Table 1. The model is defined in the formulas for the Likelihood, Random effect and Prior above. We fit the model numerically with the help of the function `bayesmeta` from the package `bayesmeta` [4]. This function allows to derive the posterior distribution of the two parameters in a random-effects meta-analysis and provides functions to evaluate joint and marginal posterior probability distributions and more. 
+
+
+
+
 ```{r}
 MA.bayesmeta <- bayesmeta(y = dat[, "log_or"], 
                           sigma = dat[, "log_or_se"],  
                           labels = dat[, "labels"], 
                           mu.prior.mean = 0, mu.prior.sd = 4,
                           tau.prior = function(t){dhalfnormal(t, scale = 0.5)}, 
-                          interval.type = "central" )
+                          interval.type = "central",
+                          predict=T)
 ```
+
+The summary of the function returns a matrix listing some summary statistics, namely marginal posterior mode, median, mean, standard deviation and a (shortest) 95% credible intervals, of the marginal posterior distributions of $\tau$ and $\mu$, and of the posterior predictive distribution of $\theta$. See Table 2 for the condensed summary statistics. 
 
 ```{r}
 summary(MA.bayesmeta)
 ```
 
-```{r}
+```{r, echo=F}
 knitr::kable(t(MA.bayesmeta$summary), align="c", digits=4, 
              caption="Summary statistics for parameters (bayesmeta)")
 ```
+\pagebreak
+Figure \ref{fig:forestplot} illustrates the forest plot of the model printed with the function `forestplot`.
 
-
-```{r forest-plot, fig.show='hold', out.width='75%', fig.align='center'}
+```{r forest-plot, fig.show='hold', out.width='75%', fig.align='center', fig.cap="Forest Plot provided by `bayesmeta` with the data from Table 1.\\label{fig:forestplot}", echo=F}
 forestplot(MA.bayesmeta)
 ```
 
-```{r plots, fig.show='hold', out.width='50%'}
-plot(MA.bayesmeta)
+Figure \ref{fig:bayesplots} shows the four plots given by the `plot` function of `bayesmeta`. The first plot is another simple forest plot, showing the 8 estimates along with the combined estimate (diamond) and prediction interval (bar).
+
+
+The second plot illustrates the joint posterior density of both parameters$\mu$ and $\tau$; a darker shading indicates higher posterior density values. The red contour lines show (approximate) 90%, 95% and 99% confidence regions for the joint distribution. The solid blue line traces the conditional posterior expectation value $E[\mu|\tau,y, \sigma]$, and the dashed lines enclose the corresponding 95% interval as a function of $\tau$. The green lines indicate marginal posterior median and 95% intervals for both parameters.
+
+The third and fourth plot show the marginal density functions of $\mu$ and $\tau$, respectively. The posterior median and (highest posterior density) 95% interval are also indicated by a vertical line and a darker shading. The dashed line shows the prior density in comparison.
+
+
+
+```{r plots, fig.show='hold', fig.cap="Plots provided by `bayesmeta` with the data from Table 1.\\label{fig:bayesplots}", echo=F, out.width='50%'}
+plot(MA.bayesmeta, prior = T)
 ```
+
+\pagebreak
+
+Figure \ref{fig:marginalposteriors} illustrates the marginal posteriors for all model parameters. 
+
+
+
+```{r, fig.show='hold', out.width='90%', fig.cap="Marginal posterior distributions for all parameters in the model provided by `bayesmeta` with the data from Table 1. \\label{fig:marginalposteriors}"}
+# compare resulting marginal densities;
+par(mfrow=c(2,2))
+# the effect parameter (mu):
+mu <- seq(-2.5, -.5, le=200)
+plot(mu, MA.bayesmeta$dposterior(mu=mu), type="l", lty="solid",
+     xlab=expression("effect "*mu),
+     ylab="",
+     main="",
+      ylim=c(0,2.5))
+
+
+# the heterogeneity parameter (tau):
+tau <- seq(0, 1, le=200)
+plot(tau, MA.bayesmeta$dposterior(tau=tau), type="l", lty="solid",
+     xlab=expression("heterogeneity "*tau),
+     ylab="",
+     main="",
+      ylim=c(0,2.5))
+
+
+# show the individual effects' posterior distributions:
+theta <- seq(-3, -0.5, le=300)
+plot(range(theta), c(0,2.5), type="n", xlab=expression(theta[i]), ylab="")
+for (i in 1:MA.bayesmeta$k) {
+  # draw effect's posterior distribution:
+  lines(theta, MA.bayesmeta$dposterior(theta=theta, indiv=i), col=i+1, lty="solid")
+}
+abline(h=0)
+
+theta <- seq(-2.5, -0.5, le=200)
+
+plot(theta, MA.bayesmeta$dposterior(theta=theta, predict = T), type="l", lty="dashed",
+     xlab=expression("effect "*theta[new]),
+     ylab=expression(""),
+     main="", ylim=c(0,2.5))
+lines(theta, MA.bayesmeta$dposterior(theta=theta, predict = T), lty="solid")
+```
+
+
+
+The full Bayesian meta-analysis expressed by NNHM provides inference on the random effects $\theta_1,..., \theta_k$ that lies in between the inference provided by two models. It returns a pooled inference. The pooled model is based on the assumption that the true location of $\theta$ is equivalent for all given studies, so $\theta_1=...= \theta_k$ which equals having a between-study variability $\tau = 0$. This assumption changes the NNHM model defined, due to the fact that random effects model collapses to $\theta$, a normal distribution with location $\theta$ and variance $\tau^2 = 0$. See pages 88 and 89 of the script [3] for the discussion of the change in the model definition as well as the plots of the credible intervals.
+
+ASK ON THURSDAY WHAT EXACTLY IS EXPCETED IN THIS TASK.
+
+
+
+
+
 
 # Exercise 4 (Bayesian meta-analysis with JAGS)
 
@@ -679,4 +804,22 @@ knitr::kable(d.comparison, align="c", digits=4, caption="Comparison of the two m
 
 The Moment Matching method yields in general higher values and the width of the confidence intervals tends to be larger.
 
+
+# References
+
+[1] Baeten, D., X. Baraliakos, J. Braun, J. Sieper, P. Emery, D. van der Heijde, I. McInnes, J. van Laar,
+R. Landewé, P. Wordsworth, J. Wollenhaupt, H. Kellner, J. Paramarta, J. Wei, A. Brachat, S. Bek,
+D. Laurent, Y. Li, Y. Wang, A. Bertolino, S. Gsteiger, A. Wright, and W. Hueber (2013). Antiinterleukin-
+17A monoclonal antibody secukinumab in treatment of ankylosing spondylitis: a
+randomised, double-blind, placebo-controlled trial. The Lancet 382, 1705–1713.
+
+[2] Held, L. and D. Sabanés Bové (2020). Likelihood and Bayesian Inference: With Applications in Biology and
+Medicine. Springer.
+
+[3] Roos, M. (2022). Foundations of Bayesian Methodology: FS22, Department of Biostatistics at Epidemiology, Biostatistics and Prevention Institute, University of Zurich
+
+
+
+[4] Röver, C. (2020). Bayesian random-effects meta-analysis using the bayesmeta R package. Journal of
+Statistical Software 93(6), 1–51.
 
