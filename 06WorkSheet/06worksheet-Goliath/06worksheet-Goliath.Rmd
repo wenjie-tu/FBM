@@ -27,6 +27,8 @@ library(ggplot2)
 library(bayesmeta)
 library(rjags)
 library(coda)
+library(car)
+library(plotrix)
 ```
 
 # Exercise 3 (Bayesian meta-analysis with `bayesmeta`)
@@ -43,7 +45,7 @@ log_or_se <- sqrt(1/pl_case + 1/(pl_total-pl_case) + 1/tr_case + 1/(tr_total-tr_
 labels <- 1:length(pl_total)
 ```
 
-```{r data table, echo=F}
+```{r data table, echo=F, warning=F}
 dat <- data.frame(labels, tr_case, tr_total, pl_case, pl_total, log_or, log_or_se)
 knitr::kable(dat, align="c", digits=3, caption="Historical data for meta-analysis")
 ```
@@ -51,8 +53,8 @@ knitr::kable(dat, align="c", digits=3, caption="Historical data for meta-analysi
 From the chapter *Comparison of proportions* on pages 137 and 138 in the book "Likelihood and Bayesian Inference" [2] we know that the log odds ratio y equals:
 
 $$
-y=\log(\text{OR})=\log\frac{x_\text{P}}{n_\text{P}-x_\text{P}}-
-\log\frac{x_\text{T}}{n_\text{T}-x_\text{T}}
+y=\log(\text{OR})=\log\bigg(\frac{x_\text{P}}{n_\text{P}-x_\text{P}}\bigg)-
+\log\bigg(\frac{x_\text{T}}{n_\text{T}-x_\text{T}}\bigg)
 $$
 And that the standard error equals
 $$
@@ -83,11 +85,29 @@ round(OR,4)
 
 log_OR = log(OR)
 round(log_OR,4)
+
+# Standard Eror of the OR:
+se_OR = (1/a+1/b+1/c+1/d)
+
+# Confidence Intervals
+CI_OR= OR+c(-1,1)*qt(0.975, 7)*se_OR
+CI_OR
+log_CI_OR = log(CI_OR)
+log_CI_OR
+```
+```{r, fig.cap="QQ - Plot of the log(OR) from the eight historical studies.\\label{fig:qqPlot}", fig.show='hold', out.width='75%', fig.align='center', echo=F}
+
+qqPlot(dat$log_or, xlab = "Theoretical Quantiles", ylab="Sample Quantiles")
+
 ```
 
 
 
-The OR is equal to 0.2007 and the log(OR) equals -1.6059 for the disaggregeated data. But the strong assumptions of i.i.d and homogeneity between all studies can't be justified in this case. 
+The OR is equal to 0.2007 with a 95% Wald Confidence interval going 0.164 up to 0.238. The confidence interval has been computed using the estimate of the OR and the standard error of the OR. Due to the fact that the eight values for the log(OR)  do not strictly follow a normal distribution the quantiles of a $t$-distribution with $df=7$ have been used to approximate the confidence interval, see Figure \ref{fig:qqPlot}.
+
+The log(OR) equals -1.6059 for the disaggregeated data having a 95% Wald confidence interval going from -1.808 up to 1.438. 
+
+But the strong assumptions of i.i.d and homogeneity between all studies can't be justified in this case. 
 
 So a full Bayesian meta-analysis expressed by the Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy is considered in the next step. The three levels of hierarchies are the likelihood, the random effects model and the priors. 
 
@@ -181,7 +201,7 @@ Figure \ref{fig:marginalposteriors} illustrates the marginal posteriors for all 
 
 
 
-```{r, fig.show='hold', out.width='90%', fig.cap="Marginal posterior distributions for all parameters in the model provided by `bayesmeta` with the data from Table 1. \\label{fig:marginalposteriors}"}
+```{r, fig.show='hold', out.width='100%', fig.cap="Marginal posterior distributions for all parameters in the model provided by `bayesmeta` with the data from Table 1. \\label{fig:marginalposteriors}"}
 # compare resulting marginal densities;
 par(mfrow=c(2,2))
 # the effect parameter (mu):
@@ -207,7 +227,8 @@ theta <- seq(-3, -0.5, le=300)
 plot(range(theta), c(0,2.5), type="n", xlab=expression(theta[i]), ylab="")
 for (i in 1:MA.bayesmeta$k) {
   # draw effect's posterior distribution:
-  lines(theta, MA.bayesmeta$dposterior(theta=theta, indiv=i), col=i+1, lty="solid")
+  lines(theta, MA.bayesmeta$dposterior(theta=theta, indiv=i), 
+        col="darkblue", lty="solid")
 }
 abline(h=0)
 
@@ -222,9 +243,56 @@ lines(theta, MA.bayesmeta$dposterior(theta=theta, predict = T), lty="solid")
 
 
 
-The full Bayesian meta-analysis expressed by NNHM provides inference on the random effects $\theta_1,..., \theta_k$ that lies in between the inference provided by two models. It returns a pooled inference. The pooled model is based on the assumption that the true location of $\theta$ is equivalent for all given studies, so $\theta_1=...= \theta_k$ which equals having a between-study variability $\tau = 0$. This assumption changes the NNHM model defined, due to the fact that random effects model collapses to $\theta$, a normal distribution with location $\theta$ and variance $\tau^2 = 0$. See pages 88 and 89 of the script [3] for the discussion of the change in the model definition as well as the plots of the credible intervals.
 
-ASK ON THURSDAY WHAT EXACTLY IS EXPCETED IN THIS TASK.
+```{r}
+pooledMean = MA.bayesmeta$summary[2,2]
+pooledCRI = MA.bayesmeta$post.interval(mu.level = 0.95, individual = F)
+
+x <- 1:8
+y <- MA.bayesmeta$theta[5,]
+l <-  MA.bayesmeta$theta[7,]
+u <- MA.bayesmeta$theta[8,]
+```
+
+
+```{r, echo=F}
+
+plotCI(x,y,li=l,ui=u, ylim=c(-4,0), xlab="random effect", 
+       ylab="equi-tailed 95% CrI", pch=18, main="Posterior equi-tailed 95% CrI of the randeom effect" )
+points(x, rep(pooledMean,8), col="red", pch=7)
+abline(h=pooledMean, col="red")
+abline(h=pooledCRI[1], col="red", lty=2)
+abline(h=pooledCRI[2], col="red", lty=2)
+legend("bottomleft", legend = c("Full Bayes", "Pooled"), 
+       col=c("black", "red"), pch=c(18,7))
+
+```
+
+The full Bayesian meta-analysis expressed by NNHM provides inference on the random effects $\theta_1,..., \theta_k$ that lies in between the inference provided by two models. It returns a pooled inference, see the red confidence band in the figure above. The pooled model is based on the assumption that the true location of $\theta$ is equivalent for all given studies, so $\theta_1=...= \theta_k$ which equals having a between-study variability $\tau = 0$. This assumption changes the NNHM model defined, due to the fact that random effects model collapses to $\theta$, a normal distribution with location $\theta$ and variance $\tau^2 = 0$. 
+The new model then reads:
+
+Likelihood:
+$$
+y_i\sim\text{N}(\theta_i,\sigma_i^2)
+$$
+for $i=1, \cdots, k$
+
+Prior:
+$$
+\theta\sim\text{N}(\nu,\gamma^2)
+$$
+A sequential application fo the Bayes theorem leads to the posterior:
+
+
+
+$$
+\theta|y_1,..., y_n \sim N\Bigg(\frac{\sum_{i=1}^{k}\frac{y_i}{\sigma^2_i}+\frac{\nu}{\gamma^2}}{\sum_{i=1}^{k}\frac{1}{\sigma^2_i}+\frac{1}{\gamma^2}}, \bigg(\sum_{i=1}^{k}\frac{1}{\sigma^2_i}+\frac{1}{\gamma^2}\bigg)^{-1}\Bigg)
+$$
+The Figure above shows the results when the in between-study heterogeneity $\tau=0, \nu=0$ and $\gamma=4$. The pooled posterior mean is equal to `r pooledMean` and the pooled standard deviation is equal to `r  MA.bayesmeta$summary[4,2]`. 
+
+See pages 88 and 89 of the script [3] for the discussion of the change in the model definition as well as the plots of the credible intervals for empirical Bayes.
+
+
 
 
 
