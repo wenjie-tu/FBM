@@ -35,7 +35,7 @@ library(plotrix)
 
 The aim of the exercise is to compute a Bayesian meta-analysis of log(OR) of treatment and placebo based on eight historical studies. The historical data of the responders in placebo and treatment can be found in Table 1. The data comes from the Baeten et al. study [1] and has been used for the prior elicitation.  
 
-```{r data, echo = F}
+```{r data}
 pl_total <- c(107, 44, 51, 39, 139, 20, 78, 35)
 pl_case <- c(23, 12, 19, 9, 39, 6, 9, 10)
 tr_total <- c(208, 38, 150, 45, 138, 20, 201, 34)
@@ -45,7 +45,7 @@ log_or_se <- sqrt(1/pl_case + 1/(pl_total-pl_case) + 1/tr_case + 1/(tr_total-tr_
 labels <- 1:length(pl_total)
 ```
 
-```{r data table, echo=F, warning=F}
+```{r data-table, warning=F}
 dat <- data.frame(labels, tr_case, tr_total, pl_case, pl_total, log_or, log_or_se)
 knitr::kable(dat, align="c", digits=3, caption="Historical data for meta-analysis")
 ```
@@ -64,54 +64,85 @@ $$
 }
 $$
 
-From Table 1 the overall estimate for the OR and log(OR) can easily be calculated, when the studies are all independent and are identical realizations of the same underlying process (i.i.d). In total 834 patients have been treated, of which 518 have responded to the treatment. In the placebo group 127 from 513 patients have responded. See table below.
+<!-- From Table 1 the overall estimate for the OR and log(OR) can easily be calculated, when the studies are all independent and are identical realizations of the same underlying process (i.i.d). In total 834 patients have been treated, of which 518 have responded to the treatment. In the placebo group 127 from 513 patients have responded. See table below. -->
 
-```{r OR, echo=F}
-b = sum(tr_case)
-d = sum(tr_total)-sum(tr_case)
-a= sum(pl_case)
-c= sum(pl_total)-sum(pl_case)
-tabledat = matrix(c(a,b,c,d), nrow = 2)
 
-colnames(tabledat) <-  c("Non-responder", "Responder ")
+```{r OR, echo=F, include=F, eval=F}
+## There might be some mistakes here
+b <- sum(tr_case)
+d <- sum(tr_total) - sum(tr_case)
+a <- sum(pl_case)
+c <- sum(pl_total) - sum(pl_case)
+tabledat <- matrix(c(a,b,c,d), nrow = 2)
+
+colnames(tabledat) <- c("Non-responder", "Responder ")
 rownames(tabledat) <- c("Treatment", "Placebo")
 knitr::kable(tabledat)
 ```
 
-```{r}
-OR = (a*d)/(b*c)
-round(OR,4)
+```{r, include=F, eval=F}
+tr_response1 <- sum(tr_case)
+tr_response0 <- sum(tr_total) - sum(tr_case)
+pl_response1 <- sum(pl_case)
+pl_response0 <- sum(pl_total) - sum(pl_case)
+
+d.table <- data.frame(matrix(c(tr_response1, tr_response0, 
+                               pl_response1, pl_response0), nrow=2, byrow=TRUE))
+
+colnames(d.table) <- c("Responder", "Non-responder")
+rownames(d.table) <- c("Treatment", "Placebo")
+knitr::kable(d.table, caption="Two-by-two contingency table")
+```
+
+<!-- $$ -->
+<!-- \text{Odds Ratio}=\frac{\text{Odds in treatment group}}{\text{Odds in placebo group}} -->
+<!-- $$ -->
+
+```{r, include=F, eval=F}
+## Compute the odds ratio
+OR <- (tr_response1 / tr_response0) / (pl_response1 / pl_response0); OR
+
+## Compute the log odds ratio
+log_OR <- log(OR); log_OR
+
+## Standard Error of the OR
+```
 
 
-log_OR = log(OR)
-round(log_OR,4)
+```{r, include=F, eval=F}
+## There might be some mistakes here
+OR <- (a*d)/(b*c)
+round(OR, 4)
 
-# Standard Eror of the OR:
-se_OR = (1/a+1/b+1/c+1/d)
+log_OR <- log(OR)
+round(log_OR, 4)
+
+# Standard Error of the OR:
+se_OR <- (1/a+1/b+1/c+1/d)
 
 # Confidence Intervals
-CI_OR= OR+c(-1,1)*qt(0.975, 7)*se_OR
+CI_OR <- OR + c(-1, 1) * qt(0.975, 7) * se_OR
 CI_OR
-log_CI_OR = log(CI_OR)
+log_CI_OR <- log(CI_OR)
 log_CI_OR
 ```
-```{r, fig.cap="QQ - Plot of the log(OR) from the eight historical studies.\\label{fig:qqPlot}", fig.show='hold', out.width='75%', fig.align='center', echo=F}
+
+```{r, fig.cap="QQ - Plot of the log(OR) from the eight historical studies.\\label{fig:qqPlot}", fig.show='hold', out.width='75%', fig.align='center', echo=F, include=F, eval=F}
 
 qqPlot(dat$log_or, xlab = "Theoretical Quantiles", ylab="Sample Quantiles")
-
 ```
 
 
 
-The OR is equal to 0.2007 with a 95% Wald Confidence interval going 0.164 up to 0.238. The confidence interval has been computed using the estimate of the OR and the standard error of the OR. Due to the fact that the eight values for the log(OR)  do not strictly follow a normal distribution the quantiles of a $t$-distribution with $df=7$ have been used to approximate the confidence interval, see Figure \ref{fig:qqPlot}.
+<!-- The OR is equal to 0.2007 with a 95% Wald Confidence interval going 0.164 up to 0.238. The confidence interval has been computed using the estimate of the OR and the standard error of the OR. Due to the fact that the eight values for the log(OR)  do not strictly follow a normal distribution the quantiles of a $t$-distribution with $df=7$ have been used to approximate the confidence interval, see Figure \ref{fig:qqPlot}. -->
 
-The log(OR) equals -1.6059 for the disaggregeated data having a 95% Wald confidence interval going from -1.808 up to 1.438. 
+<!-- The log(OR) equals -1.6059 for the disaggregeated data having a 95% Wald confidence interval going from -1.808 up to 1.438.  -->
 
-But the strong assumptions of i.i.d and homogeneity between all studies can't be justified in this case. 
+<!-- But the strong assumptions of i.i.d and homogeneity between all studies can't be justified in this case.  -->
 
-So a full Bayesian meta-analysis expressed by the Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy is considered in the next step. The three levels of hierarchies are the likelihood, the random effects model and the priors. 
+<!-- So a full Bayesian meta-analysis expressed by the Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy is considered in the next step. The three levels of hierarchies are the likelihood, the random effects model and the priors.  -->
 
-
+We consider the full Bayesian meta-analysis expressed by the Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy.
 
 Likelihood:
 $$
@@ -137,14 +168,20 @@ $\sigma_i$ represents the within-study standard deviation of the $i$-th study. T
 
 The Bayes Theorem for the Bayesian NNHM reads:
 
-$$f(\mu,\tau,\boldsymbol\theta| (y_1,\sigma_1),...,(y_k, \sigma_k)) = f((y_1,\sigma_1),...,(y_k, \sigma_k)|\boldsymbol\theta)\times f(\boldsymbol\theta|\mu, \tau) \times f(\mu) \times f(\tau)C^{-1}$$
+$$
+f(\mu,\tau,\boldsymbol\theta\mid (y_1,\sigma_1),\cdots,(y_k, \sigma_k)) = f((y_1,\sigma_1),\cdots,(y_k, \sigma_k)\mid\boldsymbol\theta)\cdot
+f(\boldsymbol\theta\mid\mu, \tau) \cdot f(\mu) \cdot f(\tau)\cdot C^{-1}
+$$
 
-where $\boldsymbol\theta = \{\theta_1, ...\theta_k\}$ and $C = f((y_1, \sigma_1),...,(y_k,\sigma_k))$ is a normalizing constant obtained by integrating out parameters $\mu, \tau, \boldsymbol\theta$ in the numerator of the above printed equation. 
+where $\boldsymbol\theta = \{\theta_1, \cdots\theta_k\}$ and $C = f((y_1, \sigma_1),\cdots,(y_k,\sigma_k))$ is a normalizing constant obtained by integrating out parameters $\mu, \tau, \boldsymbol\theta$ in the numerator of the above printed equation. 
 
 
 The approximation of the log-posterior is then:
 
-log(Posterior) $\approx$ log(Likelihood)+log(Random-effects model)+log(Prior)
+$$
+\log(\text{Posterior})\approx \log(\text{Likelihood})+\log(\text{Random-effects model})+
+\log(\text{Prior})
+$$
 
 Further details can be found in the script [3].
 
@@ -153,46 +190,44 @@ Further details can be found in the script [3].
 In the following a NNHM is applied to the data obtained in Table 1. The model is defined in the formulas for the Likelihood, Random effect and Prior above. We fit the model numerically with the help of the function `bayesmeta` from the package `bayesmeta` [4]. This function allows to derive the posterior distribution of the two parameters in a random-effects meta-analysis and provides functions to evaluate joint and marginal posterior probability distributions and more. 
 
 
-
-
 ```{r}
-MA.bayesmeta <- bayesmeta(y = dat[, "log_or"], 
-                          sigma = dat[, "log_or_se"],  
-                          labels = dat[, "labels"], 
-                          mu.prior.mean = 0, mu.prior.sd = 4,
-                          tau.prior = function(t){dhalfnormal(t, scale = 0.5)}, 
-                          interval.type = "central",
-                          predict=T)
+full.bayes <- bayesmeta(y = dat[, "log_or"], 
+                        sigma = dat[, "log_or_se"],  
+                        labels = dat[, "labels"], 
+                        mu.prior.mean = 0, mu.prior.sd = 4,
+                        tau.prior = function(t){dhalfnormal(t, scale = 0.5)}, 
+                        interval.type = "central",
+                        predict = T)
 ```
 
 The summary of the function returns a matrix listing some summary statistics, namely marginal posterior mode, median, mean, standard deviation and a (shortest) 95% credible intervals, of the marginal posterior distributions of $\tau$ and $\mu$, and of the posterior predictive distribution of $\theta$. See Table 2 for the condensed summary statistics. 
 
 ```{r}
-summary(MA.bayesmeta)
+summary(full.bayes)
 ```
 
 ```{r, echo=F}
-knitr::kable(t(MA.bayesmeta$summary), align="c", digits=4, 
+knitr::kable(t(full.bayes$summary), align="c", digits=4, 
              caption="Summary statistics for parameters (bayesmeta)")
 ```
-\pagebreak
+
 Figure \ref{fig:forestplot} illustrates the forest plot of the model printed with the function `forestplot`.
 
 ```{r forest-plot, fig.show='hold', out.width='75%', fig.align='center', fig.cap="Forest Plot provided by `bayesmeta` with the data from Table 1.\\label{fig:forestplot}", echo=F}
-forestplot(MA.bayesmeta)
+forestplot(full.bayes)
 ```
 
 Figure \ref{fig:bayesplots} shows the four plots given by the `plot` function of `bayesmeta`. The first plot is another simple forest plot, showing the 8 estimates along with the combined estimate (diamond) and prediction interval (bar).
 
 
-The second plot illustrates the joint posterior density of both parameters$\mu$ and $\tau$; a darker shading indicates higher posterior density values. The red contour lines show (approximate) 90%, 95% and 99% confidence regions for the joint distribution. The solid blue line traces the conditional posterior expectation value $E[\mu|\tau,y, \sigma]$, and the dashed lines enclose the corresponding 95% interval as a function of $\tau$. The green lines indicate marginal posterior median and 95% intervals for both parameters.
+The second plot illustrates the joint posterior density of both parameters$\mu$ and $\tau$; a darker shading indicates higher posterior density values. The red contour lines show (approximate) 90%, 95% and 99% confidence regions for the joint distribution. The solid blue line traces the conditional posterior expectation value $\mathbb{E}[\mu\mid\tau,y, \sigma]$, and the dashed lines enclose the corresponding 95% interval as a function of $\tau$. The green lines indicate marginal posterior median and 95% intervals for both parameters.
 
 The third and fourth plot show the marginal density functions of $\mu$ and $\tau$, respectively. The posterior median and (highest posterior density) 95% interval are also indicated by a vertical line and a darker shading. The dashed line shows the prior density in comparison.
 
 
 
 ```{r plots, fig.show='hold', fig.cap="Plots provided by `bayesmeta` with the data from Table 1.\\label{fig:bayesplots}", echo=F, out.width='50%'}
-plot(MA.bayesmeta, prior = T)
+plot(full.bayes, prior=T)
 ```
 
 \pagebreak
@@ -201,74 +236,67 @@ Figure \ref{fig:marginalposteriors} illustrates the marginal posteriors for all 
 
 
 
-```{r, fig.show='hold', out.width='100%', fig.cap="Marginal posterior distributions for all parameters in the model provided by `bayesmeta` with the data from Table 1. \\label{fig:marginalposteriors}"}
-# compare resulting marginal densities;
-par(mfrow=c(2,2))
-# the effect parameter (mu):
+```{r, fig.show='hold', out.width='50%', fig.cap="Marginal posterior distributions for all parameters in the model provided by `bayesmeta` with the data from Table 1. \\label{fig:marginalposteriors}"}
+## Compare resulting marginal densities;
+
+## The effect parameter (mu):
 mu <- seq(-2.5, -.5, le=200)
-plot(mu, MA.bayesmeta$dposterior(mu=mu), type="l", lty="solid",
+plot(mu, full.bayes$dposterior(mu=mu), type="l", lty="solid",
      xlab=expression("effect "*mu),
      ylab="",
      main="",
-      ylim=c(0,2.5))
+     ylim=c(0,2.5))
 
 
-# the heterogeneity parameter (tau):
+## The heterogeneity parameter (tau):
 tau <- seq(0, 1, le=200)
-plot(tau, MA.bayesmeta$dposterior(tau=tau), type="l", lty="solid",
+plot(tau, full.bayes$dposterior(tau=tau), type="l", lty="solid",
      xlab=expression("heterogeneity "*tau),
      ylab="",
      main="",
-      ylim=c(0,2.5))
+     ylim=c(0,2.5))
 
 
-# show the individual effects' posterior distributions:
+## Show the individual effects' posterior distributions:
 theta <- seq(-3, -0.5, le=300)
 plot(range(theta), c(0,2.5), type="n", xlab=expression(theta[i]), ylab="")
-for (i in 1:MA.bayesmeta$k) {
-  # draw effect's posterior distribution:
-  lines(theta, MA.bayesmeta$dposterior(theta=theta, indiv=i), 
+for (i in 1:full.bayes$k) {
+  ## Draw effect's posterior distribution:
+  lines(theta, full.bayes$dposterior(theta=theta, indiv=i), 
         col="darkblue", lty="solid")
 }
 abline(h=0)
 
 theta <- seq(-2.5, -0.5, le=200)
 
-plot(theta, MA.bayesmeta$dposterior(theta=theta, predict = T), type="l", lty="dashed",
+plot(theta, full.bayes$dposterior(theta=theta, predict=T), type="l", lty="dashed",
      xlab=expression("effect "*theta[new]),
      ylab=expression(""),
      main="", ylim=c(0,2.5))
-lines(theta, MA.bayesmeta$dposterior(theta=theta, predict = T), lty="solid")
+lines(theta, full.bayes$dposterior(theta=theta, predict=T), lty="solid")
 ```
 
 
-
-
-```{r}
-pooledMean = MA.bayesmeta$summary[2,2]
-pooledCRI = MA.bayesmeta$post.interval(mu.level = 0.95, individual = F)
+```{r, fig.show='hold', out.width='75%', fig.align='center'}
+pooledMean <- full.bayes$summary["mean", "mu"]
+pooledCRI <- full.bayes$post.interval(mu.level=0.95, individual=F)
 
 x <- 1:8
-y <- MA.bayesmeta$theta[5,]
-l <-  MA.bayesmeta$theta[7,]
-u <- MA.bayesmeta$theta[8,]
-```
+y <- full.bayes$theta["mean", ]
+l <- full.bayes$theta["95% lower", ]
+u <- full.bayes$theta["95% upper", ]
 
-
-```{r, echo=F}
-
-plotCI(x,y,li=l,ui=u, ylim=c(-4,0), xlab="random effect", 
-       ylab="equi-tailed 95% CrI", pch=18, main="Posterior equi-tailed 95% CrI of the randeom effect" )
-points(x, rep(pooledMean,8), col="red", pch=7)
+plotCI(x, y, li=l, ui=u, ylim=c(-4, 0), xlab="random effect", ylab="equi-tailed 95% CrI", 
+       pch=18, main="Posterior equi-tailed 95% CrI of the random effect")
+points(x, rep(pooledMean, 8), col="red", pch=7)
 abline(h=pooledMean, col="red")
 abline(h=pooledCRI[1], col="red", lty=2)
 abline(h=pooledCRI[2], col="red", lty=2)
-legend("bottomleft", legend = c("Full Bayes", "Pooled"), 
-       col=c("black", "red"), pch=c(18,7))
-
+legend("bottomleft", legend=c("Full Bayes", "Pooled"), 
+       col=c("black", "red"), pch=c(18, 7), bty="n")
 ```
 
-The full Bayesian meta-analysis expressed by NNHM provides inference on the random effects $\theta_1,..., \theta_k$ that lies in between the inference provided by two models. It returns a pooled inference, see the red confidence band in the figure above. The pooled model is based on the assumption that the true location of $\theta$ is equivalent for all given studies, so $\theta_1=...= \theta_k$ which equals having a between-study variability $\tau = 0$. This assumption changes the NNHM model defined, due to the fact that random effects model collapses to $\theta$, a normal distribution with location $\theta$ and variance $\tau^2 = 0$. 
+The full Bayesian meta-analysis expressed by NNHM provides inference on the random effects $\theta_1,\cdots, \theta_k$ that lies in between the inference provided by two models. It returns a pooled inference, see the red confidence band in the figure above. The pooled model is based on the assumption that the true location of $\theta$ is equivalent for all given studies, so $\theta_1=\cdots= \theta_k$ which equals having a between-study variability $\tau = 0$. This assumption changes the NNHM model defined, due to the fact that random effects model collapses to $\theta$, a normal distribution with location $\theta$ and variance $\tau^2 = 0$. 
 The new model then reads:
 
 Likelihood:
@@ -286,9 +314,9 @@ A sequential application fo the Bayes theorem leads to the posterior:
 
 
 $$
-\theta|y_1,..., y_n \sim N\Bigg(\frac{\sum_{i=1}^{k}\frac{y_i}{\sigma^2_i}+\frac{\nu}{\gamma^2}}{\sum_{i=1}^{k}\frac{1}{\sigma^2_i}+\frac{1}{\gamma^2}}, \bigg(\sum_{i=1}^{k}\frac{1}{\sigma^2_i}+\frac{1}{\gamma^2}\bigg)^{-1}\Bigg)
+\theta\mid y_1,..., y_n \sim N\Bigg(\frac{\sum_{i=1}^{k}\frac{y_i}{\sigma^2_i}+\frac{\nu}{\gamma^2}}{\sum_{i=1}^{k}\frac{1}{\sigma^2_i}+\frac{1}{\gamma^2}}, \bigg(\sum_{i=1}^{k}\frac{1}{\sigma^2_i}+\frac{1}{\gamma^2}\bigg)^{-1}\Bigg)
 $$
-The Figure above shows the results when the in between-study heterogeneity $\tau=0, \nu=0$ and $\gamma=4$. The pooled posterior mean is equal to `r pooledMean` and the pooled standard deviation is equal to `r  MA.bayesmeta$summary[4,2]`. 
+The Figure above shows the results when the in between-study heterogeneity $\tau=0, \nu=0$ and $\gamma=4$. The pooled posterior mean is equal to `r pooledMean` and the pooled standard deviation is equal to `r  full.bayes$summary[4,2]`. 
 
 See pages 88 and 89 of the script [3] for the discussion of the change in the model definition as well as the plots of the credible intervals for empirical Bayes.
 
@@ -378,8 +406,8 @@ update(rjags.pl1, n.iter = 4000)
 fit.rjags.pl1.coda <- coda.samples(
   model = rjags.pl1, 
   variable.names = pl1.params, 
-  n.iter = 10000,
-  thin = 1
+  n.iter = 30000,
+  thin = 3
 )
 
 summary(fit.rjags.pl1.coda)
@@ -398,39 +426,39 @@ d.chains <- data.frame(
 )
 
 ggplot(d.chains, aes(x=iterations, y=beta, color=chains)) + geom_line(alpha=0.5) +
-  labs(title="Trace of beta", x="Iterations") + theme_minimal()
+  labs(title="Trace of beta", x="Iterations") + theme_classic()
 
 ggplot(d.chains, aes(x=beta, y=..density..)) +
   geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
-  labs(title="Density of beta", y="Density") + theme_minimal()
+  labs(title="Density of beta", y="Density") + theme_classic()
 
 ggplot(d.chains, aes(x=iterations, y=mu, color=chains)) + geom_line(alpha=0.5) +
-  labs(title="Trace of mu", x="Iterations") + theme_minimal()
+  labs(title="Trace of mu", x="Iterations") + theme_classic()
 
 ggplot(d.chains, aes(x=mu, y=..density..)) +
   geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
-  labs(title="Density of mu", y="Density") + theme_minimal()
+  labs(title="Density of mu", y="Density") + theme_classic()
 
 ggplot(d.chains, aes(x=iterations, y=p1.star, color=chains)) + geom_line(alpha=0.5) +
-  labs(title="Trace of p1.star", x="Iterations") + theme_minimal()
+  labs(title="Trace of p1.star", x="Iterations") + theme_classic()
 
 ggplot(d.chains, aes(x=p1.star, y=..density..)) +
   geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
-  labs(title="Density of p1.star", y="Density") + theme_minimal()
+  labs(title="Density of p1.star", y="Density") + theme_classic()
 
 ggplot(d.chains, aes(x=iterations, y=p2.star, color=chains)) + geom_line(alpha=0.5) +
-  labs(title="Trace of p2.star", x="Iterations") + theme_minimal()
+  labs(title="Trace of p2.star", x="Iterations") + theme_classic()
 
 ggplot(d.chains, aes(x=p2.star, y=..density..)) +
   geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
-  labs(title="Density of p2.star", y="Density") + theme_minimal()
+  labs(title="Density of p2.star", y="Density") + theme_classic()
 
 ggplot(d.chains, aes(x=iterations, y=tau, color=chains)) + geom_line(alpha=0.5) +
-  labs(title="Trace of tau", x="Iterations") + theme_minimal()
+  labs(title="Trace of tau", x="Iterations") + theme_classic()
 
 ggplot(d.chains, aes(x=tau, y=..density..)) +
   geom_density(color="darkblue", fill="lightblue", alpha=0.5) +
-  labs(title="Density of tau", y="Density") + theme_minimal()
+  labs(title="Density of tau", y="Density") + theme_classic()
 ```
 
 ```{r}
@@ -776,7 +804,7 @@ $$
 $$
 
 ```{r}
-## Moments-matching function
+## Moment-matching function
 match.moments <- function(mean, var) {
   alpha <- mean / (var/mean - 1)
   beta <- 1 / (var/mean - 1)
@@ -811,8 +839,8 @@ result_MaMo$width <-  result_MaMo$Upper-result_MaMo$Lower
 
 Compare means and the lengths of equi-tailed 95\%CrI obtained by both approaches. Report your results
 
-```{r}
-set.seed(34324)
+```{r, eval=FALSE, include=FALSE}
+set.seed(44566)
 M <- 100000
 column.names <- c("District", "Mean", "Lower", "Median", "Upper", "Length", "Method")
 results.eb <- data.frame(matrix(nrow=length(y), ncol=7))
@@ -833,17 +861,53 @@ for (i in 1:length(y)) {
   results.mm[i, 2] <- mean(lambda.mm)
   results.mm[i, 3:5] <- quantile(lambda.mm, probs=c(0.025, 0.5, 0.975))
   results.mm[i, 6] <- results.mm[i, 5] - results.mm[i, 3]
-  results.mm[i, 7] <- "Moments Matching"
+  results.mm[i, 7] <- "Moment Matching"
 }
 ```
 
+
 ```{r}
-d.plot <- rbind(results.eb, results.mm)
-ggplot(data=d.plot, aes(x=District, y=Mean, col=Method)) + 
+column.names <- c("District", "Mean", "Lower", "Median", "Upper", "Length", "Method")
+df1 <- data.frame(matrix(nrow=length(y), ncol=7))
+df2 <- data.frame(matrix(nrow=length(y), ncol=7))
+colnames(df1) <- column.names
+colnames(df2) <- column.names
+
+for (i in 1:length(y)) {
+  ## Empirical Bayes
+  df1[i, 1] <- i
+  df1[i, 2] <- (opt$par[1]+y[i]) / (opt$par[2]+1)
+  df1[i, 3:5] <- qgamma(c(0.025, 0.5, 0.975), shape=opt$par[1]+y[i], rate=opt$par[2]+1)
+  df1[i, 6] <- df1[i, 5] - df1[i, 3]
+  df1[i, 7] <- "Empirical Bayes"
+  
+  ## Moment Matching
+  df2[i, 1] <- i
+  df2[i, 2] <- (alpha+y[i]) / (beta+1)
+  df2[i, 3:5] <- qgamma(c(0.025, 0.5, 0.975), shape=alpha+y[i], rate=beta+1)
+  df2[i, 6] <- df2[i, 5] - df2[i, 3]
+  df2[i, 7] <- "Moment Matching"
+}
+```
+
+```{r, fig.show='hold', out.width='75%'}
+d.plot <- rbind(df1, df2)
+ggplot(data=d.plot, aes(x=District, y=Mean, color=Method)) + 
   geom_point(position=position_dodge(.9)) + 
-  geom_errorbar(aes(ymin=Lower, ymax=Upper), position=position_dodge()) + 
+  geom_errorbar(aes(ymin=Lower, ymax=Upper), width=.9, position=position_dodge(0.9)) + 
+  # scale_color_manual(values = c(3, 4)) + 
   labs(title = "Posterior distribution of Lambda", 
-       y=expression(lambda[i]), x="District") + theme_minimal()
+       y=expression(lambda[i]), x="District") + theme_classic()
+```
+
+```{r, fig.show='hold', out.width='75%', include=FALSE, eval=FALSE}
+d.plot <- rbind(results.eb, results.mm)
+ggplot(data=d.plot, aes(x=District, y=Mean, color=Method)) + 
+  geom_point(position=position_dodge(.9)) + 
+  geom_errorbar(aes(ymin=Lower, ymax=Upper), width=.9, position=position_dodge(0.9)) + 
+  # scale_color_manual(values = c(3, 4)) + 
+  labs(title = "Posterior distribution of Lambda", 
+       y=expression(lambda[i]), x="District") + theme_classic()
 ```
 
 
@@ -857,9 +921,22 @@ ggplot(data=results_comp, aes(x=district, y=Mean, col=Method)) +
 ```
 
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
 mean.diff <- results.eb$Mean - results.mm$Mean
 length.diff <- results.eb$Length - results.mm$Length
+
+d.comparison <- rbind(
+  c("Mean"=mean(mean.diff), quantile(mean.diff, probs=c(0.025,0.5,0.975))), 
+  c("Mean"=mean(length.diff), quantile(length.diff, probs=c(0.025,0.5,0.975)))
+)
+
+rownames(d.comparison) <- c("Mean difference", "Length difference")
+knitr::kable(d.comparison, align="c", digits=4, caption="Comparison of the two methods")
+```
+
+```{r}
+mean.diff <- df1$Mean - df2$Mean
+length.diff <- df1$Length - df2$Length
 
 d.comparison <- rbind(
   c("Mean"=mean(mean.diff), quantile(mean.diff, probs=c(0.025,0.5,0.975))), 
@@ -873,6 +950,9 @@ knitr::kable(d.comparison, align="c", digits=4, caption="Comparison of the two m
 The Moment Matching method yields in general higher values and the width of the confidence intervals tends to be larger.
 
 
+
+\newpage
+
 # References
 
 [1] Baeten, D., X. Baraliakos, J. Braun, J. Sieper, P. Emery, D. van der Heijde, I. McInnes, J. van Laar,
@@ -885,8 +965,6 @@ randomised, double-blind, placebo-controlled trial. The Lancet 382, 1705–1713.
 Medicine. Springer.
 
 [3] Roos, M. (2022). Foundations of Bayesian Methodology: FS22, Department of Biostatistics at Epidemiology, Biostatistics and Prevention Institute, University of Zurich
-
-
 
 [4] Röver, C. (2020). Bayesian random-effects meta-analysis using the bayesmeta R package. Journal of
 Statistical Software 93(6), 1–51.
