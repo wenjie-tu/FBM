@@ -33,7 +33,23 @@ library(plotrix)
 
 # Exercise 3 (Bayesian meta-analysis with `bayesmeta`)
 
-The aim of the exercise is to compute a Bayesian meta-analysis of log(OR) of treatment and placebo based on eight historical studies. The historical data of the responders in placebo and treatment can be found in Table 1. The data comes from the Baeten et al. study [1] and has been used for the prior elicitation.  
+The aim of the exercise is to compute a Bayesian meta-analysis of log(OR) of treatment and placebo based on eight historical studies. The historical data of the responders in placebo and treatment can be found in Table 1. The data comes from the Baeten et al. study [1] and has been used for the prior elicitation. 
+
+## Log odds ratio and its standard error
+
+From the chapter *Comparison of proportions* on pages 137 and 138 in the book "Likelihood and Bayesian Inference" [2] we know that the log odds ratio y equals:
+
+$$
+y=\log(\text{OR})=\log\bigg(\frac{x_\text{P}}{n_\text{P}-x_\text{P}}\bigg)-
+\log\bigg(\frac{x_\text{T}}{n_\text{T}-x_\text{T}}\bigg)
+$$
+And that the standard error equals
+$$
+\sigma=\text{SE}\left(\log(\text{OR})\right)=
+\sqrt{\frac{1}{x_\text{P}} +\frac{1}{n_\text{P}-x_\text{P}} + 
+\frac{1}{x_\text{T}} +\frac{1}{n_\text{T}-x_\text{T}}
+}
+$$
 
 ```{r data}
 pl_total <- c(107, 44, 51, 39, 139, 20, 78, 35)
@@ -50,19 +66,6 @@ dat <- data.frame(labels, tr_case, tr_total, pl_case, pl_total, log_or, log_or_s
 knitr::kable(dat, align="c", digits=3, caption="Historical data for meta-analysis")
 ```
 
-From the chapter *Comparison of proportions* on pages 137 and 138 in the book "Likelihood and Bayesian Inference" [2] we know that the log odds ratio y equals:
-
-$$
-y=\log(\text{OR})=\log\bigg(\frac{x_\text{P}}{n_\text{P}-x_\text{P}}\bigg)-
-\log\bigg(\frac{x_\text{T}}{n_\text{T}-x_\text{T}}\bigg)
-$$
-And that the standard error equals
-$$
-\sigma=\text{SE}\left(\log(\text{OR})\right)=
-\sqrt{\frac{1}{x_\text{P}} +\frac{1}{n_\text{P}-x_\text{P}} + 
-\frac{1}{x_\text{T}} +\frac{1}{n_\text{T}-x_\text{T}}
-}
-$$
 
 <!-- From Table 1 the overall estimate for the OR and log(OR) can easily be calculated, when the studies are all independent and are identical realizations of the same underlying process (i.i.d). In total 834 patients have been treated, of which 518 have responded to the treatment. In the placebo group 127 from 513 patients have responded. See table below. -->
 
@@ -142,6 +145,8 @@ qqPlot(dat$log_or, xlab = "Theoretical Quantiles", ylab="Sample Quantiles")
 
 <!-- So a full Bayesian meta-analysis expressed by the Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy is considered in the next step. The three levels of hierarchies are the likelihood, the random effects model and the priors.  -->
 
+## Full bayesian meta-analysis - theory
+
 We consider the full Bayesian meta-analysis expressed by the Bayesian normal-normal hierarchical model (NNHM) with three levels of hierarchy.
 
 Likelihood:
@@ -189,6 +194,7 @@ Further details can be found in the script [3].
 
 In the following a NNHM is applied to the data obtained in Table 1. The model is defined in the formulas for the Likelihood, Random effect and Prior above. We fit the model numerically with the help of the function `bayesmeta` from the package `bayesmeta` [4]. This function allows to derive the posterior distribution of the two parameters in a random-effects meta-analysis and provides functions to evaluate joint and marginal posterior probability distributions and more. 
 
+## Full bayesian meta-analysis - R implementation and visualization
 
 ```{r}
 full.bayes <- bayesmeta(y = dat[, "log_or"], 
@@ -226,11 +232,9 @@ The third and fourth plot show the marginal density functions of $\mu$ and $\tau
 
 
 
-```{r plots, fig.show='hold', fig.cap="Plots provided by `bayesmeta` with the data from Table 1.\\label{fig:bayesplots}", echo=F, out.width='50%'}
+```{r plots, fig.show='hold', fig.cap="Plots provided by \texttt{bayesmeta} with the data from Table 1.\\label{fig:bayesplots}", echo=F, out.width='50%', results='asis'}
 plot(full.bayes, prior=T)
 ```
-
-\pagebreak
 
 Figure \ref{fig:marginalposteriors} illustrates the marginal posteriors for all model parameters. 
 
@@ -328,6 +332,10 @@ See pages 88 and 89 of the script [3] for the discussion of the change in the mo
 
 
 # Exercise 4 (Bayesian meta-analysis with JAGS)
+
+The goal of this exercise is to provide an alternative meta-analysis of data based on the file `06worksheet_JAGSextension.R`.
+
+## Meta-analysis based on `06worksheet_JAGSextension.R`
 
 Likelihood:
 $$
@@ -472,6 +480,7 @@ colnames(d.summary) <- c("Mean", "SD", "2.5%", "Median", "97.5%")
 knitr::kable(d.summary, align="c", digits=4, caption="Summary statistics for parameters (JAGS)")
 ```
 
+## Comparison and discussion
 
 **Model (Exercise 1 of Worksheet 5)**
 
@@ -629,6 +638,8 @@ y <- c(11, 5, 15, 9, 6, 9, 2, 3, 26, 39, 20, 31, 9, 16, 6, 16, 19, 17, 15, 11, 1
 
 Assume that these observations are $i.i.d.$ realizations of the model $Y\mid\lambda\sim \text{Po}(\lambda)$  with $\lambda\sim \text{G}(\alpha,\beta)$. Apply and compare two different approaches to compute empirical Bayes estimates for each district:
 
+## Numerical maximization of log-likelihood
+
 (a) Numerical maximization of the log-likelihood corresponding to the Poisson-gamma distribution as described by (Held and Sabanes Bove, 2020, p. 210) to obtain the marginal maximum likelihood estimator.
 
 $$
@@ -768,6 +779,8 @@ result$district <- 1:nrow(result)
 result$width <-  result$Upper-result$Lower
 ```
 
+## Machining of moments based on the Exercise 5
+
 (b) Matching of moments based on the Exercise 5 above, which provides the marginal moment estimator.
 
 In the Exercise 5, we have derived:
@@ -837,6 +850,8 @@ result_MaMo$district <- 1:nrow(result_MaMo)
 result_MaMo$width <-  result_MaMo$Upper-result_MaMo$Lower
 ```
 
+## Comparison and discussion
+
 Compare means and the lengths of equi-tailed 95\%CrI obtained by both approaches. Report your results
 
 ```{r, eval=FALSE, include=FALSE}
@@ -890,7 +905,7 @@ for (i in 1:length(y)) {
 }
 ```
 
-```{r, fig.show='hold', out.width='75%'}
+```{r, fig.show='hold', out.width='75%', fig.align='center'}
 d.plot <- rbind(df1, df2)
 ggplot(data=d.plot, aes(x=District, y=Mean, color=Method)) + 
   geom_point(position=position_dodge(.9)) + 
@@ -933,6 +948,8 @@ d.comparison <- rbind(
 rownames(d.comparison) <- c("Mean difference", "Length difference")
 knitr::kable(d.comparison, align="c", digits=4, caption="Comparison of the two methods")
 ```
+
+
 
 ```{r}
 mean.diff <- df1$Mean - df2$Mean
