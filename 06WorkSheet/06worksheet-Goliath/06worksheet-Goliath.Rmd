@@ -217,18 +217,12 @@ knitr::kable(t(full.bayes$summary), align="c", digits=4,
              caption="Summary statistics for parameters (bayesmeta)")
 ```
 
-Figure \ref{fig:forestplot} illustrates the forest plot of the model printed with the function `forestplot`.
 
 ```{r forest-plot, fig.show='hold', out.width='75%', fig.align='center', fig.cap="Forest Plot provided by `bayesmeta` with the data from Table 1.\\label{fig:forestplot}", echo=F}
 forestplot(full.bayes)
 ```
 
-Figure \ref{fig:bayesplots} shows the four plots given by the `plot` function of `bayesmeta`. The first plot is another simple forest plot, showing the 8 estimates along with the combined estimate (diamond) and prediction interval (bar).
-
-
-The second plot illustrates the joint posterior density of both parameters$\mu$ and $\tau$; a darker shading indicates higher posterior density values. The red contour lines show (approximate) 90%, 95% and 99% confidence regions for the joint distribution. The solid blue line traces the conditional posterior expectation value $\mathbb{E}[\mu\mid\tau,y, \sigma]$, and the dashed lines enclose the corresponding 95% interval as a function of $\tau$. The green lines indicate marginal posterior median and 95% intervals for both parameters.
-
-The third and fourth plot show the marginal density functions of $\mu$ and $\tau$, respectively. The posterior median and (highest posterior density) 95% interval are also indicated by a vertical line and a darker shading. The dashed line shows the prior density in comparison.
+Figure \ref{fig:forestplot} illustrates the forest plot of the model printed with the function `forestplot`. It shows eight estimates ($y_i$) with their 95% confidence intervals (the eight black horizontal lines on the right) along with the combined estimate (the diamond at the bottom, centered at the posterior median and spanning the 95% interval) and a predictive interval (the rectangle at the bottom, spanning the 95% prediction interval). The prediction interval is always longer than the posterior interval for the effect $\mu$, and it indicates the expected range for a "new" estimate $\theta_\text{new}$. The shrinkage estimates are shown along with the original data as grey horizontal lines. As the name indicates, these are usually shrunk towards the overall mean to some degree.
 
 
 
@@ -236,7 +230,11 @@ The third and fourth plot show the marginal density functions of $\mu$ and $\tau
 plot(full.bayes, prior=T)
 ```
 
-Figure \ref{fig:marginalposteriors} illustrates the marginal posteriors for all model parameters. 
+Figure \ref{fig:bayesplots} shows the four plots given by the `plot` function of `bayesmeta`. 
+
+* The first plot is another simple forest plot, showing the 8 estimates along with the combined estimate (diamond) and prediction interval (bar).
+* The second plot illustrates the joint posterior density of both parameters $\mu$ and $\tau$; a darker shading indicates higher posterior density values. The red contour lines show (approximate) 90%, 95% and 99% confidence regions for the joint distribution. The solid blue line traces the conditional posterior expectation value $\mathbb{E}[\mu\mid\tau,y, \sigma]$, and the dashed lines enclose the corresponding 95% interval as a function of $\tau$. The green lines indicate marginal posterior median and 95% intervals for both parameters.
+* The third and fourth plot show the marginal density functions of $\mu$ and $\tau$, respectively. The posterior median and (highest posterior density) 95% interval are also indicated by a vertical line and a darker shading. The dashed line shows the prior density in comparison.
 
 
 
@@ -280,6 +278,7 @@ plot(theta, full.bayes$dposterior(theta=theta, predict=T), type="l", lty="dashed
 lines(theta, full.bayes$dposterior(theta=theta, predict=T), lty="solid")
 ```
 
+Figure \ref{fig:marginalposteriors} illustrates the marginal posteriors for all model parameters.
 
 ```{r, fig.show='hold', out.width='75%', fig.align='center'}
 pooledMean <- full.bayes$summary["mean", "mu"]
@@ -320,6 +319,7 @@ A sequential application fo the Bayes theorem leads to the posterior:
 $$
 \theta\mid y_1,..., y_n \sim N\Bigg(\frac{\sum_{i=1}^{k}\frac{y_i}{\sigma^2_i}+\frac{\nu}{\gamma^2}}{\sum_{i=1}^{k}\frac{1}{\sigma^2_i}+\frac{1}{\gamma^2}}, \bigg(\sum_{i=1}^{k}\frac{1}{\sigma^2_i}+\frac{1}{\gamma^2}\bigg)^{-1}\Bigg)
 $$
+
 The Figure above shows the results when the in between-study heterogeneity $\tau=0, \nu=0$ and $\gamma=4$. The pooled posterior mean is equal to `r pooledMean` and the pooled standard deviation is equal to `r  full.bayes$summary[4,2]`. 
 
 See pages 88 and 89 of the script [3] for the discussion of the change in the model definition as well as the plots of the credible intervals for empirical Bayes.
