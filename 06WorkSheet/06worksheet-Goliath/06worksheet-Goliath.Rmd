@@ -414,8 +414,8 @@ update(rjags.pl1, n.iter = 4000)
 fit.rjags.pl1.coda <- coda.samples(
   model = rjags.pl1, 
   variable.names = pl1.params, 
-  n.iter = 30000,
-  thin = 3
+  n.iter = 50000,
+  thin = 5
 )
 
 summary(fit.rjags.pl1.coda)
