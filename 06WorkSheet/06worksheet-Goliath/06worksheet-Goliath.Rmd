@@ -774,7 +774,7 @@ for(i in 1:length(y)){
 result <- data.frame(result)
 rownames(result) <- NULL
 colnames(result) <- c("Mean","Lower","Median" ,"Upper")
-result$Method <- "EmpiricalBayes"
+result$Method <- "MaximumLikelihood"
 result$district <- 1:nrow(result)
 result$width <-  result$Upper-result$Lower
 ```
@@ -869,7 +869,7 @@ for (i in 1:length(y)) {
   results.eb[i, 2] <- mean(lambda.eb)
   results.eb[i, 3:5] <- quantile(lambda.eb, probs=c(0.025, 0.5, 0.975))
   results.eb[i, 6] <- results.eb[i, 5] - results.eb[i, 3]
-  results.eb[i, 7] <- "Empirical Bayes"
+  results.eb[i, 7] <- "Maximum Likelihood"
   
   lambda.mm <- rgamma(n=M, shape=alpha+y[i], rate=beta+1)
   results.mm[i, 1] <- i
@@ -894,7 +894,7 @@ for (i in 1:length(y)) {
   df1[i, 2] <- (opt$par[1]+y[i]) / (opt$par[2]+1)
   df1[i, 3:5] <- qgamma(c(0.025, 0.5, 0.975), shape=opt$par[1]+y[i], rate=opt$par[2]+1)
   df1[i, 6] <- df1[i, 5] - df1[i, 3]
-  df1[i, 7] <- "Empirical Bayes"
+  df1[i, 7] <- "Maximum Likelihood"
   
   ## Moment Matching
   df2[i, 1] <- i
